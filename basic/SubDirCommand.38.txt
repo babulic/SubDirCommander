@@ -127,7 +127,7 @@
  4483 gosub3700:ifrothenc$="cd:"+c$:goto4494
  4484 gosub4200:ifs=0then5170
  4486 ifs=2049or(s<40960ands+s(p)*254>2049)then4491
- 4487 rl=-1:print"{up}{wht}Load from"s:loadc$,dr,1
+ 4487 rl=-1:print"{up}{wht}Load from  ":loadc$,dr,1
  4488 rl=0:print"{up}"bl$re$"{up}Loaded OK":s$=re$+"{up}Ran OK, press any key ...  {lblu}"
  4489 ifruthenru=0:ifs>0thensyss:prints$:poke198,0:wait198,1:goto5160
  4490 goto5170

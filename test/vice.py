@@ -233,8 +233,8 @@ DOWN, UP, RIGHT, LEFT, RET = 0x11, 0x91, 0x1D, 0x9D, 0x0D
 NAME38 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.38')
 NAME37 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.37')
 
-def start(d8, name=NAME38, d9=None, drive=None, list_line=5170):
-    v = Vice(d8=d8, d9=d9)
+def start(d8, name=NAME38, d9=None, drive=None, list_line=5170, warp=True):
+    v = Vice(d8=d8, d9=d9, warp=warp)
     time.sleep(3)
     v.keys(pet('load"') + name + pet('",8\n'))
     v.wait_text("ready.", 120); time.sleep(1)
