@@ -2167,8 +2167,16 @@ parsenum
 ; inmode 1 = digits only. With infresh set the first key replaces the
 ; default. RETURN: carry clear. RUN/STOP: carry set.
 lineinput
+        lda #C_WHT
+        sta COLOR
+        sta tcol
         lda row
         jsr rowptr
+        ldy #LISTW-1
+        lda #C_WHT
+-       sta (col),y
+        dey
+        bpl -
 liloop  jsr infield
         jsr getkey
         cmp #$0d
@@ -2250,7 +2258,7 @@ getkey  jsr GETIN
         rts
 
 ; ================================================================ text
-s_title .text "   SubDir Commander 2026   "
+s_title .text "   Sub Dir Commander 2026  "
 s_seldrv
         .null " Select drive:"
 s_press .text " PRESS ANY KEY ...         "
