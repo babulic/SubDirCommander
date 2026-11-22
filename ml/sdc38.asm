@@ -322,13 +322,8 @@ cstart  jsr parseprg
         jsr getstart
         bcs fatalj
         jsr msgi
-        .null "Start adr.: $"
-        jsr hexsa
-        jsr stri
-        .null " = "
-        lda saddr
-        ldx saddr+1
-        jsr decout
+        .null "Start adr.: "
+        jsr decsa
         jmp main
 fatalj  jmp fatal
 
@@ -570,10 +565,8 @@ slow    jmp handoff
 
 ; ML that stays clear of the commander is loaded here and may come back.
 direct  jsr msgi
-        .null "Load from $"
-        jsr hexsa
-        jsr stri
-        .null " ..."
+        .null "Load from "
+        jsr decsa
         jsr setname
         lda #1
         ldx dev
@@ -2063,7 +2056,17 @@ hexout  pha
         lda hexdig,x
         jmp chrout2
 
-hexdig  .text "0123456789abcdef"
+hexdig  .text "0123456789ABCDEF"
+
+; Start address as "2049 ($0801)" after the last message.
+decsa   lda saddr
+        ldx saddr+1
+        jsr decout
+        jsr stri
+        .null " ($"
+        jsr hexsa
+        lda #")"
+        jmp chrout2
 
 ; Decimal A (lo) / X (hi) at the cursor.
 decout  jsr num2dec

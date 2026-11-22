@@ -4,7 +4,7 @@
  3310 ifti<wthengoto3310
  3320 return
  3400 print"{clr}{gry2}";:ifos$<>""thenprint"{rvon}"+os$:goto3430
- 3410 print"{rvon}   SubDir Commander 2025   "
+ 3410 print"{rvon}   SubDir Commander 2026   "
  3430 printbl$"{rvon}{gry2}NumericKeys:"rl$"{rvon}1{rvof} ListDirect"rl$"{rvon}2{rvof} ValidateDi"
  3440 printbl$"{rvon}3{rvof} RenameFile"rl$"{rvon}4{rvof} CopyFile"rl$"{rvon}5{rvof} StartAdres"
  3460 printbl$"{rvon}6{rvof} DeleteFile"rl$"{rvon}7{rvof} RunOpenDir"
@@ -44,7 +44,8 @@
  4220 open1,dr,0,c$:get#1,a$,b$:close1
  4225 if(st and178)thengosub4110:printj$:return
  4230 s=256*asc(b$+chr$(0))+asc(a$+chr$(0))
- 4235 print"{up}"lr$"{up}{wht}Start adr.:"s:return
+ 4235 h$="":x=s:forcv=1to4:hd=x-int(x/16)*16:h$=mid$("0123456789ABCDEF",hd+1,1)+h$:x=int(x/16):next
+ 4236 print"{up}"lr$"{up}{wht}Start adr.:"s"($"h$")":return
  4250 gosub4100:ifstthenprintj$:return
  4252 open1,dr,15,"ui":w=30:gosub3300:gosub4110:ifstthenprintj$:close1:return
  4254 input#1,e1,os$,e2,e3:os$=left$(os$+bl$,ll)
@@ -101,7 +102,7 @@
  4360 ift$<>"prg"andt$<>"seq"andt$<>"usr"thenj$="{rvon} Only prg/seq/usr files !  "+re$:goto4378
  4361 x=dr:dr=td:gosub4100:dr=x:ifstthencn=0:printj$:return
  4362 print"{up}"br$"{up}Copying to drive"td"...{lblu}"
- 4363 restore:forx=828to965:readcv:pokex,cv:next
+ 4363 restore:x=828:forcv=1to3:readh$:forhd=1tolen(h$)step2:ha=asc(mid$(h$,hd))-48:hb=asc(mid$(h$,hd+1))-48:pokex,16*(ha+7*(ha>9))+hb+7*(hb>9):x=x+1:next:next
  4364 f$=","+left$(t$,1):open1,dr,15:open2,dr,2,"0:"+c$+f$+",r":gosub4000:ifenthen4376
  4365 open4,td,15:open3,td,3,"0:"+n$+f$+",w":gosub4060:ifenthenclose3:close4:goto4376
  4366 sys828:x=peek(2):close3:gosub4060
@@ -203,12 +204,6 @@
  5325 p=p-22:gosub3500:goto5170
  5340 ifv=porm<1then5170
  5345 print"{up}{lblu}"m$(p):y=y+v-p:p=v:poke781,y:poke782,0:poke783,0:sys65520:goto5260
- 6000 data169,0,133,2,32,204,255,160,0,132,144,162,2,32,198,255
- 6010 data176,113,160,0,132,251,169,160,133,252,32,207,255,145,251,165
- 6020 data144,208,18,200,208,244,32,225,255,240,88,230,252,165,252,201
- 6030 data192,208,231,240,13,41,191,208,74,169,64,133,2,200,208,2
- 6040 data230,252,132,251,32,204,255,169,0,133,144,162,3,32,201,255
- 6050 data176,49,160,0,132,253,169,160,133,254,165,254,197,252,208,4
- 6060 data196,251,240,20,169,54,133,1,177,253,162,55,134,1,32,210
- 6070 data255,200,208,230,230,254,208,226,165,144,208,7,165,2,240,132
- 6080 data76,204,255,169,255,133,2,76,204,255
+ 6000 data"a900850220ccffa0008490a20220c6ffb071a00084fba9a085fc20cfff91fba590d012c8d0f420e1fff058e6fca5"
+ 6010 data"fcc9c0d0e7f00d29bfd04aa9408502c8d002e6fc84fb20ccffa9008590a20320c9ffb031a00084fda9a085fea5fe"
+ 6020 data"c5fcd004c4fbf014a9368501b1fda237860120d2ffc8d0e6e6fed0e2a590d007a502f0844cccffa9ff85024cccff"
