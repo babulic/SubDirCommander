@@ -251,3 +251,68 @@ def start(d8, name=NAME38, d9=None, drive=None, list_line=5170):
         v.wait_line(list_line, 120)
     time.sleep(0.5)
     return v
+
+def labels(path="/tmp/t/sdc38.lbl"):
+    out = {}
+    for l in open(path):
+        m = re.match(r'(\w+)\s*=\s*\$([0-9a-f]+)', l)
+        if m:
+            out[m.group(1)] = int(m.group(2), 16)
+    return out
+
+class MLVice(Vice):
+    """Vice session driving the ML commander: waits on the CPU sitting in getkey/GETIN."""
+    def setlabels(self, lab):
+        self.lab = lab
+
+    def pc(self):
+        t = self.enter()
+        self.go()
+        m = re.search(r"\.;([0-9a-f]{4}) ", t)
+        return int(m.group(1), 16) if m else -1
+
+    def idle(self, timeout=120):
+        g = self.lab["getkey"]
+        t0 = time.time()
+        hits = 0
+        while time.time() - t0 < timeout:
+            p = self.pc()
+            if g <= p <= g + 6 or 0xF13E <= p <= 0xF15F or 0xE5B4 <= p <= 0xE5CA:
+                hits += 1
+                if hits >= 2 and self.mem(0xC6, 0xC6)[0] == 0:
+                    return True
+            else:
+                hits = 0
+            time.sleep(0.15)
+        return False
+
+    def mkey(self, k, timeout=120):
+        if not self.idle(timeout):
+            raise RuntimeError("not idle, pc=%04x" % self.pc())
+        self.enter()
+        self.cmd(f"> 0277 {k:02x}", wait=0.15)
+        self.cmd("> 00c6 01", wait=0.15)
+        self.go()
+        time.sleep(0.3)
+        self.idle(timeout)
+
+    def mtype(self, keys, timeout=120):
+        for k in keys:
+            self.mkey(k, timeout)
+
+NAMEML = [0x25, 0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand38')
+
+def mlstart(d8, d9=None, drive=None, name=NAMEML):
+    v = MLVice(d8=d8, d9=d9)
+    v.setlabels(labels())
+    time.sleep(3)
+    v.keys(pet('load"') + name + pet('",8\n'))
+    v.wait_text("ready.", 120); time.sleep(1)
+    v.keys(pet('run\n'))
+    time.sleep(1)
+    v.idle(60)
+    if drive:
+        v.mkey(drive)
+    v.mkey(RET)
+    v.idle(120)
+    return v
