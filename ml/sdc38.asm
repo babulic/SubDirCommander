@@ -1,5 +1,5 @@
-; %SubDirCommand38 - machine language SubDir Commander for the C64.
-; Same screen, keys and commands as the BASIC SubDirCommand.38.
+; %SubDirCommand39 - machine language SubDirCommander 2026 for the C64.
+; Same screen, keys and commands as the BASIC SubDirCommand.39.
 ; Build: 64tass --cbm-prg -o sdc38ml.prg sdc38.asm
 ;
 ; Memory: code and work variables from $0801. Directory entries live in the
@@ -53,6 +53,7 @@ C_BLUE  = 6
 C_LBLU  = 14
 C_GRY2  = 12
 C_CYAN  = 3
+C_YEL   = 7
 C_WHT   = 1
 
 LISTW   = 27            ; width of the list column
@@ -99,6 +100,9 @@ setdrv  sta dev
 ; ---------------------------------------------------------------- drive menu
 seldrv  jsr closeall
         jsr cls
+        lda #0
+        sta oslen
+        jsr drawrow0
         lda #1
         sta row
         lda #<s_seldrv
@@ -189,6 +193,20 @@ keytab  .byte $11
         .word crun-1
         .byte "8"
         .word cload-1
+        .byte "9"
+        .word cmove-1
+        .byte "0"
+        .word cview-1
+        .byte "n"
+        .word cformat-1
+        .byte "m"
+        .word cmkdir-1
+        .byte "r"
+        .word crmdir-1
+        .byte " "
+        .word cmark-1
+        .byte "*"
+        .word cmarkall-1
         .byte $5e
         .word cdup-1
         .byte $5f
@@ -485,6 +503,358 @@ xdev    jsr xcopy
         bcs fatalc
         jmp restore
 
+; ----------------------------------------------------------------- 9 move
+cmove   jsr parsefile
+        bcs nomove
+        lda ro
+        bne nomove
+        lda blocks
+        ora blocks+1
+        beq nomove
+        jsr msgi
+        .null "Move to:"
+        lda #9
+        jsr namefield
+        bcs nomove
+        jsr takename
+        jsr msgi
+        .null "Target drive:"
+        lda dev
+        jsr numfield
+        lda #14
+        sta incol
+        jsr lineinput
+        bcs nomove
+        jsr parsenum
+        cmp #8
+        bcc nomove
+        cmp #12
+        bcs nomove
+        sta tdev
+        lda newlen
+        bne +
+        jsr oldtonew
++       lda tdev
+        cmp dev
+        bne mvx
+        jsr samename
+        bcs nomove
+        jsr msgi
+        .null "Moving ..."
+        jsr cmdi
+        .null "r0:"
+        jsr cmdnew
+        lda #"="
+        jsr cmdchr
+        jsr cmdname
+        jmp dosrelist
+mvx     jsr xcopy
+        bcs fatalc
+        jsr cmdi
+        .null "s0:"
+        jsr cmdname
+        jmp dosrelist
+
+; ----------------------------------------------------------------- 0 view
+cview   jsr parsefile
+        bcs nomove
+        lda ro
+        bne nomove
+        lda type
+        cmp #"r"
+        beq nomove
+        jsr cmdi
+        .null "0:"
+        jsr cmdname
+        lda #","
+        jsr cmdchr
+        lda type
+        jsr cmdchr
+        lda #<s_cr
+        ldx #>s_cr
+        jsr cmdapp
+        lda dev
+        sta savedev
+        lda cmdlen
+        sta savelen
+        lda #0
+        sta viewrow
+        ldx #zpend-ZPVARS-1
+-       lda ZPVARS,x
+        sta zsave,x
+        dex
+        bpl -
+        jsr zpbasic
+        jsr $e544
+        jsr $ffe7
+        lda #C_WHT
+        sta COLOR
+        lda #0
+        sta NDX
+        tax
+        tay
+        clc
+        jsr $fff0
+        lda #2
+        ldx savedev
+        ldy #2
+        jsr $ffba
+        lda savelen
+        ldx #<cmdbuf
+        ldy #>cmdbuf
+        jsr $ffbd
+        jsr $ffc0
+        bcs viewbad2
+        ldx #2
+        jsr $ffc6
+        bcs viewbad2
+        lda #0
+        sta STATUS
+vbyte   jsr CHRIN
+        ldx STATUS
+        cmp #$0d
+        beq vnl
+        cmp #$20
+        bcc vstat
+        cmp #$80
+        bcc vshow
+        cmp #$a0
+        bcc vstat
+vshow   jsr CHROUT
+        jmp vstat
+vnl     jsr CHROUT
+        inc viewrow
+        lda viewrow
+        cmp #23
+        bcc vstat
+        jsr vpause
+        bcs vdone
+        jsr $e544
+        lda #0
+        sta viewrow
+vstat   txa
+        and #$bf
+        beq vbyte
+vdone   jsr $ffcc
+        jsr vpause
+        lda #2
+        jsr $ffc3
+        jsr $ffcc
+        jmp viewback
+viewbad2
+        jsr $ffe7
+viewback
+        ldx #zpend-ZPVARS-1
+-       lda zsave,x
+        sta ZPVARS,x
+        dex
+        bpl -
+        jsr drawframe
+        jsr drawhdr
+        jmp redraw
+viewbad jsr closeall
+        jmp fatal
+
+vpause  lda #0
+        sta NDX
+        lda #C_WHT
+        sta COLOR
+        lda #$0d
+        jsr CHROUT
+        ldx #0
+-       lda s_more,x
+        beq +
+        jsr CHROUT
+        inx
+        bne -
++       jsr getkey
+        and #$7f
+        cmp #"_"
+        beq +
+        clc
+        rts
++       sec
+        rts
+
+; ---------------------------------------------------------------- N format
+cformat jsr msgi
+        .null "Format name:"
+        lda #13
+        jsr namefield
+        bcs nomove
+        jsr takename
+        lda newlen
+        beq nomove
+        jsr msgi
+        .null "ID (Return=quick):"
+        lda #0
+        sta inlen
+        sta inmode
+        sta infresh
+        lda #2
+        sta inmax
+        lda #19
+        sta incol
+        jsr lineinput
+        bcs nomove
+        lda inlen
+        sta idlen
+        ldx #0
+-       cpx idlen
+        beq +
+        lda inbuf,x
+        sta idbuf,x
+        inx
+        bne -
++       jsr msgi
+        .null "Format drive "
+        lda dev
+        ldx #0
+        jsr decout
+        jsr stri
+        .null "? y/n"
+        jsr getkey
+        and #$7f
+        cmp #"y"
+        bne nomove
+        jsr msgi
+        .null "Formatting ..."
+        jsr cmdi
+        .null "n0:"
+        jsr cmdnew
+        lda idlen
+        beq nosend
+        lda #","
+        jsr cmdchr
+        ldx #0
+-       cpx idlen
+        beq nosend
+        lda idbuf,x
+        jsr cmdchr
+        inx
+        bne -
+nosend  jmp dosrelist
+
+; ------------------------------------------------------- M / R directories
+cmkdir  jsr msgi
+        .null "Make dir:"
+        lda #10
+        jsr namefield
+        bcs nomove
+        jsr takename
+        lda newlen
+        beq nomove
+        jsr cmdi
+        .null "md:"
+        jsr cmdnew
+        jmp dosrelist
+
+crmdir  jsr parsefile
+        bcs nomove
+        lda type
+        cmp #"d"
+        bne nomove
+        lda type+1
+        cmp #"i"
+        bne nomove
+        jsr msgi
+        .null "Remove dir? y/n"
+        jsr getkey
+        and #$7f
+        cmp #"y"
+        bne nomove
+        jsr cmdi
+        .null "rd:"
+        jsr cmdname
+        jmp dosrelist
+
+; --------------------------------------------------------------- marking
+cmark   jsr parsefile
+        bcs nomove
+        jsr markable
+        bcc nomove
+        lda pos
+        jsr getent
+        lda ent+31
+        eor #1
+        sta ent+31
+        lda pos
+        jsr putent
+        lda pos
+        jsr drawent
+        jmp main
+
+cmarkall
+        jsr haslist
+        lda #0
+        sta zp3
+        tax
+mkscan  cpx last
+        beq mkdec
+        txa
+        jsr getent
+        lda ent+31
+        beq mknext
+        inc zp3
+mknext  inx
+        bne mkscan
+mkdec   lda #1
+        ldx zp3
+        beq mkset
+        lda #0
+mkset   sta zp3
+        ldx #0
+mkapply cpx last
+        beq mkdone
+        txa
+        pha
+        jsr getent
+        jsr markable
+        bcc mkskip
+        lda zp3
+        sta ent+31
+        pla
+        pha
+        jsr putent
+mkskip  pla
+        tax
+        inx
+        bne mkapply
+mkdone  jmp redraw
+
+; Carry set when the entry in ent is a PRG, SEQ or USR file.
+markable
+        ldx #0
+-       cpx ent+2
+        bcs mkno
+        lda ent+3,x
+        inx
+        cmp #$22
+        bne -
+-       cpx ent+2
+        bcs mkno
+        lda ent+3,x
+        inx
+        cmp #$22
+        bne -
+-       cpx ent+2
+        bcs mkno
+        lda ent+3,x
+        cmp #" "
+        bne +
+        inx
+        bne -
++       cmp #"p"
+        beq mkyes
+        cmp #"s"
+        beq mkyes
+        cmp #"u"
+        beq mkyes
+mkno    clc
+        rts
+mkyes   sec
+        rts
+
 ; --------------------------------------------------------- 7 / 8 run, load
 crun    lda #1
         .byte $2c
@@ -564,8 +934,8 @@ notamp  lda ro
 slow    jmp handoff
 
 ; ML that stays clear of the commander is loaded here and may come back.
-direct  jsr msgi
-        .null "Load from "
+direct          jsr msgi
+        .null "Loading from "
         jsr decsa
         jsr setname
         lda #1
@@ -1031,7 +1401,9 @@ rdtend  sty ent+2
 +       stx hdrlen
         jsr drawhdr
         jmp rdline
-rdent   ldx last
+rdent   lda #0
+        sta ent+31              ; not marked
+        ldx last
         inx
         cpx #MAXENT
         bcs rdline
@@ -1860,10 +2232,21 @@ drawent sta didx
         lda didx
         cmp pos
         bne +
+        lda ent+31
+        beq curplain
+        lda #C_YEL
+        ldx #$80
+        jmp putline
+curplain
         lda #C_CYAN
         ldx #$80
         jmp putline
-+       lda #C_LBLU
++       lda ent+31
+        beq plain
+        lda #C_YEL
+        ldx #0
+        jmp putline
+plain   lda #C_LBLU
         ldx #0
         jmp putline
 
@@ -2258,7 +2641,8 @@ getkey  jsr GETIN
         rts
 
 ; ================================================================ text
-s_title .text "   Sub Dir Commander 2026  "
+s_title .text "   SubDirCommander 2026    "
+s_more  .null " more: any key,  _ = stop"
 s_seldrv
         .null " Select drive:"
 s_press .text " PRESS ANY KEY ...         "
@@ -2292,19 +2676,35 @@ panel
         .null "7", " RunOpenDir"
         .byte 9, 1
         .null "8", " LoadOpenDi"
-        .byte 11, 12
-        .null "SD2IEC Keys:"
+        .byte 10, 1
+        .null "9", " MoveFile"
+        .byte 11, 1
+        .null "0", " ViewFile"
         .byte 12, 1
+        .null "N", " FormatDisk"
+        .byte 13, 12
+        .null "SD2IEC Keys:"
+        .byte 14, 1
         .null "^", " Go1LevelUp"
-        .byte 14, 12
+        .byte 15, 1
+        .null "M", " MakeDir"
+        .byte 16, 1
+        .null "R", " RemoveDir"
+        .byte 17, 12
         .null "CRSR Keys:  "
-        .byte 15, 3
+        .byte 18, 3
         .null "U/D", " LineUpDn"
-        .byte 16, 3
+        .byte 19, 3
         .null "L/R", " PageUpDn"
-        .byte 18, 6
+        .byte 20, 12
+        .null "Other Keys: "
+        .byte 21, 3
+        .null "Spc", " MarkFile"
+        .byte 22, 1
+        .null "*", " MarkAll"
+        .byte 23, 6
         .null "Return", $a0, "RunOp"
-        .byte 19, 1
+        .byte 24, 1
         .null "_", " to ExitApp"
         .byte $ff
 
@@ -2366,6 +2766,11 @@ type    .fill 3
 namebuf .fill 16
 newname .fill 16
 inbuf   .fill 17
+idlen   .byte ?
+idbuf   .fill 2
+savedev .byte ?
+savelen .byte ?
+viewrow .byte ?
 decbuf  .fill 6
 kbuf    .fill 10
 cmdbuf  .fill 48

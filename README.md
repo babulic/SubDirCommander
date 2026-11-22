@@ -1,4 +1,4 @@
-# SubDir Commander 38 for the Commodore 64
+# SubDirCommander 2026 for the Commodore 64
 
 A disk commander for a 1541 / 1541-II or SD2IEC drive on a stock C64. It
 lists a directory, moves a cursor through it and runs, loads, renames,

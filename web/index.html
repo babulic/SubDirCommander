@@ -4,15 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SubDir Commander 38: a disk commander for the Commodore 64, in BASIC and machine code." />
-    <title>SubDir Commander 38 for the C64</title>
+    <meta name="description" content="SubDirCommander 2026: a disk commander for the Commodore 64, in BASIC and machine code." />
+    <title>SubDirCommander 2026 for the C64</title>
   </head>
   <body>
     <main>
       <header class="hero">
         <div class="hero-text">
           <p class="kicker">Commodore 64 · 1541 / 1541-II · SD2IEC</p>
-          <h1>SubDir Commander 38</h1>
+          <h1>SubDirCommander 2026</h1>
           <p class="lead">
             A disk commander for a stock C64. List a drive, move through it a line or a page
             at a time, and run, load, rename, copy, delete or validate files, including copies
@@ -22,8 +22,8 @@
             <a class="btn primary" href="/files/subdir39.d64" download="subdir39.d64">
               Disk image <span>subdir39.d64</span>
             </a>
-            <a class="btn" href="/files/SubDirCommand38-ml.prg" download="%SubDirCommand38.prg">
-              Machine code <span>%SubDirCommand38 · 20 blocks</span>
+            <a class="btn" href="/files/SubDirCommand39-ml.prg" download="%SubDirCommand39.prg">
+              Machine code <span>%SubDirCommand39 · 24 blocks</span>
             </a>
             <a class="btn" href="/files/SubDirCommand.39.prg" download="SubDirCommand.39.prg">
               BASIC <span>SubDirCommand.39 · 45 blocks</span>
@@ -65,6 +65,11 @@ RUN</code></pre>
               <tr><th>6 · F6</th><td>delete, after y/n</td></tr>
               <tr><th>7 · F7 · RETURN</th><td>run a program, open a directory or disk image</td></tr>
               <tr><th>8 · F8</th><td>load a program without running it</td></tr>
+              <tr><th>9</th><td>move a file, on this drive or to another</td></tr>
+              <tr><th>0</th><td>view a SEQ or program file</td></tr>
+              <tr><th>N</th><td>format the disk</td></tr>
+              <tr><th>M / R</th><td>SD2IEC: make or remove a directory</td></tr>
+              <tr><th>Space / *</th><td>mark one file, or mark and clear all</td></tr>
               <tr><th>↑</th><td>SD2IEC: one directory level up</td></tr>
               <tr><th>←</th><td>quit to BASIC</td></tr>
             </tbody>
@@ -99,7 +104,7 @@ RUN</code></pre>
         </div>
       </section>
     </main>
-    <footer>SubDir Commander 38 · 2026</footer>
+    <footer>SubDirCommander 2026</footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

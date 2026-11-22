@@ -10,7 +10,7 @@ for f in basic/SubDirCommand.3*.txt; do
 done
 petcat -w2 -o dist/SubDirCommand.38.prg -- basic/SubDirCommand.38.txt
 petcat -w2 -o dist/SubDirCommand.39.prg -- basic/SubDirCommand.39.txt
-64tass -q -C --long-branch --cbm-prg -o dist/%SubDirCommand38.prg ml/sdc38.asm
+64tass -q -C --long-branch --cbm-prg -o dist/%SubDirCommand39.prg ml/sdc38.asm
 
 cp original/fb.d64 dist/fb.d64
 c1541 -attach dist/fb.d64 \
@@ -19,5 +19,6 @@ c1541 -attach dist/fb.d64 \
     -delete dc64 \
     -delete unformat.dsk.ib3 \
     -write dist/SubDirCommand.39.prg "SubDirCommand.39" \
-    -write dist/%SubDirCommand38.prg "%SubDirCommand38"
+    -delete "%SubDirCommand38" \
+    -write dist/%SubDirCommand39.prg "%SubDirCommand39"
 c1541 -attach dist/fb.d64 -dir

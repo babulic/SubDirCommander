@@ -59,7 +59,7 @@
  3310 ifti<wthengoto3310
  3320 return
  3400 print"{clr}{gry2}";:ifos$<>""thenprint"{rvon}"os$:goto3430
- 3410 print"{rvon}   Sub Dir Commander 2026  "
+ 3410 print"{rvon}   SubDirCommander 2026    "
  3430 printbl$"{rvon}{gry2}NumericKeys:"rl$"{rvon}1{rvof} ListDirect"rl$"{rvon}2{rvof} ValidateDi"
  3440 printbl$"{rvon}3{rvof} RenameFile"rl$"{rvon}4{rvof} CopyFile"rl$"{rvon}5{rvof} StartAdres"
  3450 printbl$"{rvon}6{rvof} DeleteFile"rl$"{rvon}7{rvof} RunOpenDir"rl$"{rvon}8{rvof} LoadOpenDi"
