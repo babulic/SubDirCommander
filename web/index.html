@@ -19,14 +19,14 @@
             from one drive to another.
           </p>
           <div class="downloads">
-            <a class="btn primary" href="/files/subdir38.d64" download="subdir38.d64">
-              Disk image <span>subdir38.d64</span>
+            <a class="btn primary" href="/files/subdir39.d64" download="subdir39.d64">
+              Disk image <span>subdir39.d64</span>
             </a>
             <a class="btn" href="/files/SubDirCommand38-ml.prg" download="%SubDirCommand38.prg">
               Machine code <span>%SubDirCommand38 · 20 blocks</span>
             </a>
-            <a class="btn" href="/files/SubDirCommand.38.prg" download="SubDirCommand.38.prg">
-              BASIC <span>SubDirCommand.38 · 28 blocks</span>
+            <a class="btn" href="/files/SubDirCommand.39.prg" download="SubDirCommand.39.prg">
+              BASIC <span>SubDirCommand.39 · 45 blocks</span>
             </a>
           </div>
         </div>
@@ -40,12 +40,12 @@
       <section>
         <h2>Run it</h2>
         <p>In VICE, attach the disk to drive 8:</p>
-        <pre><code>x64sc -8 subdir38.d64</code></pre>
+        <pre><code>x64sc -8 subdir39.d64</code></pre>
         <p>Then on the C64. The file names contain capital letters, so <code>?</code> stands in for them:</p>
         <pre><code>LOAD"%*",8
 RUN</code></pre>
         <p>for the machine code version, or</p>
-        <pre><code>LOAD"?UB?IR?OMMAND.38",8
+        <pre><code>LOAD"?UB?IR?OMMAND.39",8
 RUN</code></pre>
         <p>for the BASIC one. Add <code>-9 other.d64</code> to try copying between drives.</p>
       </section>

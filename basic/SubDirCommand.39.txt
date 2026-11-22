@@ -15,22 +15,6 @@
  31 return
  32 da=peek(47)+256*peek(48)+7+3*i:sa=peek(da+1)+256*peek(da+2):return
  33 gosub30:x$=left$(s$+bl$,ll):gosub32:forkc=1toll:pokesa+kc-1,asc(mid$(x$,kc,1)):next:return
- 40 ifpeek(144)then5080
- 41 sysci:c=peek(r7):sysci:ifc+peek(r7)=0orpeek(144)then5080
- 42 sysci:nb=peek(r7):sysci:nb=nb+256*peek(r7):ifm>=mathen55
- 43 m=m+1:gosub30:iflen(m$(m))<>llthenm$(m)=mid$(bl$,1)
- 44 i=m:gosub32:x=nb:kc=1:ifx>9thenkc=2:ifx>99thenkc=3:ifx>999thenkc=4:ifx>9999thenkc=5
- 45 fori=kc-1to0step-1:pokesa+i,48+x-int(x/10)*10:x=int(x/10):next:b=sa+kc:ifkc>3thenkc=3:b=sa+3
- 46 sysci:pokeb,peek(r7):sysci:pokeb+1,peek(r7):sysci:pokeb+2,peek(r7):sysci:pokeb+3,peek(r7):sysci:pokeb+4,peek(r7):sysci:pokeb+5,peek(r7):sysci:pokeb+6,peek(r7):sysci:pokeb+7,peek(r7):sysci:pokeb+8,peek(r7):sysci:pokeb+9,peek(r7):sysci:pokeb+10,peek(r7):sysci:pokeb+11,peek(r7)
- 47 sysci:pokeb+12,peek(r7):sysci:pokeb+13,peek(r7):sysci:pokeb+14,peek(r7):sysci:pokeb+15,peek(r7):sysci:pokeb+16,peek(r7):sysci:pokeb+17,peek(r7):sysci:pokeb+18,peek(r7):sysci:pokeb+19,peek(r7):sysci:pokeb+20,peek(r7):sysci:pokeb+21,peek(r7):sysci:pokeb+22,peek(r7):sysci:pokeb+23,peek(r7)
- 48 onkcgoto49,50,51
- 49 sysci:pokeb+24,peek(r7):sysci:pokeb+25,peek(r7):sysci:sysci:goto52
- 50 sysci:pokeb+24,peek(r7):sysci:sysci:sysci:goto52
- 51 sysci:sysci:sysci:sysci
- 52 mk%(m)=-1:ifpeek(sa+4)=34thenc=peek(sa+23):ifc=80orc=83orc=85thenmk%(m)=0
- 53 ifm<22theni=m:gosub24
- 54 goto40
- 55 fori=1to28:sysci:next:goto40
  100 ifp>=mthen10
  101 p=p+1:print"{up}";:i=p-1:gosub24:ify=23then106
  102 y=y+1:i=p:gosub24:goto10
@@ -237,7 +221,7 @@
  4640 next
  4645 p=pp:cn=-1:return
  4700 sp=0:cn=0:gosub4420:ifc$=""thenreturn
- 4705 gosub3700:ifrort$="rel"thenreturn
+ 4705 gosub3700:if ro or t$="rel"thenreturn
  4710 gosub4100:ifstthenprintj$:return
  4715 cn=-1:print"{clr}{wht}";:open1,dr,15:open2,dr,2,"0:"+c$+","+left$(t$,1)+",r":gosub4000:ifenthenclose2:close1:printj$:return
  4720 poke781,2:sys65478
@@ -272,27 +256,46 @@
  5009 ifdr<8ordr>11thendr=8:print"{up}";:goto5005
  5011 rd=0:o=0:m=-1:p=0:tp=0:y=2:mc=0:j$="":os$="":ifnotrthengosub5900
  5016 gosub3400:gosub4250:ifstthen5160
- 5020 poke781,0:poke782,0:poke783,0:sys65520:print"{rvon}"os$:open1,dr,0,"$0":poke781,1:sys65478:poke650,128
- 5025 sysci:sysci:sysci:sysci:sysci:sysci:i$="  ":ifpeek(144)thengosub4110:i$=j$:goto5045
- 5030 sysci:c=peek(r7):ifc=0orpeek(144)then5040
- 5035 ifc<>18andlen(i$)<lltheni$=i$+chr$(c)
- 5036 goto5030
- 5040 i$="{rvon}{lblu}"+left$(i$+bl$,ll)+"{lblu}"
- 5045 printi$
- 5046 goto40
- 5080 sys65484:close1:z=nb:ifm<0then5160
- 5082 i=m:gosub32:ifpeek(sa+4)<>34thens$=mid$(str$(z),2)+bf$:gosub33:ifm<22thenprint"{up}";:gosub24
+ 5020 poke781,0:poke782,0:poke783,0:sys65520:print"{rvon}"os$:open1,dr,0,"$0":poke650,128
+ 5022 sys49152:close1:m=peek(2)+256*peek(3)-1
+ 5024 ifpeek(144)and191thengosub4110
+ 5026 ifm<0then5160
+ 5028 z=val(m$(m)):fori=0to21:ifi>mthenprintbl$:goto5032
+ 5030 gosub24
+ 5032 next
  5160 ifrdandj$=""thengosub3500
  5162 ifrdthen10
  5165 rd=-1:ifm>=0andj$=""thenpoke781,y:poke782,0:poke783,0:sys65520:print
  5166 goto10
  5900 ma=500:dimm$(ma),mk%(ma),kt%(255):r=-1:re$=chr$(13):ap$=chr$(34):ci=65487:r7=780
  5910 ll=27:bo$="                                       ":bl$=left$(bo$,ll)
+ 5912 fori=0toma:m$(i)=mid$(bl$,1):next
  5920 bf$=" blocks free.":br$=bo$+re$:lr$=bl$+re$:rl$=re$+bl$
- 5930 restore:fori=1to3:readh$:next:fori=1to33:readx,v:kt%(x)=v:next:return
+ 5930 restore:x=828:forcv=1to3:readh$:gosub5950:next
+ 5932 x=49152:forcv=1to18:readh$:gosub5950:next
+ 5934 fori=1to33:readx,v:kt%(x)=v:next:return
+ 5950 forhd=1tolen(h$)step2:ha=asc(mid$(h$,hd))-48:hb=asc(mid$(h$,hd+1))-48:pokex,16*(ha+7*(ha>9))+hb+7*(hb>9):x=x+1:next:return
  6000 data"a900850220ccffa0008490a20220c6ffb071a00084fba9a085fc20cfff91fba590d012c8d0f420e1fff058e6fca5"
  6010 data"fcc9c0d0e7f00d29bfd04aa9408502c8d002e6fc84fb20ccffa9008590a20320c9ffb031a00084fda9a085fea5fe"
  6020 data"c5fcd004c4fbf014a9368501b1fda237860120d2ffc8d0e6e6fed0e2a590d007a502f0844cccffa9ff85024cccff"
  6100 data17,1,145,2,29,3,157,4,49,5,133,5,50,6,137,6,51,7,134,7,52,8,138,8,53,9,135,9
  6110 data54,10,139,10,55,11,136,11,13,11,56,12,140,12,57,13,48,14,78,15,206,15,94,16
  6120 data77,17,205,17,82,18,210,18,32,19,42,20,95,21
+ 6200 data"a900850285038590a20120c6ffb04d2090c02090c02090c02090c02090c02090c02094c02061c0a5"
+ 6210 data"9029bfd02f2090c08daac22090c00daac2f0142090c08dabc22090c08dacc22094c020a9c090d820"
+ 6220 data"ccffa202a0001820f0ff186020ccff3860a201a0001820f0ffa91220d2ffa000ccadc2f011c01af0"
+ 6230 data"0db9b3c2c912f00320d2ffc8d0eaa99220d2ffa90d4cd2ff20cfff60a0002090c0f00ac01db0f799"
+ 6240 data"b3c2c8d0f18cadc260204cc2a94da2802055c2b06fa9032011c2a000b1fdc91bd050c8b1fd85fbc8"
+ 6250 data"b1fd85fc2054c18ca9c2a9008da5c2a000ccadc2f048b9b3c2c922f003c8d0f1aca9c2c01bf020ae"
+ 6260 data"a5c2ecadc2f00fbdb3c2eea5c2c912f0ea91fbc8d0e5a92091fbc8c01bd0f720bdc1e602d002e603"
+ 6270 data"a503d008a502c9f5b00218603860aca9c2a200bd46c1f00ac01bf01191fbc8e8d0f1a920c01bf005"
+ 6280 data"91fbc8d0f56020424c4f434b5320465245452e00adabc28da3c2adacc28da4c2a000a200ada3c238"
+ 6290 data"f9b3c148ada4c2f9b8c1900a8da4c2688da3c2e8d0e6688a093099aec2c8c005d0d8a000b9aec2c9"
+ 6300 data"30d007c004f003c8d0f2a90085f5b9aec284f6a4f591fbe6f5a4f6c8c005d0eea4f56010e8640a01"
+ 6310 data"2703000000204cc2a9cda2cb2055c2b047a9022011c2a000a200e01bf02eb1fbc8e8c922d0f4e01b"
+ 6320 data"f022b1fbc8e8c922d0f4e01bf016b1fbc920d004c8e8d0f2c950f00bc953f007c955f003a9ff2ca9"
+ 6330 data"00a00091fdc891fd608da6c2a5028da7c2a5038da8c20ea7c22ea8c2ada6c2c902f011ada7c21865"
+ 6340 data"028da7c2ada8c265038da8c2ada7c21865f985fdada8c265fa85fe60a52f85f7a53085f8608da1c2"
+ 6350 data"8ea2c2a000b1f7c8cda1c2d007b1f7cda2c2f026a002b1f7aac8b1f71865f885f88a65f785f79002"
+ 6360 data"e6f8a5f8c53290d3d006a5f7c53190cb3860a5f718690785f9a5f8690085fa186000000000000000"
+ 6370 data"000000000000"
