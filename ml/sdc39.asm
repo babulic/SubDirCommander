@@ -1990,6 +1990,9 @@ xflush  sty zp1
         ldx #3
         jsr CHKOUT
         bcs xerr
+        lda $9a                 ; refuse to print the file on the screen
+        cmp tdev
+        bne xerr
         lda #<bufstart
         sta zp2
         lda #>bufstart
@@ -2100,6 +2103,8 @@ scrinit lda #C_BLUE
         sta $01
         lda #0
         sta hoff
+        lda #40
+        sta maxcol
         jsr CLRCHN
         lda #$0e
         jsr CHROUT
@@ -2145,6 +2150,8 @@ dfnext  ldy #0
         inc zp2+1
 +       lda #PANELC
         sta xcol
+        lda #40
+        sta maxcol
         lda #C_GRY2
         sta tcol
         jsr putrich
@@ -2273,26 +2280,51 @@ plain   lda #C_LBLU
         ldx #0
         jmp putline
 
-; Screen and colour pointers for row A (row * 40).
-rowptr  sta scr
+; Screen and colour pointers for row A (row * 40). 16-bit, so a row
+; past the window cannot land in zero page or on the CIA.
+rowptr  cmp #25
+        bcc +
+        lda #24
++       tax
+        lda #0
+        sta scr+1
+        txa
         asl
+        rol scr+1
         asl
+        rol scr+1
+        asl
+        rol scr+1               ; row * 8
+        sta scr
+        pha
+        lda scr+1
+        pha
+        lda scr
+        asl
+        rol scr+1
+        asl
+        rol scr+1               ; row * 32
+        sta scr
+        pla
+        tax
+        pla
+        clc
         adc scr
-        ldx #0
-        stx scr+1
-        asl
-        rol scr+1
-        asl
-        rol scr+1
-        asl
-        rol scr+1
+        sta scr
+        txa
+        adc scr+1
+        sta scr+1
+        lda scr
+        clc
+        adc #<SCR
         sta scr
         sta col
         lda scr+1
-        ora #>COLRAM
-        sta col+1
-        eor #(>COLRAM) ^ (>SCR)
+        adc #>SCR
         sta scr+1
+        clc
+        adc #>(COLRAM-SCR)
+        sta col+1
         rts
 
 ; Fill line from X to LISTW with spaces.
@@ -2379,7 +2411,8 @@ putline stx rvs
         rts
 
 ; Text at (scr)+xcol from (zp2) up to the 0; the first rvs characters
-; are reversed.
+; are reversed. Past maxcol the rest is consumed and not stored, so a
+; long line cannot wrap into the next row or the program.
 putrich ldy #0
         lda (zp2),y
         inc zp2
@@ -2393,6 +2426,8 @@ putrich ldy #0
         ora #$80
         dec rvs
 +       ldy xcol
+        cpy maxcol
+        bcs putrich
         sta (scr),y
         lda tcol
         sta (col),y
@@ -2435,7 +2470,13 @@ currow  lda pos
         sbc top
         clc
         adc #ROW0
-        sta row
+        cmp #ROW0
+        bcs +
+        lda #ROW0               ; pos was above the window
++       cmp #ROW0+NROWS
+        bcc +
+        lda #ROW0+NROWS-1       ; keep the message on the list
++       sta row
         rts
 
 ; Message on the cursor row; the text follows the JSR.
@@ -2474,6 +2515,8 @@ msgrow  sta zp2
         lda #0
         sta xcol
         sta rvs
+        lda #LISTW
+        sta maxcol
         lda #C_WHT
         sta tcol
         jmp putrich
@@ -2495,11 +2538,13 @@ chrout2 bit hoff
         sty zp3
         jsr p2s
         ldy xcol
+        cpy maxcol
+        bcs chdrop
         sta (scr),y
         lda #C_WHT
         sta (col),y
         inc xcol
-        ldy zp3
+chdrop  ldy zp3
         rts
 +       jmp CHROUT
 
@@ -2852,6 +2897,7 @@ ismv    .byte ?
 walk    .byte ?
 decbuf  .fill 6
 fldw    .byte ?
+maxcol  .byte ?
 kbuf    .fill 10
 cmdbuf  .fill 48
 statbuf .fill 42
