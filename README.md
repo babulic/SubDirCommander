@@ -69,7 +69,7 @@ blocks come back. Copy on the same drive still uses the drive's own `C0:`.
   starts the new program but keeps the old end-of-program pointer
   (`VARTAB`, `$2D/$2E`), so `SAVE` wrote 22 blocks even for a 2-block
   program, and a program longer than the commander had its variables placed
-  inside its own code. `.38` hands the program to BASIC the way you would
+  inside its own code. `.39` hands the program to BASIC the way you would
   type it: it prints `LOAD"name",8` on the screen, puts RETURN (plus `RUN` or
   `SYS address`) into the keyboard buffer and ends. BASIC then sets
   `VARTAB` itself. Before that it empties the BASIC program (zero link at
@@ -88,7 +88,7 @@ redraw, read-only check, wait for device); 4000-4160 read the drive status;
 key loop. The directory is held in `M$()`/`S()` (up to 257 entries) and
 shown in fixed pages of 22 entries.
 
-Defects found and fixed in `.38`:
+Defects found in `.37` and fixed:
 
 1. CRSR right moved the cursor up (line 5181).
 2. `LOAD` in program mode kept the old `VARTAB` (see above). The `.37` file
@@ -110,7 +110,7 @@ listing.
 
 ## Machine language version
 
-`ml/sdc38.asm` (64tass). Same screen, keys and behaviour; the list is drawn
+`ml/sdc39.asm` (64tass). Same screen, keys and behaviour; the list is drawn
 straight into screen RAM, so moving and paging are instant.
 
 - Code `$0801-$1B1A`, work variables up to `$1C86`.
@@ -132,9 +132,10 @@ straight into screen RAM, so moving and paging are instant.
 tools/build.sh          # petcat, 64tass and c1541 -> dist/
 ```
 
-`basic/SubDirCommand.38.txt` is the petcat listing of the BASIC program,
-`basic/copyhelper.asm` the 138-byte copy routine it POKEs to `$033C`.
-`original/` holds the extracted `.37` and the untouched `fb.d64`.
+`basic/SubDirCommand.39.txt` is the petcat listing of the BASIC program.
+`basic/copyhelper.asm` is the 138-byte copy routine it POKEs to `$033C`,
+`basic/dirread.asm` reads the directory, and `basic/hexpoke.asm` pokes the
+hex DATA. `original/` holds the extracted `.37` and the untouched `fb.d64`.
 
 `test/` drives VICE through its remote monitor: `vice.py` types keys and
 reads the screen, `t*.py` cover the BASIC version, `m*.py` the machine code

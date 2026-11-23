@@ -110,8 +110,8 @@ class Vice:
             time.sleep(0.2)
         return False
 
-    def key(self, k, at=5170, timeout=60):
-        """Send one key once the program sits in its key wait (default BASIC line 5170)."""
+    def key(self, k, at=10, timeout=60):
+        """Send one key once the program sits in its key wait (default BASIC line 10)."""
         if at is not None:
             if not self.wait_line(at, timeout):
                 raise RuntimeError(f"not at line {at}, at {self.line()}")
@@ -230,10 +230,10 @@ def pet(s):
 
 DOWN, UP, RIGHT, LEFT, RET = 0x11, 0x91, 0x1D, 0x9D, 0x0D
 
-NAME38 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.38')
+NAME39 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.39')
 NAME37 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.37')
 
-def start(d8, name=NAME38, d9=None, drive=None, list_line=5170, warp=True):
+def start(d8, name=NAME39, d9=None, drive=None, list_line=10, warp=True):
     v = Vice(d8=d8, d9=d9, warp=warp)
     time.sleep(3)
     v.keys(pet('load"') + name + pet('",8\n'))
@@ -252,7 +252,7 @@ def start(d8, name=NAME38, d9=None, drive=None, list_line=5170, warp=True):
     time.sleep(0.5)
     return v
 
-def labels(path="/tmp/t/sdc38.lbl"):
+def labels(path="/tmp/t/sdc39.lbl"):
     out = {}
     for l in open(path):
         m = re.match(r'(\w+)\s*=\s*\$([0-9a-f]+)', l)
@@ -300,7 +300,7 @@ class MLVice(Vice):
         for k in keys:
             self.mkey(k, timeout)
 
-NAMEML = [0x25, 0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand38')
+NAMEML = [0x25, 0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand39')
 
 def mlstart(d8, d9=None, drive=None, name=NAMEML):
     v = MLVice(d8=d8, d9=d9)

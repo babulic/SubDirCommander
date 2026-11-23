@@ -1,6 +1,6 @@
 ; %SubDirCommand39 - machine language SubDirCommander 2026 for the C64.
 ; Same screen, keys and commands as the BASIC SubDirCommand.39.
-; Build: 64tass --cbm-prg -o sdc38ml.prg sdc38.asm
+; Build: 64tass --cbm-prg -o sdc39ml.prg sdc39.asm
 ;
 ; Memory: code and work variables from $0801. Directory entries live in the
 ; RAM under the BASIC ROM ($A000-$BFFF, 32 bytes each). The free BASIC RAM

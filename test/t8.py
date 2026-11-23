@@ -1,9 +1,9 @@
 import time, sys
 sys.path.insert(0, "/tmp/t")
 from vice import *
-v = start("/tmp/t/fb38w.d64", d9="/tmp/t/big9.d64")
+v = start("/tmp/t/fb39w.d64", d9="/tmp/t/big9.d64")
 for i in range(13): v.key(DOWN)
-v.key(ord('8'), at=5170)
+v.key(ord('8'), at=10)
 v.wait_text("ready.", 60); time.sleep(4)
 v.show("after 8 on joyst")
 b=v.mem(0x2b,0x2e); print("TXTTAB=%04x VARTAB=%04x" % (b[0]+256*b[1], b[2]+256*b[3]))

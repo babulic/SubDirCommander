@@ -1,7 +1,7 @@
 import time, sys
 sys.path.insert(0, "/tmp/t")
 from vice import *
-v = start("/tmp/t/fb38.d64", d9="/tmp/t/big9.d64", drive=ord('9'))
+v = start("/tmp/t/fb39.d64", d9="/tmp/t/big9.d64", drive=ord('9'))
 def hl():
     rv = v.rev_rows(); sc = v.screen()
     rows = [r for r in range(2,24) if rv[r] > 10]
@@ -24,5 +24,5 @@ print("21 down", hl())
 v.key(DOWN); print("22nd down flips", hl(), v.screen()[2][:20])
 v.key(UP); print("up flips back", hl(), v.screen()[2][:20])
 v.show("final")
-v.shot("/tmp/t/s38_big.png")
+v.shot("/tmp/t/s39_big.png")
 v.quit()
