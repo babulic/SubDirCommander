@@ -306,8 +306,19 @@ haslist ldx last
 
 ; -------------------------------------------------------------- ^, validate
 cdup    jsr cmdi
-        .null "cd:_"
-        jmp dosrelist
+        .text "cd:"
+        .byte $5f, 0            ; CD:←  (left arrow, SD2IEC parent)
+        jsr doscmd
+        bcc cdok
+        lda errnum
+        cmp #30                 ; a 1541 has no CD command
+        bne fatal
+        jsr msgi
+        .null "SD2IEC only"
+        jmp main
+cdok    jsr waitdev
+        bcs fatal
+        jmp relist
 
 cvalid  jsr haslist
         lda bfree+1
@@ -382,13 +393,52 @@ restore lda pos
         jmp main
 
 ; --------------------------------------------------------------- 6 delete
-cdelete jsr parsefile
+cdelete lda #0
+        sta ismv
+        jsr countmk
+        bcs delall
+        jmp delone
+delall  jsr msgi
+        .null "Delete marked? y/n"
+        jsr flushk
+        jsr getkey
+        and #$7f
+        cmp #"y"
+        bne nomove
+        lda #0
+        sta walk
+delloop lda last
+        cmp #$ff
+        beq ddone
+        lda walk
+        cmp last
+        bcs ddone
+        jsr getent
+        lda ent+31
+        beq delnext
+        lda walk
+        sta pos
+        jsr parsefile
+        bcs delnext
+        lda ro
+        ora locked
+        bne delnext
+        jsr cmdi
+        .null "s0:"
+        jsr cmdname
+        jsr doscmd
+        bcs fatalj
+delnext inc walk
+        bne delloop
+ddone   jmp relist
+delone  jsr parsefile
         bcs restore
         lda ro
         ora locked
         bne restore
         jsr msgi
         .null "Are you sure? y/n"
+        jsr flushk
         jsr getkey
         and #$7f
         cmp #"y"
@@ -425,7 +475,12 @@ cdelete jsr parsefile
         jmp redraw
 
 ; ----------------------------------------------------------------- 4 copy
-ccopy   jsr parsefile
+ccopy   lda #0
+        sta ismv
+        jsr countmk
+        bcc +
+        jmp fileall
++       jsr parsefile
         bcs restore
         lda ro
         bne restore
@@ -504,7 +559,12 @@ xdev    jsr xcopy
         jmp restore
 
 ; ----------------------------------------------------------------- 9 move
-cmove   jsr parsefile
+cmove   lda #1
+        sta ismv
+        jsr countmk
+        bcc +
+        jmp fileall
++       jsr parsefile
         bcs nomove
         lda ro
         bne nomove
@@ -573,45 +633,29 @@ cview   jsr parsefile
         lda #<s_cr
         ldx #>s_cr
         jsr cmdapp
+        jsr cls
+        lda #2
+        ldx dev
+        ldy #2
+        jsr opfile
+        bcs viewbad
+        ldx #2
+        jsr CHKIN
+        bcs viewbad
         lda dev
         sta savedev
-        lda cmdlen
-        sta savelen
-        lda #0
-        sta viewrow
-        ldx #zpend-ZPVARS-1
--       lda ZPVARS,x
-        sta zsave,x
-        dex
-        bpl -
-        jsr zpbasic
-        jsr $e544
-        jsr $ffe7
-        lda #C_WHT
-        sta COLOR
-        lda #0
-        sta NDX
-        tax
-        tay
-        clc
-        jsr $fff0
-        lda #2
-        ldx savedev
-        ldy #2
-        jsr $ffba
-        lda savelen
-        ldx #<cmdbuf
-        ldy #>cmdbuf
-        jsr $ffbd
-        jsr $ffc0
-        bcs viewbad2
-        ldx #2
-        jsr $ffc6
-        bcs viewbad2
         lda #0
         sta STATUS
+        sta viewrow
+        sta viewcol
 vbyte   jsr CHRIN
-        ldx STATUS
+        sta vch
+        lda STATUS
+        sta vst
+        lda $99
+        cmp savedev
+        bne veof
+        lda vch
         cmp #$0d
         beq vnl
         cmp #$20
@@ -620,61 +664,190 @@ vbyte   jsr CHRIN
         bcc vshow
         cmp #$a0
         bcc vstat
-vshow   jsr CHROUT
-        jmp vstat
-vnl     jsr CHROUT
-        inc viewrow
-        lda viewrow
-        cmp #23
-        bcc vstat
-        jsr vpause
+vshow   jsr vputc
         bcs vdone
-        jsr $e544
+        jmp vstat
+vnl     jsr vnewline
+        bcs vdone
+vstat   lda vst
+        beq vbyte               ; bit 6 is end of file, do not read again
+veof    lda #<s_vend
+        ldx #>s_vend
+        jsr vmsg
+        jsr $ffcc
         lda #0
-        sta viewrow
-vstat   txa
-        and #$bf
-        beq vbyte
+        sta NDX
+        jsr getkey
 vdone   jsr $ffcc
-        jsr vpause
         lda #2
         jsr $ffc3
+        lda #1
+        jsr $ffc3
         jsr $ffcc
-        jmp viewback
-viewbad2
-        jsr $ffe7
 viewback
-        ldx #zpend-ZPVARS-1
--       lda zsave,x
-        sta ZPVARS,x
-        dex
-        bpl -
         jsr drawframe
         jsr drawhdr
         jmp redraw
 viewbad jsr closeall
         jmp fatal
 
-vpause  lda #0
-        sta NDX
+; Put the character in vch. Carry set when the user stops.
+vputc   lda viewcol
+        cmp #40
+        bcc +
+        jsr vnewline
+        bcs vpno
++       lda viewrow
+        jsr rowptr
+        ldy viewcol
+        lda vch
+        jsr p2s
+        sta (scr),y
         lda #C_WHT
-        sta COLOR
-        lda #$0d
-        jsr CHROUT
-        ldx #0
--       lda s_more,x
-        beq +
-        jsr CHROUT
-        inx
-        bne -
-+       jsr getkey
+        sta (col),y
+        inc viewcol
+        clc
+vpno    rts
+
+vnewline
+        lda #0
+        sta viewcol
+        inc viewrow
+        lda viewrow
+        cmp #22
+        bcc vnok
+        lda #<s_more
+        ldx #>s_more
+        jsr vmsg
+        jsr $ffcc               ; keyboard, not the file
+        jsr flushk
+        jsr getkey
         and #$7f
         cmp #"_"
+        beq vnstop
+        lda #0
+        sta STATUS
+        ldx #2
+        jsr $ffc6
+        jsr vclear
+        lda #0
+        sta viewrow
+vnok    clc
+        rts
+vnstop  sec
+        rts
+
+; Reverse prompt on row 23. Text at A/X.
+vmsg    sta zp2
+        stx zp2+1
+        lda #23
+        jsr rowptr
+        ldy #39
+        lda #" "
+-       sta (scr),y
+        dey
+        bpl -
+        ldy #0
+-       lda (zp2),y
         beq +
-        clc
+        jsr p2s
+        ora #$80
+        sta (scr),y
+        lda #C_WHT
+        sta (col),y
+        iny
+        cpy #40
+        bne -
++       rts
+
+vclear  ldx #0
+vcrow   txa
+        pha
+        jsr rowptr
+        ldy #39
+        lda #" "
+-       sta (scr),y
+        dey
+        bpl -
+        pla
+        tax
+        inx
+        cpx #24
+        bne vcrow
         rts
-+       sec
+
+flushk  lda #0
+        sta NDX
+        lda #8
+        jsr delay
+        lda #0
+        sta NDX
         rts
+
+; Carry set when at least one file is marked.
+countmk lda last
+        cmp #$ff
+        beq cmno
+        lda #0
+        sta walk
+cmloop  lda walk
+        cmp last
+        bcs cmno
+        jsr getent
+        lda ent+31
+        bne cmyes
+        inc walk
+        bne cmloop
+cmno    clc
+        rts
+cmyes   sec
+        rts
+
+; Copy or move every marked file. ismv selects the wording and,
+; for a move, scratches the source after a successful copy.
+fileall jsr msgi
+        .null "Target drive:"
+        lda dev
+        jsr numfield
+        lda #14
+        sta incol
+        jsr lineinput
+        bcs nomove
+        jsr parsenum
+        cmp #8
+        bcc nomove
+        cmp #12
+        bcs nomove
+        cmp dev
+        beq nomove              ; same names need another drive
+        sta tdev
+        lda #0
+        sta walk
+faloop  lda walk
+        cmp last
+        bcs fadone
+        jsr getent
+        lda ent+31
+        beq fanext
+        lda walk
+        sta pos
+        jsr parsefile
+        bcs fanext
+        lda ro
+        bne fanext
+        jsr oldtonew
+        jsr xcopy
+        bcs fatalc
+        lda ismv
+        beq fanext
+        jsr cmdi
+        .null "s0:"
+        jsr cmdname
+        jsr doscmd
+        bcs fatalc
+fanext  inc walk
+        bne faloop
+fadone  jmp relist
 
 ; ---------------------------------------------------------------- N format
 cformat jsr msgi
@@ -713,6 +886,7 @@ cformat jsr msgi
         jsr decout
         jsr stri
         .null "? y/n"
+        jsr flushk
         jsr getkey
         and #$7f
         cmp #"y"
@@ -759,6 +933,7 @@ crmdir  jsr parsefile
         bne nomove
         jsr msgi
         .null "Remove dir? y/n"
+        jsr flushk
         jsr getkey
         and #$7f
         cmp #"y"
@@ -898,7 +1073,10 @@ notamp  lda ro
         cmp #$08
         bne +
         jmp handoff
-+       inc ldml
++               inc ldml
+        lda saddr+1             ; >= $A000, including 51200 ($C800):
+        cmp #$a0                ; the file cannot cover this program
+        bcs direct
         lda blocks+1            ; end estimate = start + blocks * 254
         bne slow
         lda #0
@@ -1800,11 +1978,17 @@ xcopy   lda type
         .null "Only prg/seq/usr files !"
 +       lda tdev
         jsr probe
-        bcc +
+        bcc xdrvchk
         jmp devnp
-+       jsr msgi
+xdrvchk lda ismv
+        beq xcopymsg
+        jsr msgi
+        .null "Moving to drive "
+        jmp xdrvnum
+xcopymsg
+        jsr msgi
         .null "Copying to drive "
-        lda tdev
+xdrvnum lda tdev
         ldx #0
         jsr decout
         jsr stri
@@ -2642,7 +2826,8 @@ getkey  jsr GETIN
 
 ; ================================================================ text
 s_title .text "   SubDirCommander 2026    "
-s_more  .null " more: any key,  _ = stop"
+s_more  .null " more: key continues, _ stops"
+s_vend  .null " end of file, press any key"
 s_seldrv
         .null " Select drive:"
 s_press .text " PRESS ANY KEY ...         "
@@ -2771,6 +2956,11 @@ idbuf   .fill 2
 savedev .byte ?
 savelen .byte ?
 viewrow .byte ?
+viewcol .byte ?
+vch     .byte ?
+vst     .byte ?
+ismv    .byte ?
+walk    .byte ?
 decbuf  .fill 6
 kbuf    .fill 10
 cmdbuf  .fill 48
