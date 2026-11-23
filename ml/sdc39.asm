@@ -193,8 +193,8 @@ keytab  .byte $11
         .byte "0"
         .word cformat-1
         .byte "n"
-        .word cformat-1
-        .byte "m"
+        .word cmkdir-1
+        .byte "N"
         .word cmkdir-1
         .byte "r"
         .word crmdir-1
@@ -346,7 +346,7 @@ cstart  jsr parseprg
         jsr getstart
         bcs fatalj
         jsr msgi
-        .null "Start adr.: "
+        .null "Start From: "
         jsr decsa
         jmp main
 fatalj  jmp fatal
@@ -457,9 +457,9 @@ delone  jsr parsefile
         lda #0
         sta ent
         sta ent+1
-        lda #25
+        lda #8
         sta ent+2
-        ldx #24
+        ldx #7
 -       lda s_deleted,x
         sta ent+3,x
         dex
@@ -2148,6 +2148,14 @@ dfnext  ldy #0
         lda #C_GRY2
         sta tcol
         jsr putrich
+        lda xcol
+        cmp #PANELC+12
+        bne dfnext
+        ldy #39
+        lda #$a0
+        sta (scr),y
+        lda tcol
+        sta (col),y
         jmp dfnext
 dfend   rts
 
@@ -2230,23 +2238,28 @@ drawent sta didx
         lda ent
         ldx ent+1
         jsr num2dec
+        jsr fldwidth
         ldx #0
--       lda decbuf,x
+        lda fldw
+        sec
+        sbc declen
+        bcc deccopy
+        beq deccopy
+        tay
+-       lda #" "
         sta line,x
         inx
-        cpx declen
+        dey
         bne -
-        ldy #0
--       cpy ent+2
-        beq +
-        cpx #LISTW
-        beq +
-        lda ent+3,y
+deccopy ldy #0
+-       lda decbuf,y
         sta line,x
         inx
         iny
+        cpy declen
         bne -
-+       jsr padline
+        jsr alignrest
+        jsr padline
         lda didx
         cmp pos
         bne +
@@ -2298,6 +2311,65 @@ padline lda #" "
         inx
         bne -
 +       rts
+
+; Block-count field, same widths as the BASIC directory reader.
+fldwidth
+        ldy #3
+        lda ent+1
+        cmp #>1000
+        bcc fwset
+        bne fw1k
+        lda ent
+        cmp #<1000
+        bcc fwset
+fw1k    ldy #4
+        lda ent+1
+        cmp #>10000
+        bcc fwset
+        bne fw10k
+        lda ent
+        cmp #<10000
+        bcc fwset
+fw10k   ldy #5
+fwset   sty fldw
+        rts
+
+; X is the column after the right-aligned count. A quoted file keeps
+; the quote on column 5: one space when the field is 3 columns, none
+; when it is 4. Text with no quote is appended as stored.
+alignrest
+        ldy #0
+arscan  cpy ent+2
+        beq arraw
+        lda ent+3,y
+        cmp #$22
+        beq arfile
+        cmp #" "
+        beq arnext
+        cmp #$12
+        bne arraw
+arnext  iny
+        bne arscan
+arfile  lda fldw
+        cmp #4
+        bcs arcopy
+        cpx #LISTW
+        bcs ardone
+        lda #" "
+        sta line,x
+        inx
+        jmp arcopy
+arraw   ldy #0
+arcopy  cpy ent+2
+        beq ardone
+        cpx #LISTW
+        bcs ardone
+        lda ent+3,y
+        sta line,x
+        inx
+        iny
+        bne arcopy
+ardone  rts
 
 ; Write line (PETSCII, LISTW wide) to the row at scr in colour A,
 ; X = $80 for reverse.
@@ -2665,7 +2737,7 @@ s_seldrv
 s_press .text " PRESS ANY KEY ...         "
 s_rs    .text "runsys"
 s_deleted
-        .text "                  deleted"
+        .text " deleted"
 s_bfree .null " blocks free."
 s_cr    .null ",r"
 s_cw    .null ",w"
@@ -2678,49 +2750,49 @@ panel
         .byte 1, 12
         .null "NumericKeys:"
         .byte 2, 1
-        .null "1", " ListDirect"
+        .null "1 List Drive"
         .byte 3, 1
-        .null "2", " ValidateDi"
+        .null "2 Validate Dr"
         .byte 4, 1
-        .null "3", " RenameFile"
+        .null "3 Rename File"
         .byte 5, 1
-        .null "4", " CopyFile"
+        .null "4 Copy File/s"
         .byte 6, 1
-        .null "5", " StartAdres"
+        .null "5 Start From"
         .byte 7, 1
-        .null "6", " DeleteFile"
+        .null "6 Del. File/s"
         .byte 8, 1
-        .null "7", " RunOpenDir"
+        .null "7 Run / Open"
         .byte 9, 1
-        .null "8", " LoadOpenDi"
+        .null "8 Load / Open"
         .byte 10, 1
-        .null "9", " MoveFile"
+        .null "9 Move File/s"
         .byte 11, 1
-        .null "0", " FormatDisk"
+        .null "0 Format Disk"
         .byte 12, 12
         .null "SD2IEC Keys:"
         .byte 13, 1
-        .null "^", " Go1LevelUp"
+        .null "^ Go Level Up"
         .byte 14, 1
-        .null "M", " MakeDir"
+        .null "N New Folder"
         .byte 15, 1
-        .null "R", " RemoveDir"
+        .null "R Remove Fold"
         .byte 16, 12
         .null "CRSR Keys:  "
         .byte 17, 3
-        .null "U/D", " LineUpDn"
+        .null "U/D Move CRSR"
         .byte 18, 3
-        .null "L/R", " PageUpDn"
+        .null "L/R Page UpDn"
         .byte 19, 12
         .null "Other Keys: "
         .byte 20, 3
-        .null "Spc", " MarkFile"
+        .null "Spc Mark File"
         .byte 21, 1
-        .null "*", " MarkAll"
-        .byte 22, 6
-        .null "Return", $a0, "RunOp"
+        .null "* Mark All F."
+        .byte 22, 4
+        .null "Ret. Run/Open"
         .byte 23, 1
-        .null "_", " to ExitApp"
+        .null "_ Exit Appl."
         .byte $ff
 
 ; ============================================================ variables
@@ -2787,6 +2859,7 @@ savelen .byte ?
 ismv    .byte ?
 walk    .byte ?
 decbuf  .fill 6
+fldw    .byte ?
 kbuf    .fill 10
 cmdbuf  .fill 48
 statbuf .fill 42
