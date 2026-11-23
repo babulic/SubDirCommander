@@ -191,7 +191,7 @@ keytab  .byte $11
         .byte "9"
         .word cmove-1
         .byte "0"
-        .word cview-1
+        .word cformat-1
         .byte "n"
         .word cformat-1
         .byte "m"
@@ -308,7 +308,7 @@ cdup    jsr cmdi
         lda errnum
         cmp #30                 ; a 1541 has no CD command
         bne fatal
-        jsr msgi
+cdonly  jsr msgi
         .null "SD2IEC only"
         jmp main
 cdok    jsr waitdev
@@ -394,7 +394,7 @@ cdelete lda #0
         bcs delall
         jmp delone
 delall  jsr msgi
-        .null "Delete marked? y/n"
+        .null "Delete marked ? y/n"
         jsr flushk
         jsr getkey
         and #$7f
@@ -432,7 +432,7 @@ delone  jsr parsefile
         ora locked
         bne restore
         jsr msgi
-        .null "Are you sure? y/n"
+        .null "Delete file ? y/n"
         jsr flushk
         jsr getkey
         and #$7f
@@ -610,167 +610,6 @@ mvx     jsr xcopy
         jsr cmdname
         jmp dosrelist
 
-; ----------------------------------------------------------------- 0 view
-cview   jsr parsefile
-        bcs nomove
-        lda ro
-        bne nomove
-        lda type
-        cmp #"r"
-        beq nomove
-        jsr cmdi
-        .null "0:"
-        jsr cmdname
-        lda #","
-        jsr cmdchr
-        lda type
-        jsr cmdchr
-        lda #<s_cr
-        ldx #>s_cr
-        jsr cmdapp
-        jsr cls
-        lda #2
-        ldx dev
-        ldy #2
-        jsr opfile
-        bcs viewbad
-        ldx #2
-        jsr CHKIN
-        bcs viewbad
-        lda dev
-        sta savedev
-        lda #0
-        sta STATUS
-        sta viewrow
-        sta viewcol
-vbyte   jsr CHRIN
-        sta vch
-        lda STATUS
-        sta vst
-        lda $99
-        cmp savedev
-        bne veof
-        lda vch
-        cmp #$0d
-        beq vnl
-        cmp #$20
-        bcc vstat
-        cmp #$80
-        bcc vshow
-        cmp #$a0
-        bcc vstat
-vshow   jsr vputc
-        bcs vdone
-        jmp vstat
-vnl     jsr vnewline
-        bcs vdone
-vstat   lda vst
-        beq vbyte               ; bit 6 is end of file, do not read again
-veof    lda #<s_vend
-        ldx #>s_vend
-        jsr vmsg
-        jsr $ffcc
-        lda #0
-        sta NDX
-        jsr getkey
-vdone   jsr $ffcc
-        lda #2
-        jsr $ffc3
-        lda #1
-        jsr $ffc3
-        jsr $ffcc
-viewback
-        jsr drawframe
-        jsr drawhdr
-        jmp redraw
-viewbad jsr closeall
-        jmp fatal
-
-; Put the character in vch. Carry set when the user stops.
-vputc   lda viewcol
-        cmp #40
-        bcc +
-        jsr vnewline
-        bcs vpno
-+       lda viewrow
-        jsr rowptr
-        ldy viewcol
-        lda vch
-        jsr p2s
-        sta (scr),y
-        lda #C_WHT
-        sta (col),y
-        inc viewcol
-        clc
-vpno    rts
-
-vnewline
-        lda #0
-        sta viewcol
-        inc viewrow
-        lda viewrow
-        cmp #22
-        bcc vnok
-        lda #<s_more
-        ldx #>s_more
-        jsr vmsg
-        jsr $ffcc               ; keyboard, not the file
-        jsr flushk
-        jsr getkey
-        and #$7f
-        cmp #"_"
-        beq vnstop
-        lda #0
-        sta STATUS
-        ldx #2
-        jsr $ffc6
-        jsr vclear
-        lda #0
-        sta viewrow
-vnok    clc
-        rts
-vnstop  sec
-        rts
-
-; Reverse prompt on row 23. Text at A/X.
-vmsg    sta zp2
-        stx zp2+1
-        lda #23
-        jsr rowptr
-        ldy #39
-        lda #" "
--       sta (scr),y
-        dey
-        bpl -
-        ldy #0
--       lda (zp2),y
-        beq +
-        jsr p2s
-        ora #$80
-        sta (scr),y
-        lda #C_WHT
-        sta (col),y
-        iny
-        cpy #40
-        bne -
-+       rts
-
-vclear  ldx #0
-vcrow   txa
-        pha
-        jsr rowptr
-        ldy #39
-        lda #" "
--       sta (scr),y
-        dey
-        bpl -
-        pla
-        tax
-        inx
-        cpx #24
-        bne vcrow
-        rts
-
 flushk  lda #0
         sta NDX
         lda #8
@@ -916,7 +755,15 @@ cmkdir  jsr msgi
         jsr cmdi
         .null "md:"
         jsr cmdnew
-        jmp dosrelist
+        jsr doscmd
+        bcc mkok
+        lda errnum
+        cmp #30                 ; a 1541 has no MD command
+        beq cdonly
+        jmp fatal
+mkok    jsr waitdev
+        bcs fatal
+        jmp relist
 
 crmdir  jsr parsefile
         bcs nomove
@@ -2304,7 +2151,8 @@ dfnext  ldy #0
         jmp dfnext
 dfend   rts
 
-; Row 0 stays the light-blue title. The disk name is on row 1.
+; Row 0 is the gray title, same colour as the help headers. The disk
+; name is on row 1.
 drawrow0
         lda #0
         jsr rowptr
@@ -2313,7 +2161,7 @@ drawrow0
         sta line,x
         dex
         bpl -
-        lda #C_LBLU
+        lda #C_GRY2
         ldx #$80
         jmp putline
 
@@ -2812,8 +2660,6 @@ getkey  jsr GETIN
 
 ; ================================================================ text
 s_title .text "   SubDirCommander 2026    "
-s_more  .null " more: key continues, _ stops"
-s_vend  .null " end of file, press any key"
 s_seldrv
         .null " Select drive:"
 s_press .text " PRESS ANY KEY ...         "
@@ -2850,32 +2696,30 @@ panel
         .byte 10, 1
         .null "9", " MoveFile"
         .byte 11, 1
-        .null "0", " ViewFile"
-        .byte 12, 1
-        .null "N", " FormatDisk"
-        .byte 13, 12
+        .null "0", " FormatDisk"
+        .byte 12, 12
         .null "SD2IEC Keys:"
-        .byte 14, 1
+        .byte 13, 1
         .null "^", " Go1LevelUp"
-        .byte 15, 1
+        .byte 14, 1
         .null "M", " MakeDir"
-        .byte 16, 1
+        .byte 15, 1
         .null "R", " RemoveDir"
-        .byte 17, 12
+        .byte 16, 12
         .null "CRSR Keys:  "
-        .byte 18, 3
+        .byte 17, 3
         .null "U/D", " LineUpDn"
-        .byte 19, 3
+        .byte 18, 3
         .null "L/R", " PageUpDn"
-        .byte 20, 12
+        .byte 19, 12
         .null "Other Keys: "
-        .byte 21, 3
+        .byte 20, 3
         .null "Spc", " MarkFile"
-        .byte 22, 1
+        .byte 21, 1
         .null "*", " MarkAll"
-        .byte 23, 6
+        .byte 22, 6
         .null "Return", $a0, "RunOp"
-        .byte 24, 1
+        .byte 23, 1
         .null "_", " to ExitApp"
         .byte $ff
 
@@ -2939,12 +2783,7 @@ newname .fill 16
 inbuf   .fill 17
 idlen   .byte ?
 idbuf   .fill 2
-savedev .byte ?
 savelen .byte ?
-viewrow .byte ?
-viewcol .byte ?
-vch     .byte ?
-vst     .byte ?
 ismv    .byte ?
 walk    .byte ?
 decbuf  .fill 6

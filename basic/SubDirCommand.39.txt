@@ -1,11 +1,12 @@
  1 b=b:p=p:y=y:m=m:i=i:a$=a$:j$=j$:tp=tp:v=v:c=c:sa=sa:kc=kc:ll=ll:nb=nb:da=da:ifrlthen4488
  2 goto5000
- 10 poke198,0:wait198,1:geta$:ifj$<>""then5000
- 12 onkt%(asc(a$))goto100,110,120,130,5000,2100,2200,2300,2400,2500,2600,2700,2800,2900,2950,2960,2970,2980,140,150,4990
- 14 goto10
- 20 poke781,2:poke782,0:poke783,0:sys65520:fori=tptotp+21:ifi>mthenprintbl$:goto22
+ 3 poke782,0:poke783,0:sys65520:return
+ 4 poke198,0:wait198,1:return
+ 10 gosub4:geta$:ifj$<>""then5000
+ 12 onkt%(asc(a$))goto100,110,120,130,5000,2100,2200,2300,2400,2500,2600,2700,2800,2950,2950,2960,2970,2980,140,150,4990:goto10
+ 20 poke781,2:gosub3:fori=tptotp+21:ifi>mthenprintbl$:goto22
  21 gosub24
- 22 next:poke781,y:poke782,0:poke783,0:sys65520:print:return
+ 22 next:poke781,y:gosub3:print:return
  24 ifi=pthen27
  25 ifmk%(i)>0thenprint"{yel}"m$(i)"{lblu}":return
  26 print"{lblu}"m$(i):return
@@ -34,7 +35,7 @@
  151 mc=0:fori=0tom:ifmk%(i)>=0thenmk%(i)=v:mc=mc+v
  152 next:gosub20:goto10
  160 ifv=porm<0then10
- 161 print"{up}";:i=p:p=v:gosub24:y=p-tp+2:poke781,y:poke782,0:poke783,0:sys65520:i=p:gosub24:goto10
+ 161 print"{up}";:i=p:p=v:gosub24:y=p-tp+2:poke781,y:gosub3:i=p:gosub24:goto10
  2100 ifz<3161thengosub4260:o=-1:goto5000
  2105 goto10
  2200 gosub4270:goto2990
@@ -46,19 +47,18 @@
  2700 sp=-1:gosub4420:iff=2thenru=0:goto4480
  2705 goto10
  2800 gosub4600:goto2990
- 2900 goto2950
  2950 gosub4800:ifothen5000
  2955 goto2990
  2960 c$="cd:_":goto4494
  2970 gosub4850:ifothen5000
  2975 goto2990
  2980 gosub4870:ifothen5000
- 2990 ifj$<>""andcnthenpoke198,0:wait198,1:geta$:j$=""
+ 2990 ifj$<>""andcnthengosub4:geta$:j$=""
  2991 ifcn=0then10
- 2992 gosub3400:poke781,1:poke782,0:poke783,0:sys65520:poke646,14:print"{lblu}{rvon}"i$"{rvof}"
+ 2992 gosub3400:poke781,1:gosub3:poke646,14:print"{lblu}{rvon}"i$"{rvof}"
  2994 gosub20:cn=0:goto10
  3300 ti$="000000"
- 3310 ifti<wthengoto3310
+ 3310 ifti<wthen3310
  3320 return
  3400 poke646,14:print"{clr}{rvon}{gry2}   SubDirCommander 2026    {rvof}"
  3430 printbl$"{rvon}{gry2}NumericKeys:"rl$"{rvon}1{rvof} ListDirect"rl$"{rvon}2{rvof} ValidateDi"
@@ -68,9 +68,8 @@
  3470 printbl$"{rvon}SD2IEC Keys:"rl$"{rvon}^{rvof} Go1LevelUp"rl$"{rvon}M{rvof} MakeDir"rl$"{rvon}R{rvof} RemoveDir"
  3480 printbl$"{rvon}CRSR Keys:  "rl$"{rvon}U/D{rvof} LineUpDn"rl$"{rvon}L/R{rvof} PageUpDn"
  3490 printbl$"{rvon}Other Keys: "rl$"{rvon}Spc{rvof} MarkFile"rl$"{rvon}*{rvof} MarkAll"rl$"{rvon}Return{rvof}{$a0}RunOp"rl$"{rvon}_{rvof} to ExitApp{home}";:return
- 3500 gosub3400:poke781,1:poke782,0:poke783,0:sys65520:printi$
- 3700 ro=0
- 3710 ift$="dir"ore$="d64"ore$="g64"ore$="d81"ore$="t64"thenro=-1
+ 3500 gosub3400:poke781,1:gosub3:printi$
+ 3700 ro=0:ift$="dir"ore$="d64"ore$="g64"ore$="d81"ore$="t64"thenro=-1
  3720 return
  3750 j=0
  3760 gosub4100:if(st and128)=0orj>12thenreturn
@@ -78,7 +77,7 @@
  4000 j$="":input#1,en,er$,tr,se
  4020 ifen<2thenreturn
  4030 j$=left$(str$(en)+", "+er$+","+str$(tr)+","+str$(se)+bo$,ll)+re$
- 4040 ifj$<>""thenj$="{home}{down}{down}{wht}{rvon}"+j$+"{rvon} PRESS ANY KEY ...         {lblu}"
+ 4040 j$="{home}{down}{down}{wht}{rvon}"+j$+"{rvon} PRESS ANY KEY ...         {lblu}"
  4050 return
  4060 j$="":input#4,en,er$,tr,se:goto4020
  4100 open2,dr,15:close2:poke144,peek(144)and191:gosub4110:return
@@ -118,12 +117,11 @@
  4279 open1,dr,15,"r0:"+n$+"="+c$:gosub4000:close1
  4280 ifenthencn=0:printj$:return
  4283 gosub3750:ifstthencn=0:printj$:return
- 4285 s$="":d=len(c$)-len(n$):ifd>0thens$=left$(bl$,d)
- 4290 s$=left$(a$,5)+left$(n$+bl$,16)+right$(a$,6):i=p:goto33
+ 4290 s$=left$(a$,5)+left$(n$+bl$,16)+right$(a$,6):i=p:gosub33:print"{up}";:gosub24:cn=0:return
  4300 ifmc>0then4550
  4301 sp=0:cn=0:gosub4420:ifc$=""thenreturn
  4302 gosub3700:ifroorp$="<"thenreturn
- 4303 poke646,1:print"{up}{wht}"lr$"{up}Delete file ? y/n":poke198,0:wait198,1:getq$
+ 4303 poke646,1:print"{up}{wht}"lr$"{up}Delete file ? y/n":gosub4:getq$
  4304 ifq$<>"y"thenprint"{up}";:i=p:gosub24:return
  4305 open1,dr,15,"s0:"+c$:gosub4000:close1:cn=-1
  4306 ifen>1thencn=0:printj$:return
@@ -139,7 +137,7 @@
  4345 iflen(n$)>16thenn$=left$(n$,16)
  4346 ifn$=""thenn$=c$
  4347 iftd<8ortd>11or(td=drandn$=c$)thenreturn
- 4348 ft=0:iftd<>drthen4360
+ 4348 iftd<>drthen4360
  4349 gosub4100:ifstthenprintj$:return
  4350 poke646,1:print"{up}{wht}"br$"{up}Copying ..."
  4351 open1,dr,15,"c0:"+n$+"="+c$:gosub4000:close1
@@ -148,7 +146,6 @@
  4354 ifm>=mathenreturn
  4355 z=z-val(a$):m=m+1:iflen(m$(m))<>llthenm$(m)=mid$(bl$,1)
  4356 i=m:s$=mid$(str$(z),2)+bf$:gosub33:mk%(m)=-1:x=mk%(p)
- 4357 s$="":d=len(c$)-len(n$):ifd>0thens$=left$(bl$,d)
  4358 s$=left$(a$,5)+left$(n$+bl$,16)+right$(a$,6):i=m-1:mk%(i)=(x<0):goto33
  4360 ift$<>"prg"andt$<>"seq"andt$<>"usr"thenj$="{rvon} Only prg/seq/usr files !  "+re$:goto4378
  4361 x=dr:dr=td:gosub4100:dr=x:ifstthencn=0:printj$:return
@@ -179,15 +176,14 @@
  4476 iflen(c$)andright$(c$,1)=" "thenc$=left$(c$,len(c$)-1):goto4476
  4477 return
  4480 gosub4100:ifstthenprintj$:goto10
- 4482 ifd$="&"andt$="usr"thengoto4494
+ 4482 ifd$="&"andt$="usr"then4494
  4483 gosub3700:ifrothenc$="cd:"+c$:goto4494
  4484 gosub4200:ifs=0then10
- 4486 ifs=2049or(s<40960ands+val(a$)*254>2049)then4491
+ 4486 ifs=2049or(s<40960ands+val(a$)*254>2049)then4500
  4487 rl=-1:poke646,1:print"{up}{wht}";left$("Loading "+str$(s)+" ($"+h$+")"+bl$,ll):loadc$,dr,1
  4488 rl=0
- 4489 ifruthenru=0:ifs>0thensyss:poke646,1:print"{up}{wht}";left$("Ran OK, press any key"+bl$,ll):poke198,0:wait198,1
+ 4489 ifruthenru=0:ifs>0thensyss:poke646,1:print"{up}{wht}";left$("Ran OK, press any key"+bl$,ll):gosub4
  4490 cn=-1:goto2990
- 4491 goto4500
  4494 o=-1:rd=0:open1,dr,15,c$
  4495 print"{up}"bl$re$"{up}{gry2}Waiting for device ..."
  4496 gosub3750:close1:ifstthenprintj$:goto10
@@ -198,7 +194,7 @@
  4515 poke650,0:poke631,13:kb=1:ifru=0then4525
  4520 forx=1tolen(k$):poke631+x,asc(mid$(k$,x,1)):next:kb=x:poke631+kb,13:kb=kb+1
  4525 x=peek(43)+256*peek(44):pokex,0:pokex+1,0:poke198,kb:end
- 4550 cn=-1:poke646,1:print"{up}{wht}"lr$"{up}Delete "mc" files ? y/n":poke198,0:wait198,1:getq$
+ 4550 cn=-1:poke646,1:print"{up}{wht}"lr$"{up}Delete "mc" files ? y/n":gosub4:getq$
  4552 ifq$<>"y"thenprint"{up}";:i=p:gosub24:cn=0:return
  4554 gosub4100:ifstthenprintj$:return
  4556 pp=p:forxi=0tom:ifmk%(xi)<1then4560
@@ -227,7 +223,7 @@
  4645 p=pp:cn=-1:return
  4800 cn=-1:n$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}Format name:";n$:ifn$=""thenreturn
  4802 x$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}ID (Return=quick):";x$
- 4805 poke646,1:print"{up}{wht}"br$"{up}Format drive"dr"? y/n":poke198,0:wait198,1:getq$:ifq$<>"y"thenreturn
+ 4805 poke646,1:print"{up}{wht}"br$"{up}Format drive"dr"? y/n":gosub4:getq$:ifq$<>"y"thenreturn
  4810 gosub4100:ifstthenprintj$:return
  4812 ifx$<>""thenn$=n$+","+left$(x$,2)
  4815 poke646,1:print"{up}{wht}"br$"{up}Formatting ...":open1,dr,15,"n0:"+n$:gosub4000:close1:ifenthencn=0:printj$:return
@@ -237,7 +233,7 @@
  4860 open1,dr,15,"md:"+n$:gosub4000:close1:ifenthencn=0:printj$:return
  4865 o=-1:return
  4870 sp=0:cn=0:gosub4420:ifc$=""ort$<>"dir"thenreturn
- 4875 poke646,1:print"{up}{wht}"lr$"{up}Remove dir? y/n":poke198,0:wait198,1:getq$
+ 4875 poke646,1:print"{up}{wht}"lr$"{up}Remove dir? y/n":gosub4:getq$
  4880 ifq$<>"y"thenprint"{up}";:i=p:gosub24:return
  4885 gosub4100:ifstthenprintj$:return
  4890 open1,dr,15,"rd:"+c$:gosub4000:close1:ifenthencn=0:printj$:return
@@ -258,21 +254,23 @@
  5032 next
  5160 ifrdandj$=""thengosub3500
  5162 ifrdthen10
- 5165 rd=-1:ifm>=0andj$=""thenpoke781,y:poke782,0:poke783,0:sys65520:print
+ 5165 rd=-1:ifm>=0andj$=""thenpoke781,y:gosub3:print
  5166 goto10
- 5900 ma=500:dimm$(ma),mk%(ma),kt%(255):r=-1:re$=chr$(13):ap$=chr$(34)
+ 5900 sk=0:ma=500:dimm$(ma),mk%(ma),kt%(255):r=-1:re$=chr$(13):ap$=chr$(34)
  5910 ll=27:bo$="                                       ":bl$=left$(bo$,ll)
  5920 bf$=" blocks free.":br$=bo$+re$:lr$=bl$+re$:rl$=re$+bl$
- 5930 ifpeek(51200)+peek(51201)=227thenrestore5990:goto5934
- 5931 restore:forcv=0to146:readb:poke51200+cv,b:next
- 5934 ifpeek(828)+peek(829)=169thenrestore6028:goto5936
- 5935 poke822,60:poke823,3:forcv=1to3:readh$:sys51200:next
- 5936 ifpeek(49152)+peek(49153)=169thenrestore6300:goto5938
- 5937 poke822,0:poke823,192:forcv=1to28:readh$:sys51200:next
- 5938 forcv=1to33:readkc,v:kt%(kc)=v:next:return
- 5940 restore5990:x=828:forcv=1to3:readh$:gosub5950:next:return
+ 5925 x=50432:h$="a6fbf006200bc5cad0fa60a000b141c92cf00bc93af004c900d0072054c5a001d002a000b141c922f00fb141f01bc92cf017c93af013c8d0f1c8b141f00bc922f003c8d0f5c84c2ac59818654185419002e64260a0":gosub5950
+ 5926 h$="00b141d00cc8b141c81141f0f1a005d002a001b141c983f021c98ff018b141f019c93af015c922d009c8b141f00cc922d0f7c8d0e8c8b141d0fb9818654185419002e642a000b141c983f0b2c900f0afc93af0ab60":gosub5950
+ 5930 restore:ifpeek(51200)+peek(51201)=227thensk=sk+147:goto5934
+ 5932 forcv=0to146:readb:poke51200+cv,b:next
+ 5934 ifpeek(828)+peek(829)=169thensk=sk+3:goto5936
+ 5935 gosub5942:poke822,60:poke823,3:forcv=1to3:readh$:sys51200:next
+ 5936 ifpeek(49152)+peek(49153)=169thensk=sk+28:goto5938
+ 5937 gosub5942:poke822,0:poke823,192:forcv=1to28:readh$:sys51200:next
+ 5938 gosub5942:forcv=1to33:readkc,v:kt%(kc)=v:next:return
+ 5940 sk=147:restore:gosub5942:x=828:forcv=1to3:readh$:gosub5950:next:return
+ 5942 poke251,sk:sk=0:sys50432:return
  5950 forhd=1tolen(h$)step2:ha=asc(mid$(h$,hd))-48:hb=asc(mid$(h$,hd+1))-48:pokex,16*(ha+7*(ha>9))+hb+7*(hb>9):x=x+1:next:return
-5960 rem hex decoder, poked to 51200
 5962 data173,54,3,133,2,173,55,3,133,3,32,76,200,160,0,196
 5964 data253,176,36,177,251,32,66,200,10,10,10,10,133,254,200,177
 5966 data251,32,66,200,5,254,132,255,160,0,145,2,230,2,208,2
@@ -283,11 +281,9 @@
 5976 data197,48,144,224,208,6,165,251,197,47,144,216,169,0,133,253
 5978 data96,160,2,177,251,133,253,200,177,251,170,200,177,251,134,251
 5980 data133,252,96
-5990 rem copy helper, poked to 828. three hex strings
 6000 data"a900850220ccffa0008490a20220c6ffb071a00084fba9a085fc20cfff91fba590d012c8d0f420e1fff058e6fca5"
 6010 data"fcc9c0d0e7f00d29bfd04aa9408502c8d002e6fc84fb20ccffa9008590a20320c9ffb031a00084fda9a085fea5fe"
 6020 data"c5fcd004c4fbf014a9368501b1fda237860120d2ffc8d0e6e6fed0e2a590d007a502f0844cccffa9ff85024cccff"
-6028 rem directory reader, poked to 49152
 6030 data"a90085028503859020b0c3a20120c6ffb06720d2c020d2c020d2c020d2c020d2c020d2c020d6c020"
 6032 data"8cc0a59029bfd04920d2c08d33c420d2c00d33c4f01420d2c08d34c420d2c08d35c420d6c020ebc0"
 6034 data"90d8a008a590d00620cfff88d0f620ccffa9008590a5028d3403a5038d3503a202a0001820f0ff18"
@@ -316,7 +312,6 @@
 6080 data"a5fbc531a5fce5329035a5fb85338535a5fc85348536a000a91b91fdc8a5fb91fdc8a5fc91fda01a"
 6082 data"a92091fb8810fbe602d002e603a503d006a502c9f590a3a900850285036000000000000000000000"
 6084 data"0000000000000000"
-6300 rem key table: petscii code, command number
 6400 data17,1,145,2,29,3,157,4,49,5,133,5,50,6,137,6,51,7,134,7,52,8,138,8,53,9,135,9
 6410 data54,10,139,10,55,11,136,11,13,11,56,12,140,12,57,13,48,14,78,15,206,15,94,16
 6420 data77,17,205,17,82,18,210,18,32,19,42,20,95,21
