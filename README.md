@@ -7,12 +7,11 @@ screen and keys:
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.38.prg` | BASIC V2 (from `SubDirCommand.37`) | 28 blocks |
-| `dist/%SubDirCommand38.prg` | 6502 machine code, `SYS2061` stub | 20 blocks |
-| `dist/fb.d64` | your `fb.d64`, `.37` replaced by `.38`, ML version added | 1 block free |
+| `dist/SubDirCommand.39.prg` | BASIC V2 | 51 blocks |
+| `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
+| `dist/fb.d64` | 1541 disk with both programs | |
 
-`.38` sits in the directory slot `.37` had. `%SubDirCommand38` is the last
-entry. `%` is an ordinary character in a 1541 file name.
+`%` is an ordinary character in a 1541 file name.
 
 ## Run it
 
@@ -25,7 +24,7 @@ x64sc -8 dist/fb.d64
 Then on the C64 (the names have capital S, D and C, so match them with `?`):
 
 ```text
-LOAD"?UB?IR?OMMAND.38",8
+LOAD"?UB?IR?OMMAND.39",8
 RUN
 ```
 

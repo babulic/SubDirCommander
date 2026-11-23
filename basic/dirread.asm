@@ -1,6 +1,9 @@
 ; Read the open directory in logical file 1 into BASIC arrays M$ and MK%.
-; SYS 49152. Every M$() string is already 27 characters long.
-; $02/$03 = number of lines stored. Carry set when the read fails.
+; SYS 49152 enters read. alloc gives every M$() slot a 27-byte body, once.
+; $02/$03 = number of lines stored, including the blocks-free line.
+; A file line is 27 characters: 4-column block count, quote, 16-character
+; name, quote, space, 3-character type, and "<" or a space. The quote is
+; always at column 5, so BASIC can load any length of name.
 ; MK%() is 0 for a PRG, SEQ or USR file and -1 for anything else.
 
 CHKIN   = $ffc6
@@ -13,8 +16,6 @@ ptr     = $fb
 el      = $fd
 scan    = $f7
 arr     = $f9
-dst     = $f5
-tmp     = $f6
 maxl    = 27
 
         * = $c000
@@ -23,6 +24,7 @@ read    lda #0
         sta count
         sta count+1
         sta status
+        jsr alloc
         ldx #1
         jsr CHKIN
         bcs stop
@@ -41,7 +43,7 @@ next    lda status
         sta link
         jsr getb
         ora link
-        beq ok                  ; no further line
+        beq ok                  ; 00 00 after the blocks-free line
         jsr getb
         sta blocks
         jsr getb
@@ -49,7 +51,19 @@ next    lda status
         jsr getline
         jsr store
         bcc next
-ok      jsr CLRCHN
+ok      ldy #8                  ; finish the drive's last bytes
+-       lda status
+        bne +
+        jsr CHRIN
+        dey
+        bne -
++       jsr CLRCHN
+        lda #0
+        sta status
+        lda count
+        sta $0334
+        lda count+1
+        sta $0335
         ldx #2
         ldy #0
         clc
@@ -57,10 +71,18 @@ ok      jsr CLRCHN
         clc
         rts
 stop    jsr CLRCHN
+        lda #0
+        sta status
+        lda count
+        sta $0334
+        lda count+1
+        sta $0335
         sec
         rts
 
 showhead
+        lda #14                 ; light blue, same as the title
+        sta $0286
         ldx #1
         ldy #0
         clc
@@ -68,20 +90,31 @@ showhead
         lda #$12
         jsr $ffd2
         ldy #0
+        ldx #0
 sh      cpy buflen
         beq shx
-        cpy #26
+        cpx #27
         beq shx
         lda buf,y
         cmp #$12
         beq shn
+        sta hdrbuf,x
+        inx
         jsr $ffd2
 shn     iny
         bne sh
-shx     lda #$92
+shx     lda #$20
+-       cpx #27
+        beq +
+        sta hdrbuf,x
+        inx
+        bne -
++       lda #$92
         jsr $ffd2
         lda #$0d
         jmp $ffd2
+
+hdrbuf  = $c800
 
 getb    jsr CHRIN
         rts
@@ -89,7 +122,7 @@ getb    jsr CHRIN
 getline ldy #0
 gl      jsr getb
         beq gld
-        cpy #29
+        cpy #40
         bcs gl
         sta buf,y
         iny
@@ -97,6 +130,7 @@ gl      jsr getb
 gld     sty buflen
         rts
 
+; Write one directory line into M$(count) and bump the count.
 store   jsr find
         lda #$4d
         ldx #$80
@@ -114,37 +148,10 @@ store   jsr find
         iny
         lda (el),y
         sta ptr+1
-        jsr putnum              ; Y = characters used
+        jsr putnum
         sty used
-        lda #0
-        sta src
-        ldy #0
-qscan   cpy buflen
-        beq putfree
-        lda buf,y
-        cmp #$22
-        beq files
-        iny
-        bne qscan
-files   ldy used
-copy    cpy #maxl
-        beq typed
-        ldx src
-        cpx buflen
-        beq pad
-        lda buf,x
-        inc src
-        cmp #$12
-        beq copy
-        sta (ptr),y
-        iny
-        bne copy
-pad     lda #' '
-        sta (ptr),y
-        iny
-        cpy #maxl
-        bne pad
-typed   jsr markof
+        jsr compose
+        jsr markof
 skip    inc count
         bne +
         inc count+1
@@ -158,27 +165,122 @@ skip    inc count
 full    sec
         rts
 
-putfree ldy used
+; File line, or blocks free when the raw text has no quote.
+compose ldy #0
+cq      cpy buflen
+        bne +
+        jmp free
++       lda buf,y
+        cmp #$22
+        beq openq
+        iny
+        bne cq
+openq   iny
+        ldx #0
+nm      cpy buflen
+        beq namedone
+        lda buf,y
+        cmp #$22
+        beq namedone
+        cmp #$12
+        beq nn
+        cpx #16
+        bcs nn
+        sta nbuf,x
+        inx
+nn      iny
+        bne nm
+namedone
+        stx nlen
+        cpy buflen
+        beq notype
+        iny                     ; step past the closing quote
+sp      cpy buflen
+        beq notype
+        lda buf,y
+        cmp #' '
+        bne gotty
+        iny
+        bne sp
+gotty   ldx #0
+tc      cpx #3
+        beq tdone
+        cpy buflen
+        beq tdone
+        lda buf,y
+        sta tbuf,x
+        iny
+        inx
+        bne tc
+tdone   lda #' '
+        cpy buflen
+        beq locked
+        lda buf,y
+        cmp #'<'
+        beq locked
+        lda #' '
+locked  sta lockch
+        ldy used
+        lda #$22
+        sta (ptr),y
+        iny
+        ldx #0
+wn      cpx #16
+        beq wq
+        lda #' '
+        cpx nlen
+        bcs +
+        lda nbuf,x
++       sta (ptr),y
+        iny
+        inx
+        bne wn
+wq      lda #$22
+        sta (ptr),y
+        iny
+        lda #' '
+        sta (ptr),y
+        iny
+        ldx #0
+wt      cpx #3
+        beq wl
+        lda tbuf,x
+        sta (ptr),y
+        iny
+        inx
+        bne wt
+wl      lda lockch
+        sta (ptr),y
+        rts
+
+notype  lda #' '
+        sta tbuf
+        sta tbuf+1
+        sta tbuf+2
+        sta lockch
+        jmp locked
+
+free    ldy used
         ldx #0
 pf      lda ftxt,x
-        beq pad2
+        beq frdone
         cpy #maxl
-        beq +
+        beq frdone
         sta (ptr),y
         iny
         inx
         bne pf
-pad2    lda #' '
-        cpy #maxl
+frdone  lda #' '
+-       cpy #maxl
         beq +
         sta (ptr),y
         iny
-        bne pad2
+        bne -
 +       rts
 
 ftxt    .byte $20,$42,$4c,$4f,$43,$4b,$53,$20,$46,$52,$45,$45,$2e,0
 
-; Decimal number and a trailing space. Returns the length in X.
+; Right-align the block count in four columns (five when it needs them).
 putnum  lda blocks
         sta num
         lda blocks+1
@@ -204,26 +306,50 @@ pdone   pla
         iny
         cpy #5
         bne pd
-        ldy #0
-sk      lda digs,y
+        ldy #1
+        lda digs
         cmp #'0'
-        bne wr
+        beq +
+        ldy #0
++       sty first
+        lda #5
+        sec
+        sbc first
+        sta field
+        ldy first
+sk0     lda digs,y
+        cmp #'0'
+        bne sig
         cpy #4
-        beq wr
+        beq sig
         iny
-        bne sk
-wr      lda #0
-        sta dst
-wdig    lda digs,y
-        sty tmp
-        ldy dst
+        bne sk0
+sig     sty start
+        lda #5
+        sec
+        sbc start
+        sta ndig
+        lda field
+        sec
+        sbc ndig
+        bcs +
+        lda #0
++       sta pad
+        ldy #0
+pspc    lda pad
+        beq wdig
+        lda #' '
         sta (ptr),y
-        inc dst
-        ldy tmp
         iny
-        cpy #5
-        bne wdig
-        ldy dst
+        dec pad
+        bne pspc
+wdig    ldx start
+wd      lda digs,x
+        sta (ptr),y
+        iny
+        inx
+        cpx #5
+        bne wd
         rts
 
 tlo     .byte <10000, <1000, <100, <10, <1
@@ -261,7 +387,7 @@ qs      cpx #maxl
         iny
         inx
         bne qs
-qt              cmp #$50
+qt      cmp #$50
         beq mzero
         cmp #$53
         beq mzero
@@ -352,15 +478,88 @@ hit     lda scan
         clc
         rts
 
+; Give every M$() slot its own 27-byte body, once.
+alloc   jsr find
+        lda #$4d
+        ldx #$80
+        jsr named
+        bcs aldone
+        ldy #0
+        lda (arr),y
+        cmp #maxl
+        beq aldone
+        lda #0
+        sta count
+        sta count+1
+alloop  jsr find
+        lda #$4d
+        ldx #$80
+        jsr named
+        bcs aldone
+        lda #3
+        jsr element
+        lda $33
+        sec
+        sbc #maxl
+        sta ptr
+        lda $34
+        sbc #0
+        sta ptr+1
+        lda ptr
+        cmp $31
+        lda ptr+1
+        sbc $32
+        bcc aldone
+        lda ptr
+        sta $33
+        sta $35
+        lda ptr+1
+        sta $34
+        sta $36
+        ldy #0
+        lda #maxl
+        sta (el),y
+        iny
+        lda ptr
+        sta (el),y
+        iny
+        lda ptr+1
+        sta (el),y
+        ldy #maxl-1
+        lda #' '
+-       sta (ptr),y
+        dey
+        bpl -
+        inc count
+        bne +
+        inc count+1
++       lda count+1
+        bne aldone
+        lda count
+        cmp #<501
+        bcc alloop
+aldone  lda #0
+        sta count
+        sta count+1
+        rts
+
 want    .byte 0
         .byte 0
 num     .word 0
-src     .byte 0
-width   .byte 0
-acc     .word 0
 used    .byte 0
 link    .byte 0
 blocks  .word 0
 buflen  .byte 0
+first   .byte 0
+field   .byte 0
+start   .byte 0
+ndig    .byte 0
+pad     .byte 0
+nlen    .byte 0
+lockch  .byte 0
+width   .byte 0
+acc     .word 0
 digs    .fill 5
-buf     .fill 29
+nbuf    .fill 16
+tbuf    .fill 3
+buf     .fill 40

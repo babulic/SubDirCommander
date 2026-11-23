@@ -8,7 +8,7 @@
  22 next:poke781,y:poke782,0:poke783,0:sys65520:print:return
  24 ifi=pthen27
  25 ifmk%(i)>0thenprint"{yel}"m$(i)"{lblu}":return
- 26 printm$(i):return
+ 26 print"{lblu}"m$(i):return
  27 ifmk%(i)>0thenprint"{rvon}{yel}"m$(i)"{lblu}":return
  28 print"{rvon}{cyn}"m$(i)"{lblu}":return
  30 ifpeek(51)+256*peek(52)-peek(49)-256*peek(50)<300thenx=fre(0)
@@ -53,13 +53,12 @@
  2970 gosub4850:ifothen5000
  2975 goto2990
  2980 gosub4870:ifothen5000
- 2990 ifcnthen5160
+ 2990 ifcntheno=-1:goto5000
  2995 goto10
  3300 ti$="000000"
  3310 ifti<wthengoto3310
  3320 return
- 3400 print"{clr}{gry2}";:ifos$<>""thenprint"{rvon}"os$:goto3430
- 3410 print"{rvon}   SubDirCommander 2026    "
+ 3400 print"{clr}{lblu}{rvon}   SubDirCommander 2026    "
  3430 printbl$"{rvon}{gry2}NumericKeys:"rl$"{rvon}1{rvof} ListDirect"rl$"{rvon}2{rvof} ValidateDi"
  3440 printbl$"{rvon}3{rvof} RenameFile"rl$"{rvon}4{rvof} CopyFile"rl$"{rvon}5{rvof} StartAdres"
  3450 printbl$"{rvon}6{rvof} DeleteFile"rl$"{rvon}7{rvof} RunOpenDir"rl$"{rvon}8{rvof} LoadOpenDi"
@@ -80,7 +79,7 @@
  4040 ifj$<>""thenj$="{home}{down}{down}{wht}{rvon}"+j$+"{rvon} PRESS ANY KEY ...         {lblu}"
  4050 return
  4060 j$="":input#4,en,er$,tr,se:goto4020
- 4100 open2,dr,2:close2:gosub4110:return
+ 4100 open2,dr,15:close2:poke144,peek(144)and191:gosub4110:return
  4110 j$="":ifst and128thenj$="{rvon} Device is not present !   "+re$
  4120 ifst and64thenj$=j$+"{rvon} End of file !             "+re$
  4130 ifst and16thenj$=j$+"{rvon} Verify/read mismatch !    "+re$
@@ -100,7 +99,7 @@
  4254 input#1,e1,os$,e2,e3:os$=left$(os$+bl$,ll)
  4255 if(st and146)thengosub4110:printj$:close1:return
  4256 l$=left$(os$,3):ifl$<>"cbm"andl$<>"cop"andl$<>"jif"then4258
- 4257 print"Initialize ...":print#1,"i0":ifstthengosub4110:printj$
+ 4257 print"{home}{down}{down}Initialize ...":print#1,"i0":ifstthengosub4110:printj$
  4258 close1:gosub3750:ifstthenprintj$
  4259 return
  4260 gosub4100:ifstthenprintj$:return
@@ -152,7 +151,7 @@
  4360 ift$<>"prg"andt$<>"seq"andt$<>"usr"thenj$="{rvon} Only prg/seq/usr files !  "+re$:goto4378
  4361 x=dr:dr=td:gosub4100:dr=x:ifstthencn=0:printj$:return
  4362 print"{up}"br$"{up}Copying to drive"td"...{lblu}"
- 4364 ifpeek(828)<>169orpeek(965)<>255thenrestore:x=828:forcv=1to3:readh$:forhd=1tolen(h$)step2:ha=asc(mid$(h$,hd))-48:hb=asc(mid$(h$,hd+1))-48:pokex,16*(ha+7*(ha>9))+hb+7*(hb>9):x=x+1:next:next
+ 4364 ifpeek(828)<>169orpeek(965)<>255thengosub5940
  4365 f$=","+left$(t$,1):open1,dr,15:open2,dr,2,"0:"+c$+f$+",r":gosub4000:ifenthen4376
  4366 open4,td,15:open3,td,3,"0:"+n$+f$+",w":gosub4060:ifenthenclose3:close4:goto4376
  4367 sys828:x=peek(2):close3:gosub4060
@@ -162,17 +161,20 @@
  4371 return
  4376 close2:close1:cn=0:printj$:return
  4378 gosub4150:cn=0:printj$:return
- 4420 a$=m$(p):c$="":d$="":e$="":t$="":ifmid$(a$,5,1)<>ap$thenreturn
- 4421 l=len(a$):f=1:c=5:d$=mid$(a$,6,1)
- 4422 p$=right$(a$,1):t$=left$(right$(a$,4),3):ifnotspthen4450
- 4423 ifnot(d$="&"ort$="dir")and(t$<>"prg"orleft$(a$,1)="0")thenreturn
- 4430 ifp=mthenreturn
- 4440 iff=2thenc$=mid$(a$,6,c-6):goto4470
- 4450 c=c+1:ifc>lthenreturn
- 4455 ifmid$(a$,c,1)=ap$thenf=2
- 4460 goto4440
+ 4420 a$=m$(p):c$="":d$="":e$="":t$="":p$="":f=0:ifmid$(a$,5,1)<>ap$thenreturn
+ 4421 l=len(a$):c=6:d$=mid$(a$,6,1)
+ 4422 ifc>lthenreturn
+ 4424 ifmid$(a$,c,1)<>ap$thenc=c+1:goto4422
+ 4426 c$=mid$(a$,6,c-6):gosub4476:x=c+1
+ 4427 ifx<=landmid$(a$,x,1)=" "thenx=x+1:goto4427
+ 4428 t$=left$(mid$(a$,x)+bl$,3):ifx+3<=lthenifmid$(a$,x+3,1)="<"thenp$="<"
+ 4429 ifnotspthenf=2:goto4470
+ 4432 ifnot(d$="&"ort$="dir")and(t$<>"prg"orval(a$)=0)thenc$="":return
+ 4436 f=2
  4470 iflen(c$)>4thene$=right$(c$,4):ifleft$(e$,1)="."thene$=right$(e$,3)
  4475 return
+ 4476 iflen(c$)andright$(c$,1)=" "thenc$=left$(c$,len(c$)-1):goto4476
+ 4477 return
  4480 gosub4100:ifstthenprintj$:goto10
  4482 ifd$="&"andt$="usr"thengoto4494
  4483 gosub3700:ifrothenc$="cd:"+c$:goto4494
@@ -256,8 +258,8 @@
  5009 ifdr<8ordr>11thendr=8:print"{up}";:goto5005
  5011 rd=0:o=0:m=-1:p=0:tp=0:y=2:mc=0:j$="":os$="":ifnotrthengosub5900
  5016 gosub3400:gosub4250:ifstthen5160
- 5020 poke781,0:poke782,0:poke783,0:sys65520:print"{rvon}"os$:open1,dr,0,"$0":poke650,128
- 5022 sys49152:close1:m=peek(2)+256*peek(3)-1
+ 5020 poke646,14:open1,dr,0,"$0":poke650,128
+ 5022 sys49152:m=peek(820)+256*peek(821)-1:close1:i$="":forcv=0to26:i$=i$+chr$(peek(51200+cv)):next
  5024 ifpeek(144)and191thengosub4110
  5026 ifm<0then5160
  5028 z=val(m$(m)):fori=0to21:ifi>mthenprintbl$:goto5032
@@ -269,36 +271,57 @@
  5166 goto10
  5900 ma=500:dimm$(ma),mk%(ma),kt%(255):r=-1:re$=chr$(13):ap$=chr$(34):ci=65487:r7=780
  5910 ll=27:bo$="                                       ":bl$=left$(bo$,ll)
- 5912 fori=0toma:m$(i)=mid$(bl$,1):next
  5920 bf$=" blocks free.":br$=bo$+re$:lr$=bl$+re$:rl$=re$+bl$
- 5930 restore:x=828:forcv=1to3:readh$:gosub5950:next
- 5932 x=49152:forcv=1to18:readh$:gosub5950:next
- 5934 fori=1to33:readx,v:kt%(x)=v:next:return
+ 5930 restore:forcv=0to146:readb:poke51200+cv,b:next
+ 5932 poke822,60:poke823,3:forcv=1to3:readh$:sys51200:next
+ 5936 poke822,0:poke823,192:forcv=1to27:readh$:sys51200:next
+ 5938 forcv=1to33:readkc,v:kt%(kc)=v:next:return
+ 5940 restore:forcv=0to146:readb:next:x=828:forcv=1to3:readh$:gosub5950:next:return
  5950 forhd=1tolen(h$)step2:ha=asc(mid$(h$,hd))-48:hb=asc(mid$(h$,hd+1))-48:pokex,16*(ha+7*(ha>9))+hb+7*(hb>9):x=x+1:next:return
- 5990 rem copy helper, poked to 828. three hex strings
- 6000 data"a900850220ccffa0008490a20220c6ffb071a00084fba9a085fc20cfff91fba590d012c8d0f420e1fff058e6fca5"
- 6010 data"fcc9c0d0e7f00d29bfd04aa9408502c8d002e6fc84fb20ccffa9008590a20320c9ffb031a00084fda9a085fea5fe"
- 6020 data"c5fcd004c4fbf014a9368501b1fda237860120d2ffc8d0e6e6fed0e2a590d007a502f0844cccffa9ff85024cccff"
- 6025 rem directory reader, poked to 49152. hex, same as 6000
- 6030 data"a900850285038590a20120c6ffb04d2090c02090c02090c02090c02090c02090c02094c02061c0a5"
- 6040 data"9029bfd02f2090c08daac22090c00daac2f0142090c08dabc22090c08dacc22094c020a9c090d820"
- 6050 data"ccffa202a0001820f0ff186020ccff3860a201a0001820f0ffa91220d2ffa000ccadc2f011c01af0"
- 6060 data"0db9b3c2c912f00320d2ffc8d0eaa99220d2ffa90d4cd2ff20cfff60a0002090c0f00ac01db0f799"
- 6070 data"b3c2c8d0f18cadc260204cc2a94da2802055c2b06fa9032011c2a000b1fdc91bd050c8b1fd85fbc8"
- 6080 data"b1fd85fc2054c18ca9c2a9008da5c2a000ccadc2f048b9b3c2c922f003c8d0f1aca9c2c01bf020ae"
- 6090 data"a5c2ecadc2f00fbdb3c2eea5c2c912f0ea91fbc8d0e5a92091fbc8c01bd0f720bdc1e602d002e603"
- 6100 data"a503d008a502c9f5b00218603860aca9c2a200bd46c1f00ac01bf01191fbc8e8d0f1a920c01bf005"
- 6110 data"91fbc8d0f56020424c4f434b5320465245452e00adabc28da3c2adacc28da4c2a000a200ada3c238"
- 6120 data"f9b3c148ada4c2f9b8c1900a8da4c2688da3c2e8d0e6688a093099aec2c8c005d0d8a000b9aec2c9"
- 6130 data"30d007c004f003c8d0f2a90085f5b9aec284f6a4f591fbe6f5a4f6c8c005d0eea4f56010e8640a01"
- 6140 data"2703000000204cc2a9cda2cb2055c2b047a9022011c2a000a200e01bf02eb1fbc8e8c922d0f4e01b"
- 6150 data"f022b1fbc8e8c922d0f4e01bf016b1fbc920d004c8e8d0f2c950f00bc953f007c955f003a9ff2ca9"
- 6160 data"00a00091fdc891fd608da6c2a5028da7c2a5038da8c20ea7c22ea8c2ada6c2c902f011ada7c21865"
- 6170 data"028da7c2ada8c265038da8c2ada7c21865f985fdada8c265fa85fe60a52f85f7a53085f8608da1c2"
- 6180 data"8ea2c2a000b1f7c8cda1c2d007b1f7cda2c2f026a002b1f7aac8b1f71865f885f88a65f785f79002"
- 6190 data"e6f8a5f8c53290d3d006a5f7c53190cb3860a5f718690785f9a5f8690085fa186000000000000000"
- 6200 data"000000000000"
- 6300 rem key table: petscii code, command number
- 6400 data17,1,145,2,29,3,157,4,49,5,133,5,50,6,137,6,51,7,134,7,52,8,138,8,53,9,135,9
- 6410 data54,10,139,10,55,11,136,11,13,11,56,12,140,12,57,13,48,14,78,15,206,15,94,16
- 6420 data77,17,205,17,82,18,210,18,32,19,42,20,95,21
+5960 rem hex decoder, poked to 51200
+5962 data173,54,3,133,2,173,55,3,133,3,32,76,200,160,0,196
+5964 data253,176,36,177,251,32,66,200,10,10,10,10,133,254,200,177
+5966 data251,32,66,200,5,254,132,255,160,0,145,2,230,2,208,2
+5968 data230,3,164,255,200,208,216,165,2,141,54,3,165,3,141,55
+5970 data3,96,56,233,48,201,10,144,2,233,7,96,165,45,133,251
+5972 data165,46,133,252,160,0,177,251,201,72,208,7,200,177,251,201
+5974 data128,240,30,165,251,24,105,7,133,251,144,2,230,252,165,252
+5976 data197,48,144,224,208,6,165,251,197,47,144,216,169,0,133,253
+5978 data96,160,2,177,251,133,253,200,177,251,170,200,177,251,134,251
+5980 data133,252,96
+5990 rem copy helper, poked to 828. three hex strings
+6000 data"a900850220ccffa0008490a20220c6ffb071a00084fba9a085fc20cfff91fba590d012c8d0f420e1fff058e6fca5"
+6010 data"fcc9c0d0e7f00d29bfd04aa9408502c8d002e6fc84fb20ccffa9008590a20320c9ffb031a00084fda9a085fea5fe"
+6020 data"c5fcd004c4fbf014a9368501b1fda237860120d2ffc8d0e6e6fed0e2a590d007a502f0844cccffa9ff85024cccff"
+6028 rem directory reader, poked to 49152
+6030 data"a90085028503859020a2c3a20120c6ffb06720d2c020d2c020d2c020d2c020d2c020d2c020d6c020"
+6032 data"8cc0a59029bfd04920d2c08d25c420d2c00d25c4f01420d2c08d26c420d2c08d27c420d6c020ebc0"
+6034 data"90d8a008a590d00620cfff88d0f620ccffa9008590a5028d3403a5038d3503a202a0001820f0ff18"
+6036 data"6020ccffa9008590a5028d3403a5038d35033860a90e8d8602a201a0001820f0ffa91220d2ffa000"
+6038 data"a200cc28c4f015e01bf011b94bc4c912f0079d00c8e820d2ffc8d0e6a920e01bf0069d00c8e8d0f6"
+6040 data"a99220d2ffa90d4cd2ff20cfff60a00020d2c0f00ac028b0f7994bc4c8d0f18c28c460204dc3a94d"
+6042 data"a2802056c3b035a9032012c3a000b1fdc91bd016c8b1fd85fbc8b1fd85fc201cc28c24c4202ec120"
+6044 data"bec2e602d002e603a503d008a502c9f5b00218603860a000cc28c4d0034ceec1b94bc4c922f003c8"
+6046 data"d0eec8a200cc28c4f016b94bc4c922f00fc912f008e010b0049d38c4e8c8d0e58e2ec4cc28c4f075"
+6048 data"c8cc28c4f06fb94bc4c920d003c8d0f1a200e003f00fcc28c4f00ab94bc49d48c4c8e8d0eda920cc"
+6050 data"28c4f009b94bc4c93cf002a9208d2fc4ac24c4a92291fbc8a200e010f010a920ec2ec4b003bd38c4"
+6052 data"91fbc8e8d0eca92291fbc8a92091fbc8a200e003f009bd48c491fbc8e8d0f3ad2fc491fb60a9208d"
+6054 data"48c48d49c48d4ac48d2fc44c9dc1ac24c4a200bd0ec2f00ac01bf00691fbc8e8d0f1a920c01bf005"
+6056 data"91fbc8d0f76020424c4f434b5320465245452e00ad26c48d22c4ad27c48d23c4a000a200ad22c438"
+6058 data"f9b4c248ad23c4f9b9c2900a8d23c4688d22c4e8d0e6688a09309933c4c8c005d0d8a001ad33c4c9"
+6060 data"30f002a0008c29c4a90538ed29c48d2ac4ac29c4b933c4c930d007c004f003c8d0f28c2bc4a90538"
+6062 data"ed2bc48d2cc4ad2ac438ed2cc4b002a9008d2dc4a000ad2dc4f00aa92091fbc8ce2dc4d0f1ae2bc4"
+6064 data"bd33c491fbc8e8e005d0f56010e8640a012703000000204dc3a9cda2cb2056c3b047a9022012c3a0"
+6066 data"00a200e01bf02eb1fbc8e8c922d0f4e01bf022b1fbc8e8c922d0f4e01bf016b1fbc920d004c8e8d0"
+6068 data"f2c950f00bc953f007c955f003a9ff2ca900a00091fdc891fd608d30c4a5028d31c4a5038d32c40e"
+6070 data"31c42e32c4ad30c4c902f011ad31c41865028d31c4ad32c465038d32c4ad31c41865f985fdad32c4"
+6072 data"65fa85fe60a52f85f7a53085f8608d20c48e21c4a000b1f7c8cd20c4d007b1f7cd21c4f026a002b1"
+6074 data"f7aac8b1f71865f885f88a65f785f79002e6f8a5f8c53290d3d006a5f7c53190cb3860a5f7186907"
+6076 data"85f9a5f8690085fa1860204dc3a94da2802056c3b06ba000b1f9c91bf063a90085028503204dc3a9"
+6078 data"4da2802056c3b051a9032012c3a53338e91b85fba534e90085fca5fbc531a5fce5329035a5fb8533"
+6080 data"8535a5fc85348536a000a91b91fdc8a5fb91fdc8a5fc91fda01aa92091fb8810fbe602d002e603a5"
+6082 data"03d006a502c9f590a3a900850285036000000000000000000000000000000000000000"
+6300 rem key table: petscii code, command number
+6400 data17,1,145,2,29,3,157,4,49,5,133,5,50,6,137,6,51,7,134,7,52,8,138,8,53,9,135,9
+6410 data54,10,139,10,55,11,136,11,13,11,56,12,140,12,57,13,48,14,78,15,206,15,94,16
+6420 data77,17,205,17,82,18,210,18,32,19,42,20,95,21
