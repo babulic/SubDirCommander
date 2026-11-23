@@ -2,10 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="SubDirCommander 2026: a disk commander for the Commodore 64, in BASIC and machine code." />
     <title>SubDirCommander 2026 for the C64</title>
+    <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
     <main>
@@ -19,19 +20,19 @@
             from one drive to another.
           </p>
           <div class="downloads">
-            <a class="btn primary" href="/files/subdir39.d64" download="subdir39.d64">
-              Disk image <span>subdir39.d64</span>
+            <a class="btn primary" href="public/files/SubDirCommand.39.d64" download="SubDirCommand.39.d64">
+              Disk image <span>SubDirCommand.39.d64</span>
             </a>
-            <a class="btn" href="/files/SubDirCommand39-ml.prg" download="%SubDirCommand39.prg">
+            <a class="btn" href="public/files/SubDirCommand39-ml.prg" download="%SubDirCommand39.prg">
               Machine code <span>%SubDirCommand39 · 26 blocks</span>
             </a>
-            <a class="btn" href="/files/SubDirCommand.39.prg" download="SubDirCommand.39.prg">
+            <a class="btn" href="public/files/SubDirCommand.39.prg" download="SubDirCommand.39.prg">
               BASIC <span>SubDirCommand.39 · 52 blocks</span>
             </a>
           </div>
         </div>
         <figure class="screen">
-          <img src="/screen.png" width="384" height="272"
+          <img src="./public/screen.png" width="384" height="272"
                alt="SubDir Commander on a C64 screen: the file list on the left, the key panel on the right" />
           <figcaption>Running in VICE on a PAL C64 with a 1541</figcaption>
         </figure>
@@ -40,7 +41,7 @@
       <section>
         <h2>Run it</h2>
         <p>In VICE, attach the disk to drive 8:</p>
-        <pre><code>x64sc -8 subdir39.d64</code></pre>
+        <pre><code>x64sc -8 SubDirCommand.39.d64</code></pre>
         <p>Then on the C64. The file names contain capital letters, so <code>?</code> stands in for them:</p>
         <pre><code>LOAD"%*",8
 RUN</code></pre>
