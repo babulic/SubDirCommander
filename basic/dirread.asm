@@ -1,9 +1,11 @@
 ; Read the open directory in logical file 1 into BASIC arrays M$ and MK%.
 ; SYS 49152 enters read. alloc gives every M$() slot a 27-byte body, once.
 ; $02/$03 = number of lines stored, including the blocks-free line.
-; A file line is 27 characters: 4-column block count, quote, 16-character
-; name, quote, space, 3-character type, and "<" or a space. The quote is
-; always at column 5, so BASIC can load any length of name.
+; A file line is 27 characters. The block count is right-aligned in three
+; columns (four when it needs them), then a space, a quote, a 16-character
+; name, a quote, a space, and 4 characters of type. The old fourth count
+; column was always blank on a normal file, so dropping it leaves room for
+; the drive's own "*RG" or "PRG<" text. The quote stays at column 5.
 ; MK%() is 0 for a PRG, SEQ or USR file and -1 for anything else.
 
 CHKIN   = $ffc6
@@ -203,7 +205,7 @@ sp      cpy buflen
         iny
         bne sp
 gotty   ldx #0
-tc      cpx #3
+tc      cpx #4
         beq tdone
         cpy buflen
         beq tdone
@@ -212,19 +214,19 @@ tc      cpx #3
         iny
         inx
         bne tc
-tdone   lda #' '
-        cpy buflen
-        beq locked
-        lda buf,y
-        cmp #'<'
+tdone   cpx #4
         beq locked
         lda #' '
-locked  sta lockch
-        ldy used
+        sta tbuf,x
+        inx
+        bne tdone
+locked  ldy used
+        cpy #4
+        bcs qopen
         lda #' '
         sta (ptr),y
         iny
-        lda #$22
+qopen   lda #$22
         sta (ptr),y
         iny
         ldx #0
@@ -245,7 +247,7 @@ wq      lda #$22
         sta (ptr),y
         iny
         ldx #0
-wt      cpx #3
+wt      cpx #4
         beq wdone
         lda tbuf,x
         sta (ptr),y
@@ -258,7 +260,7 @@ notype  lda #' '
         sta tbuf
         sta tbuf+1
         sta tbuf+2
-        sta lockch
+        sta tbuf+3
         jmp locked
 
 free    ldy used
@@ -281,7 +283,7 @@ frdone  lda #' '
 
 ftxt    .byte $20,$42,$4c,$4f,$43,$4b,$53,$20,$46,$52,$45,$45,$2e,0
 
-; Right-align the block count in four columns (five when it needs them).
+; Right-align the block count: 3 columns under 1000, 4 under 10000, else 5.
 putnum  lda blocks
         sta num
         lda blocks+1
@@ -307,12 +309,18 @@ pdone   pla
         iny
         cpy #5
         bne pd
-        ldy #1
+        ldy #2
         lda digs
         cmp #'0'
-        beq +
-        ldy #0
-+       sty first
+        bne wide
+        lda digs+1
+        cmp #'0'
+        bne +
+        beq setf
+wide    ldy #0
+        beq setf
++       ldy #1
+setf    sty first
         lda #5
         sec
         sbc first
@@ -384,8 +392,10 @@ qs      cpx #maxl
         beq mneg
         lda (ptr),y
         cmp #' '
+        beq qsk
+        cmp #'*'
         bne qt
-        iny
+qsk     iny
         inx
         bne qs
 qt      cmp #$50
@@ -557,10 +567,9 @@ start   .byte 0
 ndig    .byte 0
 pad     .byte 0
 nlen    .byte 0
-lockch  .byte 0
 width   .byte 0
 acc     .word 0
 digs    .fill 5
 nbuf    .fill 16
-tbuf    .fill 3
+tbuf    .fill 4
 buf     .fill 40
