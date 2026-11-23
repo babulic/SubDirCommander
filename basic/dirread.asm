@@ -221,6 +221,9 @@ tdone   lda #' '
         lda #' '
 locked  sta lockch
         ldy used
+        lda #' '
+        sta (ptr),y
+        iny
         lda #$22
         sta (ptr),y
         iny
@@ -243,15 +246,13 @@ wq      lda #$22
         iny
         ldx #0
 wt      cpx #3
-        beq wl
+        beq wdone
         lda tbuf,x
         sta (ptr),y
         iny
         inx
         bne wt
-wl      lda lockch
-        sta (ptr),y
-        rts
+wdone   rts
 
 notype  lda #' '
         sta tbuf

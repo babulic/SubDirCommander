@@ -53,12 +53,13 @@
  2970 gosub4850:ifothen5000
  2975 goto2990
  2980 gosub4870:ifothen5000
- 2990 ifcntheno=-1:goto5000
- 2995 goto10
+ 2990 ifcn=0then10
+ 2992 gosub3400:poke781,1:poke782,0:poke783,0:sys65520:poke646,14:print"{lblu}{rvon}"i$"{rvof}"
+ 2994 gosub20:cn=0:goto10
  3300 ti$="000000"
  3310 ifti<wthengoto3310
  3320 return
- 3400 print"{clr}{lblu}{rvon}   SubDirCommander 2026    "
+ 3400 poke646,14:print"{clr}{lblu}{rvon}   SubDirCommander 2026    {rvof}"
  3430 printbl$"{rvon}{gry2}NumericKeys:"rl$"{rvon}1{rvof} ListDirect"rl$"{rvon}2{rvof} ValidateDi"
  3440 printbl$"{rvon}3{rvof} RenameFile"rl$"{rvon}4{rvof} CopyFile"rl$"{rvon}5{rvof} StartAdres"
  3450 printbl$"{rvon}6{rvof} DeleteFile"rl$"{rvon}7{rvof} RunOpenDir"rl$"{rvon}8{rvof} LoadOpenDi"
@@ -108,38 +109,38 @@
  4267 return
  4270 sp=0:cn=0:gosub4420:ifc$=""thenreturn
  4271 gosub3700:ifrothenreturn
- 4273 n$="":print"{up}"bo$:input"{up}{wht}Rename to:";n$
+ 4273 n$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}Rename to:";n$
  4274 cn=-1:iflen(n$)>16thenn$=left$(n$,16)
  4275 ifn$=""orn$=c$thenreturn
  4277 gosub4100:ifstthenprintj$:return
- 4278 print"{up}"br$"{up}Renaming ...{lblu}"
+ 4278 poke646,1:print"{up}{wht}"br$"{up}Renaming ..."
  4279 open1,dr,15,"r0:"+n$+"="+c$:gosub4000:close1
  4280 ifenthencn=0:printj$:return
  4283 gosub3750:ifstthencn=0:printj$:return
  4285 s$="":d=len(c$)-len(n$):ifd>0thens$=left$(bl$,d)
- 4290 n$=n$+ap$+s$:s$=left$(a$,5)+n$+right$(a$,len(a$)-len(n$)-5):i=p:goto33
+ 4290 s$=left$(a$,6)+left$(n$+bl$,16)+right$(a$,5):i=p:goto33
  4300 ifmc>0then4550
  4301 sp=0:cn=0:gosub4420:ifc$=""thenreturn
  4302 gosub3700:ifroorp$="<"thenreturn
- 4303 print"{up}"lr$"{up}{wht}Are you sure? y/n{lblu}":poke198,0:wait198,1:getq$
+ 4303 poke646,1:print"{up}{wht}"lr$"{up}Are you sure? y/n":poke198,0:wait198,1:getq$
  4304 ifq$<>"y"thenprint"{up}";:i=p:gosub24:return
  4305 open1,dr,15,"s0:"+c$:gosub4000:close1:cn=-1
  4306 ifen>1thencn=0:printj$:return
  4307 gosub3750:ifstthencn=0:printj$:return
  4309 z=z+val(a$):ifmk%(p)>0thenmc=mc-1
- 4310 i=p:s$="0"+left$(bl$,18)+"deleted":gosub33:mk%(p)=-1
- 4320 i=m:s$=mid$(str$(z),2)+bf$:goto33
+ 4310 i=p:s$=left$(a$,4)+" deleted"+bl$:gosub33:mk%(p)=-1
+ 4320 i=m:s$=right$("    "+mid$(str$(z),2),4)+bf$:goto33
  4330 ifmc>0thenft=0:goto4620
  4331 sp=0:cn=0:gosub4420:ifc$=""orval(a$)=0thenreturn
  4335 gosub3700:ifrothenreturn
- 4340 n$="":print"{up}"bo$:input"{up}{wht}Copy to:";n$
- 4341 cn=-1:td=dr:print"{up}"bo$:print"{up}"spc(13)td:input"{up}{wht}Target drive";td
+ 4340 n$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}Copy to:";n$
+ 4341 cn=-1:td=dr:poke646,1:print"{up}{wht}"bo$:print"{up}{wht}"spc(13)td:input"{up}{wht}Target drive";td
  4345 iflen(n$)>16thenn$=left$(n$,16)
  4346 ifn$=""thenn$=c$
  4347 iftd<8ortd>11or(td=drandn$=c$)thenreturn
  4348 iftd<>drthen4360
  4349 gosub4100:ifstthenprintj$:return
- 4350 print"{up}"br$"{up}Copying ...{lblu}"
+ 4350 poke646,1:print"{up}{wht}"br$"{up}Copying ..."
  4351 open1,dr,15,"c0:"+n$+"="+c$:gosub4000:close1
  4352 ifenthencn=0:printj$:return
  4353 gosub3750:ifstthenprintj$:return
@@ -147,10 +148,10 @@
  4355 z=z-val(a$):m=m+1:iflen(m$(m))<>llthenm$(m)=mid$(bl$,1)
  4356 i=m:s$=mid$(str$(z),2)+bf$:gosub33:mk%(m)=-1:x=mk%(p)
  4357 s$="":d=len(c$)-len(n$):ifd>0thens$=left$(bl$,d)
- 4358 n$=n$+ap$+s$:s$=left$(a$,5)+n$+right$(a$,len(a$)-len(n$)-5):i=m-1:mk%(i)=(x<0):goto33
+ 4358 s$=left$(a$,6)+left$(n$+bl$,16)+right$(a$,5):i=m-1:mk%(i)=(x<0):goto33
  4360 ift$<>"prg"andt$<>"seq"andt$<>"usr"thenj$="{rvon} Only prg/seq/usr files !  "+re$:goto4378
  4361 x=dr:dr=td:gosub4100:dr=x:ifstthencn=0:printj$:return
- 4362 print"{up}"br$"{up}Copying to drive"td"...{lblu}"
+ 4362 poke646,1:print"{up}{wht}"br$"{up}Copying to drive"td"..."
  4364 ifpeek(828)<>169orpeek(965)<>255thengosub5940
  4365 f$=","+left$(t$,1):open1,dr,15:open2,dr,2,"0:"+c$+f$+",r":gosub4000:ifenthen4376
  4366 open4,td,15:open3,td,3,"0:"+n$+f$+",w":gosub4060:ifenthenclose3:close4:goto4376
@@ -161,11 +162,11 @@
  4371 return
  4376 close2:close1:cn=0:printj$:return
  4378 gosub4150:cn=0:printj$:return
- 4420 a$=m$(p):c$="":d$="":e$="":t$="":p$="":f=0:ifmid$(a$,5,1)<>ap$thenreturn
- 4421 l=len(a$):c=6:d$=mid$(a$,6,1)
+ 4420 a$=m$(p):c$="":d$="":e$="":t$="":p$="":f=0:ifmid$(a$,6,1)<>ap$thenreturn
+ 4421 l=len(a$):c=7:d$=mid$(a$,7,1)
  4422 ifc>lthenreturn
  4424 ifmid$(a$,c,1)<>ap$thenc=c+1:goto4422
- 4426 c$=mid$(a$,6,c-6):gosub4476:x=c+1
+ 4426 c$=mid$(a$,7,c-7):gosub4476:x=c+1
  4427 ifx<=landmid$(a$,x,1)=" "thenx=x+1:goto4427
  4428 t$=left$(mid$(a$,x)+bl$,3):ifx+3<=lthenifmid$(a$,x+3,1)="<"thenp$="<"
  4429 ifnotspthenf=2:goto4470
@@ -180,10 +181,10 @@
  4483 gosub3700:ifrothenc$="cd:"+c$:goto4494
  4484 gosub4200:ifs=0then10
  4486 ifs=2049or(s<40960ands+val(a$)*254>2049)then4491
- 4487 rl=-1:print"{up}{wht}Loading from "s" ($"h$")":loadc$,dr,1
- 4488 rl=0:print"{up}"bl$re$"{up}Loaded OK":s$=re$+"{up}Ran OK, press any key ...  {lblu}"
- 4489 ifruthenru=0:ifs>0thensyss:prints$:poke198,0:wait198,1:goto5160
- 4490 goto10
+ 4487 rl=-1:poke646,1:print"{up}{wht}";left$("Loading "+str$(s)+" ($"+h$+")"+bl$,ll):loadc$,dr,1
+ 4488 rl=0
+ 4489 ifruthenru=0:ifs>0thensyss:poke646,1:print"{up}{wht}";left$("Ran OK, press any key"+bl$,ll):poke198,0:wait198,1
+ 4490 cn=-1:goto2990
  4491 goto4500
  4494 o=-1:rd=0:open1,dr,15,c$
  4495 print"{up}"bl$re$"{up}{gry2}Waiting for device ..."
@@ -195,7 +196,7 @@
  4515 poke650,0:poke631,13:kb=1:ifru=0then4525
  4520 forx=1tolen(k$):poke631+x,asc(mid$(k$,x,1)):next:kb=x:poke631+kb,13:kb=kb+1
  4525 x=peek(43)+256*peek(44):pokex,0:pokex+1,0:poke198,kb:end
- 4550 cn=-1:print"{up}"lr$"{up}{wht}Delete"mc"files? y/n{lblu}":poke198,0:wait198,1:getq$
+ 4550 cn=-1:poke646,1:print"{up}{wht}"lr$"{up}Delete"mc"files? y/n":poke198,0:wait198,1:getq$
  4552 ifq$<>"y"thenprint"{up}";:i=p:gosub24:cn=0:return
  4554 gosub4100:ifstthenprintj$:return
  4556 pp=p:forxi=0tom:ifmk%(xi)<1then4560
@@ -205,15 +206,15 @@
  4600 ifmc>0thenft=1:goto4620
  4601 sp=0:cn=0:gosub4420:ifc$=""orval(a$)=0thenreturn
  4602 gosub3700:ifrothenreturn
- 4603 n$="":print"{up}"bo$:input"{up}{wht}Move to:";n$
- 4604 cn=-1:td=dr:print"{up}"bo$:print"{up}"spc(13)td:input"{up}{wht}Target drive";td
+ 4603 n$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}Move to:";n$
+ 4604 cn=-1:td=dr:poke646,1:print"{up}{wht}"bo$:print"{up}{wht}"spc(13)td:input"{up}{wht}Target drive";td
  4605 iflen(n$)>16thenn$=left$(n$,16)
  4606 ifn$=""thenn$=c$
  4607 iftd<8ortd>11or(td=drandn$=c$)thenreturn
  4608 iftd=drthengosub4277:return
  4609 gosub4360:ifj$=""thengosub4305
  4610 cn=-1:return
- 4620 cn=-1:td=dr:print"{up}"bo$:print"{up}"spc(13)td:input"{up}{wht}Target drive";td
+ 4620 cn=-1:td=dr:poke646,1:print"{up}{wht}"bo$:print"{up}{wht}"spc(13)td:input"{up}{wht}Target drive";td
  4622 iftd<8ortd>11ortd=drthenreturn
  4623 x=dr:dr=td:gosub4100:dr=x:ifstthencn=0:printj$:return
  4625 pp=p:forxi=0tom:ifmk%(xi)<1then4640
@@ -234,19 +235,19 @@
  4745 poke781,2:sys65478:goto4725
  4760 sys65484:print:print"{rvon} end of file, press any key {rvof}";:poke198,0:wait198,1:geta$
  4770 sys65484:close2:close1:return
- 4800 cn=-1:n$="":print"{up}"bo$:input"{up}{wht}Format name:";n$:ifn$=""thenreturn
- 4802 x$="":print"{up}"bo$:input"{up}{wht}ID (Return=quick):";x$
- 4805 print"{up}"br$"{up}{wht}Format drive"dr"? y/n{lblu}":poke198,0:wait198,1:getq$:ifq$<>"y"thenreturn
+ 4800 cn=-1:n$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}Format name:";n$:ifn$=""thenreturn
+ 4802 x$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}ID (Return=quick):";x$
+ 4805 poke646,1:print"{up}{wht}"br$"{up}Format drive"dr"? y/n":poke198,0:wait198,1:getq$:ifq$<>"y"thenreturn
  4810 gosub4100:ifstthenprintj$:return
  4812 ifx$<>""thenn$=n$+","+left$(x$,2)
- 4815 print"{up}"br$"{up}{wht}Formatting ...{lblu}":open1,dr,15,"n0:"+n$:gosub4000:close1:ifenthencn=0:printj$:return
+ 4815 poke646,1:print"{up}{wht}"br$"{up}Formatting ...":open1,dr,15,"n0:"+n$:gosub4000:close1:ifenthencn=0:printj$:return
  4820 o=-1:return
- 4850 cn=-1:n$="":print"{up}"bo$:input"{up}{wht}Make dir:";n$:ifn$=""thenreturn
+ 4850 cn=-1:n$="":poke646,1:print"{up}{wht}"bo$:input"{up}{wht}Make dir:";n$:ifn$=""thenreturn
  4855 gosub4100:ifstthenprintj$:return
  4860 open1,dr,15,"md:"+n$:gosub4000:close1:ifenthencn=0:printj$:return
  4865 o=-1:return
  4870 sp=0:cn=0:gosub4420:ifc$=""ort$<>"dir"thenreturn
- 4875 print"{up}"lr$"{up}{wht}Remove dir? y/n{lblu}":poke198,0:wait198,1:getq$
+ 4875 poke646,1:print"{up}{wht}"lr$"{up}Remove dir? y/n":poke198,0:wait198,1:getq$
  4880 ifq$<>"y"thenprint"{up}";:i=p:gosub24:return
  4885 gosub4100:ifstthenprintj$:return
  4890 open1,dr,15,"rd:"+c$:gosub4000:close1:ifenthencn=0:printj$:return
@@ -304,8 +305,8 @@
 6044 data"bec2e602d002e603a503d008a502c9f5b00218603860a000cc28c4d0034ceec1b94bc4c922f003c8"
 6046 data"d0eec8a200cc28c4f016b94bc4c922f00fc912f008e010b0049d38c4e8c8d0e58e2ec4cc28c4f075"
 6048 data"c8cc28c4f06fb94bc4c920d003c8d0f1a200e003f00fcc28c4f00ab94bc49d48c4c8e8d0eda920cc"
-6050 data"28c4f009b94bc4c93cf002a9208d2fc4ac24c4a92291fbc8a200e010f010a920ec2ec4b003bd38c4"
-6052 data"91fbc8e8d0eca92291fbc8a92091fbc8a200e003f009bd48c491fbc8e8d0f3ad2fc491fb60a9208d"
+6050 data"28c4f009b94bc4c93cf002a9208d2fc4ac24c4a92091fbc8a92291fbc8a200e010f010a920ec2ec4"
+6052 data"b003bd38c491fbc8e8d0eca92291fbc8a92091fbc8a200e003f009bd48c491fbc8e8d0f360a9208d"
 6054 data"48c48d49c48d4ac48d2fc44c9dc1ac24c4a200bd0ec2f00ac01bf00691fbc8e8d0f1a920c01bf005"
 6056 data"91fbc8d0f76020424c4f434b5320465245452e00ad26c48d22c4ad27c48d23c4a000a200ad22c438"
 6058 data"f9b4c248ad23c4f9b9c2900a8d23c4688d22c4e8d0e6688a09309933c4c8c005d0d8a001ad33c4c9"

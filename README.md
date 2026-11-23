@@ -7,7 +7,7 @@ screen and keys:
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.39.prg` | BASIC V2 | 51 blocks |
+| `dist/SubDirCommand.39.prg` | BASIC V2 | 52 blocks |
 | `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
 | `dist/fb.d64` | 1541 disk with both programs | |
 

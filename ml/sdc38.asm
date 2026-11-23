@@ -127,12 +127,7 @@ seldef  lda #8
         jmp seldrv
 
 ; ------------------------------------------------------- read and show list
-relist  lda #0
-        sta oslen
-        jsr drawframe
-        jsr getos
-        bcs fatal
-        jsr drawrow0
+relist  jsr drawframe
         jsr readdir
         bcs fatal
         lda #0
@@ -900,12 +895,12 @@ cformat jsr msgi
         beq nosend
         lda #","
         jsr cmdchr
-        ldx #0
--       cpx idlen
+        ldy #0
+-       cpy idlen
         beq nosend
-        lda idbuf,x
+        lda idbuf,y
         jsr cmdchr
-        inx
+        iny
         bne -
 nosend  jmp dosrelist
 
@@ -1158,11 +1153,9 @@ direct          jsr msgi
 ldok    jsr dirhit
         bcs relistj
         jsr msgi
-        .null "Loaded OK, end $"
-        lda eaddr
-        ldx eaddr+1
-        jsr hex16
-        jmp main
+        .null "Loaded OK"
+        jsr getkey
+        jmp redraw
 relistj jmp relist
 
 ; Carry set when the loaded range touched the directory under BASIC ROM.
@@ -2311,23 +2304,16 @@ dfnext  ldy #0
         jmp dfnext
 dfend   rts
 
-; Row 0: drive name from UI in reverse grey, or the title.
+; Row 0 stays the light-blue title. The disk name is on row 1.
 drawrow0
         lda #0
         jsr rowptr
         ldx #LISTW-1
-        lda oslen
-        beq dr0t
--       lda osbuf,x
+-       lda s_title,x
         sta line,x
         dex
         bpl -
-        bmi dr0p
-dr0t    lda s_title,x
-        sta line,x
-        dex
-        bpl dr0t
-dr0p    lda #C_GRY2
+        lda #C_LBLU
         ldx #$80
         jmp putline
 
