@@ -1,14 +1,18 @@
 # SubDirCommander 2026 for the Commodore 64
 
-A disk commander for a 1541 / 1541-II or SD2IEC drive on a stock C64. It
-lists a directory, moves a cursor through it and runs, loads, renames,
-copies, deletes and validates files. It comes in two versions with the same
-screen and keys:
+A disk commander for a 1541 / 1541-II, SD2IEC, pi1541 or Kung Fu Flash on a
+stock C64. It lists a directory, moves a cursor through it and runs, loads,
+renames, copies, deletes and validates files. It comes in two versions with
+the same screen and keys.
+
+A 1541 does the whole set. SD2IEC and pi1541 also make and remove directories.
+Kung Fu Flash lists, loads, runs and deletes; rename, copy, validate and format
+are not in its firmware yet.
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.39.prg` | BASIC V2 | 52 blocks |
-| `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
+| `dist/SubDirCommand.39.prg` | BASIC V2 | 54 blocks |
+| `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 25 blocks |
 | `dist/fb.d64` | 1541 disk with both programs | |
 
 `%` is an ordinary character in a 1541 file name.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SubDirCommander 2026: a disk commander for the Commodore 64, in BASIC and machine code." />
+    <meta name="description" content="SubDirCommander 2026: a disk commander for the Commodore 64, for a 1541, SD2IEC, pi1541 or Kung Fu Flash." />
     <title>SubDirCommander 2026 for the C64</title>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
@@ -12,29 +12,34 @@
     <main>
       <header class="hero">
         <div class="hero-text">
-          <p class="kicker">Commodore 64 · 1541 / 1541-II · SD2IEC</p>
+          <p class="kicker">Commodore 64 · 1541 / 1541-II · SD2IEC · pi1541 · Kung Fu Flash</p>
           <h1>SubDirCommander 2026</h1>
           <p class="lead">
             A disk commander for a stock C64. List a drive, move through it a line or a page
             at a time, and run, load, rename, copy, delete or validate files, including copies
             from one drive to another.
           </p>
+          <p class="lead">
+            A 1541 and 1541-II do the whole set. SD2IEC and pi1541 also make and remove
+            directories. Kung Fu Flash lists, loads, runs and deletes; its firmware does not
+            rename, copy, validate or format yet.
+          </p>
           <div class="downloads">
             <a class="btn primary" href="public/files/SubDirCommand.39.d64" download="SubDirCommand.39.d64">
               Disk image <span>SubDirCommand.39.d64</span>
             </a>
             <a class="btn" href="public/files/SubDirCommand39-ml.prg" download="%SubDirCommand39.prg">
-              Machine code <span>%SubDirCommand39 · 26 blocks</span>
+              Machine code <span>%SubDirCommand39 · 25 blocks</span>
             </a>
             <a class="btn" href="public/files/SubDirCommand.39.prg" download="SubDirCommand.39.prg">
-              BASIC <span>SubDirCommand.39 · 52 blocks</span>
+              BASIC <span>SubDirCommand.39 · 54 blocks</span>
             </a>
           </div>
         </div>
         <figure class="screen">
           <img src="./public/screen.png" width="384" height="272"
                alt="SubDir Commander on a C64 screen: the file list on the left, the key panel on the right" />
-          <figcaption>Running in VICE on a PAL C64 with a 1541</figcaption>
+          <figcaption>Current screen, from VICE on a PAL C64</figcaption>
         </figure>
       </header>
 
@@ -68,9 +73,9 @@ RUN</code></pre>
               <tr><th>8 · F8</th><td>load a program without running it</td></tr>
               <tr><th>9</th><td>move a file, on this drive or to another</td></tr>
               <tr><th>0</th><td>format the disk</td></tr>
-              <tr><th>N / R</th><td>SD2IEC: make or remove a directory</td></tr>
+              <tr><th>N / R</th><td>SD2IEC and pi1541: make or remove a directory</td></tr>
               <tr><th>Space / *</th><td>mark one file, or mark and clear all</td></tr>
-              <tr><th>↑</th><td>SD2IEC: one directory level up</td></tr>
+              <tr><th>↑</th><td>SD2IEC and pi1541: one directory level up</td></tr>
               <tr><th>←</th><td>quit to BASIC</td></tr>
             </tbody>
           </table>
