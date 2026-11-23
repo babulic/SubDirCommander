@@ -77,12 +77,12 @@
         <h2>Run it</h2>
         <p>In VICE, attach the disk to drive 8:</p>
         <pre><code>x64sc -8 SubDirCommand.39.d64</code></pre>
-        <p>Then on the C64. The file names contain capital letters, so <code>?</code> stands in for them:</p>
-        <pre><code>LOAD"%*",8
-RUN</code></pre>
+        <p>Then on the C64, in lowercase:</p>
+        <pre><code>load "%SubDirCommand39",8
+run</code></pre>
         <p>for the machine code version, or</p>
-        <pre><code>LOAD"?UB?IR?OMMAND.39",8
-RUN</code></pre>
+        <pre><code>load "SubDirCommand.39",8
+run</code></pre>
         <p>for the BASIC one. Add <code>-9 other.d64</code> to try copying between drives.</p>
       </section>
 

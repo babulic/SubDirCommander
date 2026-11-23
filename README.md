@@ -30,16 +30,16 @@ In VICE on the Mac:
 x64sc -8 dist/fb.d64
 ```
 
-Then on the C64 (the names have capital S, D and C, so match them with `?`):
+Then on the C64, in lowercase:
 
 ```text
-LOAD"?UB?IR?OMMAND.39",8
-RUN
+load "SubDirCommand.39",8
+run
 ```
 
 ```text
-LOAD"%*",8
-RUN
+load "%SubDirCommand39",8
+run
 ```
 
 Give a second drive with `-9 other.d64` to try copying between drives.
