@@ -8,6 +8,7 @@
 ; helper at $033C. The first drive select then died with a corrupted IRQ.
 ; $C500 is the gap after the directory reader ($C000-$C43F) and before the
 ; hex decoder ($C800), which the directory header later overwrites.
+; The help panel follows this routine at $C5B0 and ends before $C800.
 
         * = $c500
 

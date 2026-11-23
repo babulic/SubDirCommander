@@ -2148,14 +2148,6 @@ dfnext  ldy #0
         lda #C_GRY2
         sta tcol
         jsr putrich
-        lda xcol
-        cmp #PANELC+12
-        bne dfnext
-        ldy #39
-        lda #$a0
-        sta (scr),y
-        lda tcol
-        sta (col),y
         jmp dfnext
 dfend   rts
 
@@ -2747,8 +2739,8 @@ e_abort .null "Copy aborted !"
 
 ; Key panel: row, then rich text.
 panel
-        .byte 1, 12
-        .null "NumericKeys:"
+        .byte 1, 13
+        .null "NumericKeys: "
         .byte 2, 1
         .null "1 List Drive"
         .byte 3, 1
@@ -2769,22 +2761,22 @@ panel
         .null "9 Move File/s"
         .byte 11, 1
         .null "0 Format Disk"
-        .byte 12, 12
-        .null "SD2IEC Keys:"
+        .byte 12, 13
+        .null "SD2IEC Keys: "
         .byte 13, 1
         .null "^ Go Level Up"
         .byte 14, 1
         .null "N New Folder"
         .byte 15, 1
         .null "R Remove Fold"
-        .byte 16, 12
-        .null "CRSR Keys:  "
+        .byte 16, 13
+        .null "CRSR Keys:   "
         .byte 17, 3
         .null "U/D Move CRSR"
         .byte 18, 3
         .null "L/R Page UpDn"
-        .byte 19, 12
-        .null "Other Keys: "
+        .byte 19, 13
+        .null "Other Keys:  "
         .byte 20, 3
         .null "Spc Mark File"
         .byte 21, 1
