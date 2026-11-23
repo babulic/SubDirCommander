@@ -85,6 +85,8 @@ section {
 }
 
 section p { margin: 0 0 12px; }
+section a { color: var(--hi); }
+section a:hover { color: var(--ink); }
 
 pre {
   margin: 0 0 14px;

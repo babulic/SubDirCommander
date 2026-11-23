@@ -6,7 +6,10 @@ function publishedFileLinks(): Plugin {
   return {
     name: "published-file-links",
     transformIndexHtml(html) {
-      return html.replaceAll('href="public/files/', 'href="/files/');
+      return html
+        .replaceAll('href="public/files/', 'href="/files/')
+        .replaceAll('src="./public/', 'src="/')
+        .replaceAll('href="./public/', 'href="/');
     },
   };
 }

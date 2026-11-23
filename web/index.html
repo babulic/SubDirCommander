@@ -16,13 +16,8 @@
           <h1>SubDirCommander 2026</h1>
           <p class="lead">
             A disk commander for a stock C64. List a drive, move through it a line or a page
-            at a time, and run, load, rename, copy, delete or validate files, including copies
-            from one drive to another.
-          </p>
-          <p class="lead">
-            A 1541 and 1541-II do the whole set. SD2IEC and pi1541 also make and remove
-            directories. Kung Fu Flash lists, loads, runs and deletes; its firmware does not
-            rename, copy, validate or format yet.
+            at a time, and run, load, copy, move or delete files, including copies from one
+            drive to another. Rename, validate and format depend on the drive.
           </p>
           <div class="downloads">
             <a class="btn primary" href="public/files/SubDirCommand.39.d64" download="SubDirCommand.39.d64">
@@ -39,9 +34,44 @@
         <figure class="screen">
           <img src="./public/screen.png" width="384" height="272"
                alt="SubDir Commander on a C64 screen: the file list on the left, the key panel on the right" />
-          <figcaption>Current screen, from VICE on a PAL C64</figcaption>
+          <figcaption>Current machine-code screen, from VICE on a PAL C64</figcaption>
         </figure>
       </header>
+
+      <section>
+        <h2>Drives</h2>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr>
+                <th>1541 / 1541-II</th>
+                <td>The whole set: rename, copy, move, delete, validate and format.</td>
+              </tr>
+              <tr>
+                <th>SD2IEC</th>
+                <td>The same as a 1541, and directories: go up, make a folder, remove a folder.</td>
+              </tr>
+              <tr>
+                <th>pi1541</th>
+                <td>
+                  A mounted disk image behaves as a 1541. On the SD card it also changes
+                  folders, and it renames, copies and deletes. Validate is not implemented
+                  there, and format creates a new D64 instead of wiping the card.
+                  <a href="https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md">Command list</a>.
+                </td>
+              </tr>
+              <tr>
+                <th>Kung Fu Flash</th>
+                <td>
+                  Kung Fu Flash and Kung Fu Flash 2 list, load, run, delete, copy and move.
+                  There is no rename, no validate and no format.
+                  <a href="https://github.com/KimJorgensen/KungFuFlash2">Kung Fu Flash 2</a>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section>
         <h2>Run it</h2>
@@ -80,6 +110,11 @@ RUN</code></pre>
             </tbody>
           </table>
         </div>
+        <p>
+          Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
+          New folder, remove folder and go up are for SD2IEC and for pi1541 on the SD card.
+          On Kung Fu Flash, use list, load, run, copy, move and delete.
+        </p>
       </section>
 
       <section class="cols">

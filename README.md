@@ -2,12 +2,17 @@
 
 A disk commander for a 1541 / 1541-II, SD2IEC, pi1541 or Kung Fu Flash on a
 stock C64. It lists a directory, moves a cursor through it and runs, loads,
-renames, copies, deletes and validates files. It comes in two versions with
-the same screen and keys.
+copies, moves and deletes files. It comes in two versions with the same
+screen and keys.
 
-A 1541 does the whole set. SD2IEC and pi1541 also make and remove directories.
-Kung Fu Flash lists, loads, runs and deletes; rename, copy, validate and format
-are not in its firmware yet.
+A 1541 does the whole set, including rename, validate and format. SD2IEC does
+that too, and it makes, removes and leaves directories. pi1541 does the same
+inside a disk image. On the SD card it renames, copies, deletes and changes
+folders; validate is not implemented, and format creates a new D64
+([IEC commands](https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md)).
+Kung Fu Flash and Kung Fu Flash 2 list, load, run, delete, copy and move.
+Rename, validate and format are not in that firmware
+([Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2)).
 
 | File | Kind | Size |
 | --- | --- | --- |
@@ -53,11 +58,16 @@ Give a second drive with `-9 other.d64` to try copying between drives.
 | 6 / F6 | delete (asks y/n; not locked files) |
 | 7 / F7 / RETURN | run a program, enter a directory or disk image, run an `&` USR file in the drive |
 | 8 / F8 | load a program without running it (directories and images open like 7) |
-| ↑ | SD2IEC: one directory level up (`CD:←`) |
+| 9 | move a file, on this drive or to another |
+| 0 | format the disk |
+| N / R | SD2IEC and pi1541: make or remove a directory |
+| Space / * | mark one file, or mark and clear all |
+| ↑ | SD2IEC and pi1541: one directory level up (`CD:←`) |
 | ← | quit to BASIC |
 
-The key panel on the right has a new `CRSR Keys:` block (`U/D LineUpDn`,
-`L/R PageUpDn`); the old `CRSR MoveCur` line is gone.
+The key panel on the right says `U/D Move CRSR` and `L/R Page UpDn`.
+Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
+On Kung Fu Flash, use list, load, run, copy, move and delete.
 
 Copy to another drive streams the file through the C64. PRG, SEQ and USR
 files can be copied; REL files cannot. A failed copy (disk full, write
