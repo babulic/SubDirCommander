@@ -1,4 +1,4 @@
-; Cross-drive file copy helper for SubDirCommand.39 (BASIC).
+; Cross-drive file copy helper for the BASIC SubDirCommander.
 ; BASIC opens the source as logical file 2 and the target as logical file 3,
 ; then calls SYS 828. Data moves in 8 KB chunks through the RAM under the
 ; BASIC ROM ($A000-$BFFF). Writes there go to RAM; reads need $01=$36.
@@ -17,7 +17,11 @@ src     = $fd
 BUFHI   = $a0
 BUFEND  = $c0
 
-        * = $033c
+        .weak
+HELPER_ADDR = $033c
+        .endweak
+
+        * = HELPER_ADDR
 
 copy    lda #0
         sta result

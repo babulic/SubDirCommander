@@ -20,14 +20,14 @@
             drive to another. Rename, validate and format depend on the drive.
           </p>
           <div class="downloads">
-            <a class="btn primary" href="public/files/SubDirCommand.39.d64" download="SubDirCommand.39.d64">
-              Disk image <span>SubDirCommand.39.d64</span>
+            <a class="btn primary" href="public/files/SubDirCommand.40.d64" download="SubDirCommand.40.d64">
+              Disk image <span>SubDirCommand.40.d64</span>
             </a>
-            <a class="btn" href="public/files/SubDirCommand39-ml.prg" download="%SubDirCommand39.prg">
-              Machine code <span>%SubDirCommand39 · 26 blocks</span>
+            <a class="btn" href="public/files/%25SubDirCommand.40.prg" download="%SubDirCommand.40.prg">
+              Machine code <span>%SubDirCommand.40 · 26 blocks</span>
             </a>
-            <a class="btn" href="public/files/SubDirCommand.39.prg" download="SubDirCommand.39.prg">
-              BASIC <span>SubDirCommand.39 · 56 blocks</span>
+            <a class="btn" href="public/files/SubDirCommand.40.prg" download="SubDirCommand.40.prg">
+              BASIC <span>SubDirCommand.40 · 45 blocks</span>
             </a>
           </div>
         </div>
@@ -76,19 +76,19 @@
       <section>
         <h2>Run it</h2>
         <p>In VICE, attach the disk to drive 8:</p>
-        <pre><code>x64sc -8 SubDirCommand.39.d64</code></pre>
+        <pre><code>x64sc -8 SubDirCommand.40.d64</code></pre>
         <p>Then on the C64, in lowercase:</p>
-        <pre><code>load "%SubDirCommand39",8
+        <pre><code>load "%SubDirCommand40",8
 run</code></pre>
         <p>for the machine code version, or</p>
-        <pre><code>load "SubDirCommand.39",8
+        <pre><code>load "SubDirCommand.40",8
 run</code></pre>
         <p>for the BASIC one.</p>
         <p>
           A copy from one drive to another needs a second disk. In VICE on the computer,
           attach it as drive 9. That is a flag for <code>x64sc</code>, not a command on the C64:
         </p>
-        <pre><code>x64sc -8 SubDirCommand.39.d64 -9 other.d64</code></pre>
+        <pre><code>x64sc -8 SubDirCommand.40.d64 -9 other.d64</code></pre>
         <p><code>other.d64</code> is any second disk image. On a real C64, use the two drives you have and pick the target drive in the commander.</p>
       </section>
 
@@ -135,8 +135,9 @@ run</code></pre>
             supported return targets.
           </p>
           <p>
-            <strong>BASIC</strong> is the readable one, with a 138-byte helper in the cassette buffer
-            for drive-to-drive copies.
+            <strong>BASIC</strong> transports its helpers after the BASIC program, then relocates them
+            to reserved RAM at <code>$97f0-$9fff</code>. Before Load or Run it names every helper a
+            selected PRG would overwrite and asks for confirmation.
           </p>
         </div>
         <div>

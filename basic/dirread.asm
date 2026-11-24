@@ -20,7 +20,31 @@ scan    = $f7
 arr     = $f9
 maxl    = 27
 
-        * = $c000
+        .weak
+HELPER_ADDR = $c000
+        .endweak
+
+; 3.9 keeps the original in-image workspace.  4.0 places the header and
+; workspace in its reserved $9880-$98F2 RAM, so a program loaded at $C800
+; cannot corrupt Commander state. At $9BC0 the original tail would cross
+; $A000 into BASIC ROM.
+        .weak
+HELPER_WORK = 0
+        .endweak
+
+        .weak
+HELPER_HEADER = $c800
+        .endweak
+
+; The 3.9 binary retains its original title rendering.  4.0 enables the
+; compact two-cell inverse margin so its relocated title stays clear of the
+; right-side panel. The 25th title cell, immediately after the disk ID, is
+; explicitly output as an inverse space; later trailing cells are not shown.
+.weak
+TITLE_MARGIN = 0
+.endweak
+
+        * = HELPER_ADDR
 
 read    lda #0
         sta count
@@ -91,11 +115,25 @@ showhead
         jsr $fff0
         lda #$12
         jsr $ffd2
+        .if TITLE_MARGIN
+        lda #$20                ; two inverse spaces: fixed title margin
+        jsr $ffd2
+        lda #$20
+        jsr $ffd2
+        .endif
         ldy #0
         ldx #0
-sh      cpy buflen
+sh      .if TITLE_MARGIN
+        cpx #25                 ; 2-cell margin leaves 25 title cells
+        beq shx
+        .endif
+        cpy buflen
+        .if TITLE_MARGIN
+        beq shsuffix
+        .else
         beq shx
         cpx #27
+        .endif
         beq shx
         lda buf,y
         cmp #$12
@@ -105,6 +143,15 @@ sh      cpy buflen
         jsr $ffd2
 shn     iny
         bne sh
+        .if TITLE_MARGIN
+shsuffix
+        lda #$12                ; 3.8 appends this only after all input
+        jsr $ffd2
+        lda #$20
+        sta hdrbuf,x
+        inx
+        jsr $ffd2
+        .endif
 shx     lda #$20
 -       cpx #27
         beq +
@@ -116,7 +163,7 @@ shx     lda #$20
         lda #$0d
         jmp $ffd2
 
-hdrbuf  = $c800
+hdrbuf  = HELPER_HEADER
 
 getb    jsr CHRIN
         rts
@@ -554,6 +601,7 @@ aldone  lda #0
         sta count+1
         rts
 
+        .if HELPER_WORK == 0
 want    .byte 0
         .byte 0
 num     .word 0
@@ -573,3 +621,23 @@ digs    .fill 5
 nbuf    .fill 16
 tbuf    .fill 4
 buf     .fill 40
+        .else
+want    = HELPER_WORK
+num     = want + 2
+used    = num + 2
+link    = used + 1
+blocks  = link + 1
+buflen  = blocks + 2
+first   = buflen + 1
+field   = first + 1
+start   = field + 1
+ndig    = start + 1
+pad     = ndig + 1
+nlen    = pad + 1
+width   = nlen + 1
+acc     = width + 1
+digs    = acc + 2
+nbuf    = digs + 5
+tbuf    = nbuf + 16
+buf     = tbuf + 4
+        .endif

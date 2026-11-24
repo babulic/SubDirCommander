@@ -1,6 +1,6 @@
 ; Move the BASIC DATA pointer ($41/$42) forward by the number of items in X.
 ; Does not collect the values. The next READ continues at the following item.
-; SYS 50432. The count is in $FB (0 does nothing).
+; SYS 50432 in the 3.9 layout. The count is in $FB (0 does nothing).
 ;
 ; This used to sit at $02A7, the RS-232 output buffer. That buffer is only
 ; 89 bytes ($02A7-$02FF). The routine is 170, so it ran through the BASIC
@@ -10,7 +10,11 @@
 ; hex decoder ($C800), which the directory header later overwrites.
 ; The help panel follows this routine at $C5B0 and ends before $C800.
 
-        * = $c500
+        .weak
+HELPER_ADDR = $c500
+        .endweak
+
+        * = HELPER_ADDR
 
         ldx $fb
         beq done

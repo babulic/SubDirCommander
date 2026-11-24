@@ -16,9 +16,9 @@ Rename, validate and format are not in that firmware
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.39.prg` | BASIC V2 | 56 blocks |
-| `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
-| `dist/SubDirCommand.39.d64` | slim 1541 disk with both programs | |
+| `dist/SubDirCommand.40.prg` | BASIC V2 | 45 blocks |
+| `dist/%SubDirCommand.40.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
+| `dist/SubDirCommand.40.d64` | slim 1541 disk with both programs | |
 | `dist/fb.d64` | frequently-used disk with both programs | |
 
 `%` is an ordinary character in a 1541 file name.
@@ -34,12 +34,12 @@ x64sc -8 dist/fb.d64
 Then on the C64, in lowercase:
 
 ```text
-load "SubDirCommand.39",8
+load "SubDirCommand.40",8
 run
 ```
 
 ```text
-load "%SubDirCommand39",8
+load "%SubDirCommand40",8
 run
 ```
 
@@ -81,7 +81,28 @@ files can be copied; REL files cannot. A failed copy (disk full, write
 error, RUN/STOP) removes the partial file and validates the target so its
 blocks come back. Copy on the same drive still uses the drive's own `C:`.
 
-## What changed from `.37`
+## What changed in `.40`
+
+- BASIC helpers are no longer stored as `DATA` fields. A binary trailer after
+  the BASIC terminator copies them at startup into `$97F0-$9FFF`. The first
+  line first detects the return from an in-program `LOAD`; otherwise it
+  reserves that RAM, runs `CLR`, sets `VARTAB` to the trailer, runs `CLR`
+  again, and only then `SYS`es the relocator.
+- The trailer is only a transport: it is copied from the file image first,
+  then BASIC allocates its variables below `$97F0`. The live services are
+  `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY PANEL`
+  `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. `HEX DECODE` and `DATA SKIP`
+  are retained only as 3.9 source helpers; 4.0 neither transports nor calls them.
+- Before `7` / `8`, BASIC warns with the exact service names when the selected
+  PRG can overwrite any resident range. KERNAL `LOAD` can still write above
+  BASIC's memory ceiling, so this confirmation is required even in 4.0.
+- `$C000-$CFFF` no longer contains any BASIC Commander code or state: a PRG
+  loaded at `$C800` or `$C900` is not damaged by Commander state, nor can it
+  corrupt it merely by being loaded. The only other temporary high-RAM use is
+  the cross-drive Copy buffer at `$A000-$BFFF`, behind BASIC ROM, and it is
+  used only while that Copy is running.
+
+Earlier `.39` changes retained in 4.0:
 
 - CRSR right no longer moves up a line. CRSR left/right now page.
 - Copy asks for the target drive.
@@ -131,7 +152,7 @@ listing.
 
 ## Machine language version
 
-`ml/sdc39.asm` (64tass). Same screen, keys and behaviour; the list is drawn
+`ml/sdc40.asm` (64tass). Same screen, keys and behaviour; the list is drawn
 straight into screen RAM, so moving and paging are instant.
 
 - Code `$0801-$1B1A`, work variables up to `$1C86`.
@@ -153,13 +174,14 @@ straight into screen RAM, so moving and paging are instant.
 ## Build and test
 
 ```bash
-tools/build.sh          # petcat, 64tass and c1541 -> dist/
+python3 tools/build40.py # petcat, 64tass and c1541 -> dist/
 ```
 
-`basic/SubDirCommand.39.txt` is the petcat listing of the BASIC program.
-`basic/copyhelper.asm` is the 138-byte copy routine it POKEs to `$033C`,
-`basic/dirread.asm` reads the directory, and `basic/hexpoke.asm` pokes the
-hex DATA. `original/` holds the extracted `.37` and the untouched `fb.d64`.
+`basic/SubDirCommand.40.txt` is the petcat listing of the BASIC program;
+`basic/trailer40.asm` is the binary transport appended after its terminator.
+The common helper sources are assembled at the 4.0 resident addresses by
+`tools/build40.py`. `original/` holds the extracted `.37` and the untouched
+`fb.d64`.
 
 `test/` drives VICE through its remote monitor: `vice.py` types keys and
 reads the screen, `t*.py` cover the BASIC version, `m*.py` the machine code
@@ -170,10 +192,16 @@ their disk images in `/tmp/t` (`mkdisks.sh` builds them).
 Use the official runners for a persistent latest result:
 
 ```bash
+test/run40.sh                   # 4.0 trailer, relocation, Copy and warning regression
 test/runall.sh                 # full BASIC + ML VICE suite
 test/run_scenario.sh t6        # one fresh-fixture VICE scenario
 test/run_device_matrix.sh sd2iec
 ```
+
+`test/run40.sh` rewrites `TEST_REPORT_SUB40.md` on every exit and keeps one
+timestamped 4.0 report under `test/reports/`. Its report names both executed
+VICE scenarios and their purpose. The established `.39` runners below retain
+their own `TEST_REPORT_SUB39.md` history.
 
 Each runner rewrites `TEST_REPORT_SUB39.md` on exit, including a failed run
 or a device-adapter `SKIP` (exit 77). It therefore never leaves a stale PASS.

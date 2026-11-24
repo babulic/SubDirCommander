@@ -1,11 +1,12 @@
-; Help panel for the BASIC SubDirCommand.39.
+; Help panel for the BASIC SubDirCommander.
 ; Rows 1-23, from column 27, go straight into screen and colour RAM.
 ; A short row stops before column 39, so that cell stays as the clear
 ; left it. The caller clears the screen first, including the file list.
 ;
-; $C5B0 sits after the DATA skipper ($C500, 170 bytes, ends at $C5A9)
-; and before the hex decoder ($C800). The first two bytes are $A9 $43.
-; A later RUN sees them and skips this block's DATA.
+; The default $C5B0 placement is only for the 3.9 DATA-loader build, after
+; the DATA skipper and before the old $C800 hex decoder.  build40.py supplies
+; HELPER_ADDR=$9930, where this image becomes a protected 4.0 resident helper.
+; The first two bytes are $A9 $43; a later 3.9 RUN sees them and skips DATA.
 
         .cpu "6502"
         .enc "pet"
@@ -17,7 +18,11 @@
         .cdef "^^", $5e
         .cdef "__", $5f
 
-        * = $c5b0
+        .weak
+HELPER_ADDR = $c5b0
+        .endweak
+
+        * = HELPER_ADDR
 
 ptr     = $fb
 scr     = $fd

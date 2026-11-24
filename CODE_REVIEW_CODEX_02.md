@@ -1,60 +1,95 @@
-# Codex review — SubDirCommander 3.9, follow-up 02
+# Codex review — SubDirCommander 4.0, follow-up 02
 
-This is the authoritative list of findings still open after the BASIC
-optimization recorded in `CODE_REVIEW_CODEX.md`.  It deliberately excludes
-the completed identifier shortening, dead assignments and tokenized-line
-length guard.
+This is the authoritative record of the remaining review items after the
+BASIC optimization in `CODE_REVIEW_CODEX.md` and the 4.0 implementation. It
+deliberately excludes the completed identifier shortening, dead assignments
+and tokenized-line length guard.
 
-## P1 — Direct LOAD/RUN can overwrite the BASIC resident services
+## Resolved P1 — BASIC helpers now use a binary transport trailer
 
-The BASIC frontend directly loads a selected PRG at 4487 and optionally
-executes it at 4489.  A loaded PRG can overwrite one or more resident helpers
-and then return to a Commander whose next directory, help-panel or copy call
-uses corrupted code.
+4.0 removes the helper bytes from BASIC `DATA`. The normal BASIC program ends
+with `$0000`; the raw PRG appends a relocator followed by the three executable
+helper images. The fourth protected region holds directory state at run time;
+it is not an executable trailer image. The transport is not called in place.
 
-Current services are still at:
+Its first BASIC line starts with the direct-load reentry gate
+`ON-SGN(RL)GOTO4489`; on an ordinary start it evaluates to zero and falls
+through to this numeric bootstrap:
 
-| Service | Current range | Use |
+1. `POKE55,240:POKE56,151:CLR` — reserve the top of BASIC RAM at `$97F0`.
+2. `POKE45,120:POKE46,43:CLR` — set `VARTAB` to the start of this build's
+   trailer (`$2B78`) and rebuild BASIC's allocation pointers below the ceiling.
+3. `SYS11128` — call the still-unreferenced trailer relocator.
+
+The second `CLR` is necessary. KERNAL has set `VARTAB` after the complete raw
+PRG, including its trailer; changing only `MEMSIZ` would leave BASIC's future
+allocations starting after that transport. `tools/build40.py` derives the
+trailer address from the tokenized BASIC program and rejects a listing whose
+literal `POKE45/46` or `SYS` no longer matches it.
+
+`RL` is set immediately before a direct in-program `LOAD`. Such a load
+re-enters BASIC at line 1; the gate resumes at 4489 instead of entering the
+consumed raw trailer. On a normal startup the one scalar `RL` is created only
+after KERNAL's raw-file end pointer, then the first `CLR` immediately discards
+it; it cannot overwrite the transport before the helper copy.
+
+The relocator copies the images before line 2 allocates any variables, arrays
+or strings. The active map is:
+
+| Service | Resident range | Entry |
 | --- | --- | --- |
-| `COPY HELPER` | `$033C-$03C5` | cross-drive `SYS 828` |
-| `DIR READ` | `$C000-$C43F` | `SYS 49152` |
-| `DATA SKIP` | `$C500-$C5A9` | `SYS 50432` |
-| `KEY PANEL` | `$C5B0-$C794` | `SYS 50608` |
-| `HEX DECODE` | `$C800-$C892` | `SYS 51200` |
+| `COPY HELPER` | `$97F0-$9879` | `SYS 38896` |
+| `DIR HEADER/WORK` | `$9880-$98F2` | internal state |
+| `KEY PANEL` | `$9930-$9B14` | `SYS 39216` |
+| `DIR READ` | `$9B20-$9F6F` | `SYS 39712` |
 
-Before commands `7` (Run) and `8` (Load), calculate the conservative loaded
-range from the PRG load address and directory block count.  If it intersects
-any service, list the exact affected names and ask `y/n`:
+`DIR HEADER/WORK` is fully resident: header `$9880-$989A`, workspace
+`$98A0-$98F2`. This avoids the old high-build workspace crossing `$A000` into
+BASIC ROM and ensures that a program loaded at `$C800` or `$C900` cannot
+corrupt Commander state. `DATA SKIP` was only the 3.9 loader for the discarded
+helper `DATA`; it has no 4.0 caller and is no longer transported. `HEX DECODE`
+was likewise used only to construct those 3.9 helper bytes, so it is neither
+assembled, transported nor called in 4.0.
 
-- `7`: whether to run it anyway;
-- `8`: whether to load it anyway.
+The 4.0 title renderer follows the 3.8 presentation rule: two inverse spaces,
+the complete incoming header stream and one appended inverse space, truncated
+to the 27 cells before the right-side panel. Thus the first 25 incoming header
+characters are preserved unchanged; a device-supplied byte after `2A` remains
+visible while the appended blank naturally falls outside the area. Only a
+short header receives the appended blank within its 25 cells. `showhead` and
+`I$` use the same stored value, so a fresh list and later Copy/Delete redraw
+have identical attributes. The 3.9 source path retains its original title
+renderer.
+The tail of the fixed `DIR READ` reservation is intentional padding; the full
+`$9B20-$9F6F` range remains unavailable to BASIC. There is no live BASIC
+Commander code or state at `$C000-$CFFF`: `$C800` and `$C900` are safe direct
+load targets.  The sole other high-RAM use is the temporary cross-drive Copy
+buffer at `$A000-$BFFF`, behind BASIC ROM, and it is used only while Copy runs.
 
-Default is cancel.  A confirmed operation intentionally leaves Commander
-memory altered; do not silently reinstall helpers afterwards.
+At a clean Commander exit, line 4990 writes an `RTS` at `VARTAB`, the former
+raw trailer entry. During the first run BASIC correctly reuses that transport
+RAM for variables; without this single-byte handoff a later ordinary `RUN`
+would `SYS` into variable bytes and return to `READY`. The resident helpers
+remain at `$97F0-$9FFF`, so the next `RUN` returns from this `RTS` and starts
+normally. A confirmed operation that overwrites resident helpers remains an
+explicitly unsupported return case.
 
-### Approved follow-up architecture — not implemented yet
+Before commands `7` (Run) and `8` (Load), BASIC calculates a conservative
+range from the PRG load address and its directory-block count. On an overlap
+it lists every exact affected service and asks `Run anyway? y/n` or `Load
+anyway? y/n`; any key other than `y` cancels. A confirmed operation may alter
+the Commander, and it is deliberately not silently reinstalled. The warning
+is still necessary: KERNAL `LOAD` does not obey BASIC's memory ceiling.
 
-Replace the BASIC `DATA` helper payload with a binary trailer after the BASIC
-program. The first BASIC line must use only numeric literals to set the BASIC
-memory ceiling to `$97F0` and run `CLR` (for example
-`POKE55,240:POKE56,151:CLR`) **before** it calls the trailer's relocator with
-`SYS`. `CLR` resets BASIC pointers but does not erase the still-unreferenced
-trailer. The relocator must immediately copy the helpers to the now-reserved
-`$97F0-$9FFF` area; only then may normal BASIC code allocate variables,
-arrays or strings.
+## Resolved P2 — obsolete `M/m` key-map entries
 
-The planned resident positions are:
-
-| Service | Planned range |
-| --- | --- |
-| `COPY HELPER` | `$97F0-$9879` |
-| `DATA SKIP` | `$9880-$9929` |
-| `KEY PANEL` | `$9930-$9B14` |
-| `HEX DECODE` | `$9B20-$9BB2` |
-| `DIR READ` | `$9BC0-$9FFF` |
-
-The direct-load warning remains necessary after this move because KERNAL
-`LOAD` does not respect BASIC's memory ceiling.
+The two former Make-directory mappings `77,0,205,0` were removed from the
+remaining BASIC key-map `DATA`. Make directory has long used `N/n`; `M/m`
+were explicitly assigned action zero, exactly the initialized value of every
+`K%(0..255)` entry after `DIM`. No code writes those two map entries or treats
+action zero as a command. The initialization now reads the remaining 31
+pairs, so pressing `M/m` still has the same no-op behaviour without storing
+redundant data.
 
 ## Accepted limitation — BAS and ML can enter RAM hidden by ROM or I/O
 
@@ -126,6 +161,25 @@ test name, purpose and execution description. Before a run, the runner cleans
 only prior reports in its own category (full suite, single scenario or device
 matrix), preserving current reports from the other two categories.
 
+### 4.0 binary-trailer release
+
+`tools/build40.py`, `test/verify_artifacts40.py` and `test/run40.sh` passed.
+The final runner report is `TEST_REPORT_SUB40.md`; it records the valid VICE
+startup directory and preserved disk title, `$37/$38 = $97F0`, byte-exact
+relocation of the three executable images and validation of the fourth reserved
+directory-state range, clean Exit followed by ordinary RUN
+and fresh drive selection, and a failed cross-drive Move (`FILE EXISTS`) that
+preserves both files and redraws the title. It also records cross-drive Copy
+through `SYS 38896`, and declined Load and Run of a synthetic nine-block
+`$97F0` PRG. The latter overlaps the complete resident interval and the test
+requires all four exact service names in both dialogs while confirming that
+the first helper byte did not change.
+
+The 4.0 runner replaces only its previous
+`basic40-binary-trailer` history report under `test/reports/`. Its current
+timestamped PASS is therefore separate from the 3.9 full-suite, scenario and
+device reports.
+
 ## Remaining test debt
 
 `test/runall.sh` correctly fails on shell/Python/fixture errors, and
@@ -145,8 +199,10 @@ Still add asserted VICE coverage for:
 2. full-disk/abort cleanup: no partial target and recovered free blocks;
 3. NUL-containing SEQ cross-drive copy;
 4. BASIC `VARTAB`/`TXTTAB` after Load/Run and restored key-repeat on exit;
-5. cancel/confirm for every resident-service overlap on both `7` and `8`;
-6. helper reload after cross-drive copy, including preserved `MK%` marks.
+5. the affirmative `y` path for a deliberately destructive resident-overlap
+   Load/Run operation;
+6. relocation integrity after more varied Copy failure/abort paths, including
+   preserved `MK%` marks.
 
 VICE tests run in VICE console mode when executed outside the filesystem
 sandbox, which must be allowed to create the loopback remote-monitor socket.

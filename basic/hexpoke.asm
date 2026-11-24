@@ -1,8 +1,13 @@
 ; Decode the BASIC string H$ and poke it.
 ; Destination is kept at $0336/$0337, because BASIC reuses $02 between SYS calls.
-; H$ holds PETSCII hex. Lives in the RS-232 buffer, ahead of the copy helper.
+; H$ holds PETSCII hex. This is a 3.9-only DATA-loader helper at $C800.
+; BASIC 4.0 has no caller and does not assemble, transport or relocate it.
 
-        * = $c800
+        .weak
+HELPER_ADDR = $c800
+        .endweak
+
+        * = HELPER_ADDR
 
 poke    lda $0336
         sta $02
