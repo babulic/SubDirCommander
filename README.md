@@ -43,7 +43,13 @@ load "%SubDirCommand39",8
 run
 ```
 
-Give a second drive with `-9 other.d64` to try copying between drives.
+A copy from one drive to another needs a second disk. In VICE on the computer, attach it as drive 9. That flag belongs on the `x64sc` command, not on the C64:
+
+```bash
+x64sc -8 dist/fb.d64 -9 other.d64
+```
+
+`other.d64` is any second disk image. On a real C64, use the two drives you have and pick the target drive in the commander.
 
 ## Keys
 

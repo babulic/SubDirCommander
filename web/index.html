@@ -83,7 +83,13 @@ run</code></pre>
         <p>for the machine code version, or</p>
         <pre><code>load "SubDirCommand.39",8
 run</code></pre>
-        <p>for the BASIC one. Add <code>-9 other.d64</code> to try copying between drives.</p>
+        <p>for the BASIC one.</p>
+        <p>
+          A copy from one drive to another needs a second disk. In VICE on the computer,
+          attach it as drive 9. That is a flag for <code>x64sc</code>, not a command on the C64:
+        </p>
+        <pre><code>x64sc -8 SubDirCommand.39.d64 -9 other.d64</code></pre>
+        <p><code>other.d64</code> is any second disk image. On a real C64, use the two drives you have and pick the target drive in the commander.</p>
       </section>
 
       <section>
