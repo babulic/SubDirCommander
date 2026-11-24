@@ -16,7 +16,7 @@ Rename, validate and format are not in that firmware
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.40.prg` | BASIC V2 | 45 blocks |
+| `dist/SubDirCommand.40.prg` | BASIC V2 | 43 blocks |
 | `dist/%SubDirCommand.40.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
 | `dist/SubDirCommand.40.d64` | slim 1541 disk with both programs | |
 | `dist/fb.d64` | frequently-used disk with both programs | |
