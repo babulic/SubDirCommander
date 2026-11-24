@@ -6,6 +6,15 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 device=${1:?"usage: test/run_device_matrix.sh DEVICE"}
 work=/tmp/t
 
+report() {
+    local status=$?
+    if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then
+        python3 "$root/test/write_test_report.py" --suite device --target "$device" --status "$status" || true
+    fi
+    exit "$status"
+}
+trap report EXIT
+
 run_pi1541_d64() {
     bash "$root/test/mkdisks.sh" "$root" "$work"
     python3 "$root/test/verify_fixtures.py" "$work"

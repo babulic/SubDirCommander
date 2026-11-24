@@ -35,8 +35,15 @@ memory altered; do not silently reinstall helpers afterwards.
 ### Approved follow-up architecture — not implemented yet
 
 Replace the BASIC `DATA` helper payload with a binary trailer after the BASIC
-program.  A startup bootstrap should reserve `$97F0-$9FFF`, set the BASIC
-memory ceiling below it, then copy/execute helpers from these positions:
+program. The first BASIC line must use only numeric literals to set the BASIC
+memory ceiling to `$97F0` and run `CLR` (for example
+`POKE55,240:POKE56,151:CLR`) **before** it calls the trailer's relocator with
+`SYS`. `CLR` resets BASIC pointers but does not erase the still-unreferenced
+trailer. The relocator must immediately copy the helpers to the now-reserved
+`$97F0-$9FFF` area; only then may normal BASIC code allocate variables,
+arrays or strings.
+
+The planned resident positions are:
 
 | Service | Planned range |
 | --- | --- |
@@ -110,6 +117,11 @@ and ML VICE suite also passed with exit status 0, including the asserted
 `t5.py`, `t6.py`, `t15.py` and `m8.py` coverage. This is true-drive D64
 coverage; it is not a firmware-level PASS for SD2IEC, Pi1541 SD-card mode or
 Kung Fu Flash, which remain explicit adapter-dependent `SKIP`s.
+
+The official full-suite, single-scenario and device-matrix runners regenerate
+`TEST_REPORT_SUB39.md` and save a timestamped copy under `test/reports/` in
+their `EXIT` handlers. A later failure or missing device adapter therefore
+replaces an earlier PASS in the latest report without losing the run history.
 
 ## Remaining test debt
 

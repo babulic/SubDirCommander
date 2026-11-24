@@ -6,6 +6,15 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 work=/tmp/t
 limit=${SDC_TEST_TIMEOUT:-1200}
 
+report() {
+    local status=$?
+    if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then
+        python3 "$root/test/write_test_report.py" --suite runall --status "$status" || true
+    fi
+    exit "$status"
+}
+trap report EXIT
+
 run() {
     local scenario=$1
     echo "### $scenario"

@@ -166,3 +166,18 @@ reads the screen, `t*.py` cover the BASIC version, `m*.py` the machine code
 version (paging, every command, copies across drives including disk full and
 file exists, loading BASIC and machine code, quitting). The scripts expect
 their disk images in `/tmp/t` (`mkdisks.sh` builds them).
+
+Use the official runners for a persistent latest result:
+
+```bash
+test/runall.sh                 # full BASIC + ML VICE suite
+test/run_scenario.sh t6        # one fresh-fixture VICE scenario
+test/run_device_matrix.sh sd2iec
+```
+
+Each runner rewrites `TEST_REPORT_SUB39.md` on exit, including a failed run
+or a device-adapter `SKIP` (exit 77). It therefore never leaves a stale PASS.
+It also saves an immutable timestamped copy under `test/reports/`; those local
+history reports are ignored by Git. Their names use
+`YYYY-MM-DD_HH-MM-SS-microseconds__runner__target__result.md`; a report is
+created exclusively and gets a numeric suffix on a collision.
