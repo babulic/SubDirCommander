@@ -74,14 +74,14 @@ but deliberately does not execute it.
 `README.md` and the web page now use the assembled `bufstart = $2300`, state
 the 31.25 KiB `$2300-$9FFF` buffer, and document the direct-return contract:
 only `$2300-$9FFF` and `$C000-$CFFF` are safe.  The ROM/I/O ranges remain a
-P1 runtime-validation issue above; documentation does not claim that the
+documented accepted limitation above; documentation does not claim that the
 current code safely executes them.
 
 `mkdisks.sh` creates exact `$22FF`, `$2300`, `$9FFF`, `$C000`, `$CFFF` and
 `$D000` PRGs. `verify_fixtures.py` validates every load address; `m8.py`
 asserts the `$22FF` handoff, direct return at the four safe boundaries and
-the `$D000` start-address probe. It deliberately does not execute `$D000`
-until P1 rejection is implemented.
+the `$D000` start-address probe. It deliberately does not execute `$D000`,
+which is outside the supported direct-return contract.
 
 ### DOS delimiters
 
