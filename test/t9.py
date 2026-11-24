@@ -7,12 +7,14 @@ for i in range(6): v.key(DOWN)
 v.key(ord('7'), at=10)
 v.wait_line(10, 120); time.sleep(1)
 v.show("7 on mlc000 ($c000, stays in commander)")
-v.key(ord(' '), at=4489)
+# 4489 invokes the shared GET loop; by the time the prompt is observable the
+# executing BASIC line is 4, not the transient caller line.
+v.key(ord(' '))
 v.wait_line(10, 60); time.sleep(1)
 v.show("after any key")
 # copy smallseq (index 52) to drive 8
 v.key(DOWN); v.key(DOWN)
-v.key(ord('4'), at=10); v.wait_line(4340, 60); time.sleep(0.3); v.keys([RET])
+v.key(ord('4'), at=10); v.wait_line((4340,4390), 60); time.sleep(0.3); v.keys([RET])
 v.wait_line(4341, 30); time.sleep(0.3); v.keys(pet("8")+[RET])
 v.wait_line(10, 300); time.sleep(1)
 v.show("after smallseq copy")

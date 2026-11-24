@@ -137,12 +137,15 @@ straight into screen RAM, so moving and paging are instant.
 - Code `$0801-$1B1A`, work variables up to `$1C86`.
 - Directory: RAM under the BASIC ROM, `$A000-$BFFF`, 32 bytes per entry,
   up to 242 entries.
-- Copy buffer: `$1D00-$9FFF` (33 KB), so most files copy in one pass.
+- Copy buffer: `$2300-$9FFF` (31.25 KiB), so most files copy in one pass.
 - Zero page `$4B-$72` holds the hot variables; BASIC's own bytes there
   (including its `JMP` at `$54`) are saved at start and put back on exit and
   while a loaded program runs.
-- A program comes back to the commander only when it loads at or above
-  `$1D00` and below `$D000`; everything else is handed to BASIC as above.
+- The copy buffer begins at the assembled `bufstart` label, `$2300`.
+  The ML direct-return contract is only `$2300-$9FFF` or `$C000-$CFFF`.
+  `$A000-$BFFF` (BASIC ROM), `$D000-$DFFF` (I/O) and `$E000-$FFFF`
+  (KERNAL ROM) are not direct-return targets; unsupported addresses must be
+  handed to BASIC rather than executed inside the commander.
 - The line editor in the prompts: first key replaces the default, DEL
   deletes, RETURN accepts, RUN/STOP cancels. RUN/STOP in the drive prompt
   quits.

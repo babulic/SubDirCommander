@@ -4,7 +4,7 @@ from vice import *
 v = start("/tmp/t/fb39w.d64", d9="/tmp/t/big9.d64")
 def copy(name, drive):
     v.key(ord('4'), at=10)
-    v.wait_line(4340, 60); time.sleep(0.3)
+    v.wait_line((4340,4390), 60); time.sleep(0.3)
     v.keys(pet(name)+[RET])
     v.wait_line(4341, 30); time.sleep(0.3)
     v.keys(pet(drive)+[RET])

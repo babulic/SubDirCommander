@@ -83,6 +83,34 @@ def dataskip_payload(source: str) -> bytes:
     return bytes.fromhex("".join(pieces))
 
 
+def basic_record_sizes(path: Path) -> list[tuple[int, int]]:
+    """Return (line number, encoded record size) for a BASIC V2 PRG."""
+    data = path.read_bytes()
+    assert data[:2] == b"\x01\x08", f"unexpected BASIC load address: {path}"
+    sizes: list[tuple[int, int]] = []
+    offset = 2
+    while True:
+        next_address = int.from_bytes(data[offset : offset + 2], "little")
+        if next_address == 0:
+            break
+        line_number = int.from_bytes(data[offset + 2 : offset + 4], "little")
+        end = data.index(0, offset + 4)
+        sizes.append((line_number, end - offset + 1))
+        expected_offset = 2 + next_address - 0x0801
+        assert expected_offset == end + 1, (line_number, next_address, end)
+        offset = expected_offset
+    return sizes
+
+
+def labels(path: Path) -> dict[str, int]:
+    values: dict[str, int] = {}
+    for raw in path.read_text(encoding="latin-1").splitlines():
+        matched = re.match(r"(\w+)\s*=\s*\$([0-9a-f]+)", raw, re.IGNORECASE)
+        if matched:
+            values[matched.group(1)] = int(matched.group(2), 16)
+    return values
+
+
 def assert_disk(path: Path) -> None:
     disk = D64(str(path))
     assert disk.read(BASIC_NAME) == BASIC_PRG.read_bytes(), path
@@ -103,10 +131,16 @@ def main() -> None:
         temporary = Path(directory)
         decoded = temporary / "decoded.bas"
         rebuilt_ml = temporary / "sdc39ml.prg"
+        rebuilt_labels = temporary / "sdc39ml.lbl"
         command(petcat, "-2", "-o", str(decoded), "--", str(BASIC_PRG))
         assert listing(decoded) == listing(BASIC_TEXT), "BASIC source and PRG differ"
-        command(tass, "-q", "-C", "--long-branch", "--cbm-prg", "-o", str(rebuilt_ml), str(ML_SOURCE))
+        longest_line, longest_size = max(basic_record_sizes(BASIC_PRG), key=lambda item: item[1])
+        assert longest_size <= 200, ("BASIC line too long", longest_line, longest_size)
+        command(tass, "-q", "-C", "--long-branch", "--cbm-prg", "-l", str(rebuilt_labels), "-o", str(rebuilt_ml), str(ML_SOURCE))
         assert rebuilt_ml.read_bytes() == ML_PRG.read_bytes(), "ML source and PRG differ"
+        assert labels(rebuilt_labels)["bufstart"] == 0x2300, "ML buffer start changed"
+        assert "gosub4478" in source and "fori=1tolen(n$)" in source, "BASIC DOS-name guard missing"
+        assert "safeold" in ML_SOURCE.read_text(encoding="latin-1"), "ML DOS-name guard missing"
 
         helpers: list[bytes] = []
         for helper in HELPERS:
@@ -122,7 +156,10 @@ def main() -> None:
 
     assert_disk(ROOT / "dist" / "SubDirCommand.39.d64")
     assert_disk(ROOT / "dist" / "fb.d64")
-    print("PASS: BASIC, ML, helper payloads and release D64 images agree")
+    print(
+        "PASS: BASIC, ML, helper payloads and release D64 images agree "
+        f"(longest BASIC line {longest_line}: {longest_size} bytes)"
+    )
 
 
 if __name__ == "__main__":

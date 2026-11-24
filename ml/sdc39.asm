@@ -349,6 +349,8 @@ fatalj  jmp fatal
 ; --------------------------------------------------------------- 3 rename
 crename jsr parsefile
         bcs restore
+        jsr safeold
+        bcs restore
         lda ro
         bne restore
         jsr msgi
@@ -357,6 +359,7 @@ crename jsr parsefile
         jsr namefield
         bcs restore
         jsr takename
+        bcs restore
         lda newlen
         beq restore
         jsr samename
@@ -413,6 +416,8 @@ delloop lda last
         lda ro
         ora locked
         bne delnext
+        jsr safeold
+        bcs delnext
         jsr cmdi
         .null "s:"
         jsr cmdname
@@ -426,6 +431,8 @@ delone  jsr parsefile
         lda ro
         ora locked
         bne restore
+        jsr safeold
+        bcs restore
         jsr msgi
         .null "Delete file ? y/n"
         jsr flushk
@@ -472,6 +479,8 @@ ccopy   lda #0
         jmp fileall
 +       jsr parsefile
         bcs restore
+        jsr safeold
+        bcs restore
         lda ro
         bne restore
         lda blocks
@@ -483,6 +492,7 @@ ccopy   lda #0
         jsr namefield
         bcs restore
         jsr takename
+        bcs restore
         jsr msgi
         .null "Target drive:"
         lda dev
@@ -556,6 +566,8 @@ cmove   lda #1
         jmp fileall
 +       jsr parsefile
         bcs nomove
+        jsr safeold
+        bcs nomove
         lda ro
         bne nomove
         lda blocks
@@ -567,6 +579,7 @@ cmove   lda #1
         jsr namefield
         bcs nomove
         jsr takename
+        bcs nomove
         jsr msgi
         .null "Target drive:"
         lda dev
@@ -664,6 +677,8 @@ faloop  lda walk
         bcs fanext
         lda ro
         bne fanext
+        jsr safeold
+        bcs fanext
         jsr oldtonew
         jsr xcopy
         bcs fatalc
@@ -685,6 +700,7 @@ cformat jsr msgi
         jsr namefield
         bcs nomove
         jsr takename
+        bcs nomove
         lda newlen
         beq nomove
         jsr msgi
@@ -745,6 +761,7 @@ cmkdir  jsr msgi
         jsr namefield
         bcs nomove
         jsr takename
+        bcs nomove
         lda newlen
         beq nomove
         jsr cmdi
@@ -753,6 +770,8 @@ cmkdir  jsr msgi
         jmp dosfolder
 
 crmdir  jsr parsefile
+        bcs nomove
+        jsr safeold
         bcs nomove
         lda type
         cmp #"d"
@@ -1760,6 +1779,43 @@ takename
         bpl -
         lda inlen
         sta newlen
+        jmp safenew
+
+; Carry is set for a DOS command delimiter.  Names are deliberately not
+; quoted here: DOS commands use the delimiters as syntax, not file data.
+safeold ldx #0
+-       cpx namelen
+        beq safegood
+        lda namebuf,x
+        jsr unsafe
+        bcs safebad
+        inx
+        bne -
+
+safenew ldx #0
+-       cpx newlen
+        beq safegood
+        lda newname,x
+        jsr unsafe
+        bcs safebad
+        inx
+        bne -
+
+safegood
+        clc
+        rts
+safebad sec
+        rts
+
+unsafe  cmp #":"
+        beq safebad
+        cmp #","
+        beq safebad
+        cmp #"="
+        beq safebad
+        cmp #$22
+        beq safebad
+        clc
         rts
 
 ; Carry set when newname equals the selected name.

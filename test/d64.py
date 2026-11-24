@@ -66,6 +66,11 @@ class D64:
             t, s = b[0], b[1]
         return bytes(out)
 
+    def blocks_free(self):
+        """Return free 254-byte data blocks from the 1541 BAM."""
+        bam = self.sec(18, 0)
+        return sum(bam[4 + 4 * (track - 1)] for track in range(1, 36) if track != 18)
+
     def save(self):
         open(self.path, "wb").write(self.d)
 

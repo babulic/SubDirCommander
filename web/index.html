@@ -129,7 +129,10 @@ run</code></pre>
           <p>
             <strong>Machine code</strong> draws the list straight into screen memory, so moving and
             paging are instant. It keeps the directory in the RAM under the BASIC ROM and copies
-            between drives through a 33 KB buffer.
+            between drives through a 31.25 KiB buffer at <code>$2300-$9fff</code>.
+            Its direct-return range is <code>$2300-$9fff</code> or
+            <code>$c000-$cfff</code>; ROM and I/O address ranges are not
+            supported return targets.
           </p>
           <p>
             <strong>BASIC</strong> is the readable one, with a 138-byte helper in the cassette buffer

@@ -1,13 +1,29 @@
-import os, shutil, socket, subprocess, time, re
+import atexit, os, shutil, socket, subprocess, time, re
+
+
+def free_loopback_port():
+    """Reserve no state; return a currently free port for one VICE session.
+
+    A unique monitor port prevents a test started after an interrupted run
+    from accidentally driving its predecessor's emulator.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        return probe.getsockname()[1]
 
 class Vice:
-    def __init__(self, d8=None, d9=None, port=6510, warp=True, extra=None, truedrive=True):
-        self.port = port
+    def __init__(self, d8=None, d9=None, port=None, warp=True, extra=None, truedrive=True):
+        self.port = free_loopback_port() if port is None else port
+        self.closed = False
         args = ["x64sc", "-default", "-silent", "-sounddev", "dummy",
-                "-remotemonitor", "-remotemonitoraddress", f"ip4://127.0.0.1:{port}", "-pal"]
+                "-remotemonitor", "-remotemonitoraddress", f"ip4://127.0.0.1:{self.port}", "-pal"]
         xvfb = shutil.which("xvfb-run")
         if xvfb:
             args = [xvfb, "-a", "-s", "-screen 0 1024x768x24"] + args
+        else:
+            # macOS CI commonly has no WindowServer.  VICE's console mode
+            # still supplies the remote monitor and C64 screen RAM.
+            args.append("-console")
         if warp:
             args.append("-warp")
         if d8:
@@ -20,10 +36,11 @@ class Vice:
             args += extra
         self.log = open("/tmp/t/vice.log", "w")
         self.proc = subprocess.Popen(args, stdout=self.log, stderr=subprocess.STDOUT)
+        atexit.register(self.quit)
         self.sock = None
         for _ in range(200):
             try:
-                self.sock = socket.create_connection(("127.0.0.1", port), timeout=2)
+                self.sock = socket.create_connection(("127.0.0.1", self.port), timeout=2)
                 break
             except OSError:
                 time.sleep(0.1)
@@ -107,7 +124,9 @@ class Vice:
 
     def wait_line(self, lines, timeout=60):
         if isinstance(lines, int):
-            lines = (lines,)
+            # BASIC command handlers return to the GET loop (line 4) so
+            # quickly that sampling only their caller (line 10) is flaky.
+            lines = (4, 10) if lines == 10 else (lines,)
         t0 = time.time()
         while time.time() - t0 < timeout:
             if self.line() in lines:
@@ -119,7 +138,12 @@ class Vice:
         """Send one key once the program sits in its key wait.
 
         Idle is usually line 4 (the GET subroutine) while the caller is line 10.
+        An explicit `at` is a command/prompt synchronization point: wait for
+        it before sending but let the caller wait for the following prompt.
         """
+        explicit_at = at != (4, 10)
+        if at == 10:
+            at = (4, 10)
         if at is not None:
             if not self.wait_line(at, timeout):
                 raise RuntimeError(f"not at line {at}, at {self.line()}")
@@ -129,7 +153,7 @@ class Vice:
         self.cmd("> 00c6 01", wait=0.15)
         self.go()
         time.sleep(0.4)
-        if at is not None:
+        if at is not None and not explicit_at:
             self.wait_line(at, timeout)
             time.sleep(0.2)
 
@@ -186,6 +210,18 @@ class Vice:
         raw = self.mem(0x0400, 0x07E7)
         return [sum(1 for c in range(27) if raw[r * 40 + c] & 0x80) for r in range(25)]
 
+    def highlighted_rows(self):
+        return [r for r, count in enumerate(self.rev_rows()) if 2 <= r <= 23 and count > 10]
+
+    def highlighted_row(self):
+        rows = self.highlighted_rows()
+        assert len(rows) == 1, f"expected one highlighted row, got {rows}"
+        return rows[0]
+
+    def require_text(self, text):
+        screen = self.screen()
+        assert any(text.lower() in row.lower() for row in screen), f"missing {text!r}: {screen}"
+
     def show(self, title=""):
         print("=" * 10, title)
         rv = self.rev_rows()
@@ -207,6 +243,9 @@ class Vice:
         return False
 
     def quit(self):
+        if self.closed:
+            return
+        self.closed = True
         try:
             self.enter()
             self.cmd("quit", expect=False)
@@ -218,6 +257,10 @@ class Vice:
             self.proc.wait(5)
         except Exception:
             self.proc.kill()
+            try:
+                self.proc.wait(5)
+            except Exception:
+                pass
         self.log.close()
 
 
@@ -254,8 +297,9 @@ def start(d8, name=NAME39, d9=None, drive=None, list_line=10, warp=True):
         v.keys(([drive] if drive else []) + [RET])
         v.wait_line(idle, 120)
     elif drive and drive != ord('8'):
-        v.key(ord('1'), at=idle)
-        v.wait_line(5007, 60); time.sleep(0.5)
+        assert v.wait_line(idle, 60)
+        v.key(ord('1'), at=None)
+        assert v.wait_line(5007, 60); time.sleep(0.5)
         v.keys([drive, RET])
         v.wait_line(idle, 120)
     time.sleep(0.5)

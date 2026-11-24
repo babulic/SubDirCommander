@@ -31,6 +31,18 @@ def main() -> None:
     ]
     assert D64(str(work / "big2.d64")).read(b"SMALLSEQ") == (work / "smallseq.bin").read_bytes()
     assert "smallseq" in files(work / "full9.d64")
+    bounds = D64(str(work / "bounds9.d64"))
+    for name, address in {
+        b"B22FF": 0x22FF,
+        b"B2300": 0x2300,
+        b"B9FFF": 0x9FFF,
+        b"BC000": 0xC000,
+        b"BCFFF": 0xCFFF,
+        b"BD000": 0xD000,
+    }.items():
+        image = bounds.read(name)
+        assert image is not None and int.from_bytes(image[:2], "little") == address, (name, image)
+    assert bounds.read(b"BAD:NAME") is not None
     print("PASS: deterministic VICE fixtures")
 
 
