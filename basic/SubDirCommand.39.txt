@@ -2,7 +2,7 @@
  2 goto5000
  3 poke782,0:poke783,0:sys65520:return
  4 poke198,0:wait198,1:return
- 5 poke646,1:poke781,y:gosub3:printbl$;:poke781,y:gosub3:return
+ 5 poke646,1:poke781,y:gosub3:printbo$;:poke1024+y*40+39,32:poke55296+y*40+39,1:poke781,y:gosub3:return
  10 gosub4:geta$:ifj$<>""then5000
  12 onkt%(asc(a$))goto100,110,120,130,5000,2100,2200,2300,2400,2500,2600,2700,2800,2950,2950,2960,2970,2980,140,150,4990:goto10
  20 poke781,2:gosub3:fori=tptotp+21:ifi>mthenprintbl$:goto22
@@ -120,7 +120,7 @@
  4300 ifmc>0then4550
  4301 sp=0:cn=0:gosub4420:ifc$=""thenreturn
  4302 gosub3700:ifroorp$="<"thenreturn
- 4303 poke646,1:poke781,y:gosub3:print"{wht}"bl$"Delete file ? y/n":gosub4:getq$
+ 4303 poke646,1:gosub5:print"Delete file ? y/n":gosub4:getq$
  4304 ifq$<>"y"thenpoke781,y:gosub3:i=p:gosub24:return
  4305 open1,dr,15,"s:"+c$:gosub4000:close1:cn=-1
  4306 ifen>1thencn=0:printj$:return
@@ -193,7 +193,7 @@
  4515 poke650,0:poke631,13:kb=1:ifru=0then4525
  4520 forx=1tolen(k$):poke631+x,asc(mid$(k$,x,1)):next:kb=x:poke631+kb,13:kb=kb+1
  4525 x=peek(43)+256*peek(44):pokex,0:pokex+1,0:poke198,kb:end
- 4550 cn=-1:poke646,1:poke781,y:gosub3:print"{wht}"bl$"Delete "mc" files ? y/n":gosub4:getq$
+ 4550 cn=-1:gosub5:print"Delete "mc" files ? y/n":gosub4:getq$
  4552 ifq$<>"y"thenpoke781,y:gosub3:i=p:gosub24:cn=0:return
  4554 gosub4100:ifstthenprintj$:return
  4556 pp=p:forxi=0tom:ifmk%(xi)<1then4560
@@ -233,7 +233,7 @@
  4861 ifl$="cbm"orl$="cop"orl$="jif"thenopen1,dr,15:gosub4000:close1:ifenthencn=0:printj$:return
  4865 o=-1:return
  4870 sp=0:cn=0:gosub4420:ifc$=""ort$<>"dir"thenreturn
- 4875 poke646,1:poke781,y:gosub3:print"{wht}"bl$"Remove dir? y/n":gosub4:getq$
+ 4875 gosub5:print"Remove dir? y/n":gosub4:getq$
  4880 ifq$<>"y"thenpoke781,y:gosub3:i=p:gosub24:return
  4885 gosub4100:ifstthenprintj$:return
  4890 open1,dr,15,"rd:"+c$:close1:gosub3750:ifstthenprintj$:return
