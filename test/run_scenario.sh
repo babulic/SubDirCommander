@@ -7,11 +7,11 @@ work=/tmp/t
 scenario=${1:?"usage: test/run_scenario.sh t5|...|m8"}
 limit=${SDC_TEST_TIMEOUT:-1200}
 
-find "$root/test/reports" -maxdepth 1 -type f -name '*.md' -delete
+python3 "$root/test/write_test_report.py" --clear-history vice-scenario
 
 report() {
     local status=$?
-    python3 "$root/test/write_test_report.py" --suite scenario --target "$scenario" --status "$status" || true
+    python3 "$root/test/write_test_report.py" --suite vice-scenario --target "$scenario" --status "$status" || true
     exit "$status"
 }
 trap report EXIT

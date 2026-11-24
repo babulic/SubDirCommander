@@ -180,6 +180,8 @@ or a device-adapter `SKIP` (exit 77). It therefore never leaves a stale PASS.
 It also saves an immutable timestamped copy under `test/reports/`; those local
 history reports are ignored by Git. Their names use
 `YYYY-MM-DD_HH-MM-SS-microseconds_runner_target_result.md`; a report is
-created exclusively and gets a numeric suffix on a collision. Before an
-official run begins, its older `.md` history reports are deleted, so the
-directory retains only the report for the current run.
+created exclusively and gets a numeric suffix on a collision. The report
+contains a human-readable test name, purpose and execution description.
+Before a run, only that runner category's older report is deleted: full-suite
+runs preserve scenario/device reports, scenario runs preserve full-suite/device
+reports, and device runs preserve full-suite/scenario reports.

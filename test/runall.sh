@@ -6,14 +6,12 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 work=/tmp/t
 limit=${SDC_TEST_TIMEOUT:-1200}
 
-# Keep the report directory useful: the next official test owns its one
-# historical report.  .gitkeep is not an .md file and is preserved.
-find "$root/test/reports" -maxdepth 1 -type f -name '*.md' -delete
+python3 "$root/test/write_test_report.py" --clear-history full-vice-regression
 
 report() {
     local status=$?
     if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then
-        python3 "$root/test/write_test_report.py" --suite runall --status "$status" || true
+        python3 "$root/test/write_test_report.py" --suite full-vice-regression --status "$status" || true
     fi
     exit "$status"
 }

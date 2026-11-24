@@ -6,12 +6,12 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 device=${1:?"usage: test/run_device_matrix.sh DEVICE"}
 work=/tmp/t
 
-find "$root/test/reports" -maxdepth 1 -type f -name '*.md' -delete
+python3 "$root/test/write_test_report.py" --clear-history device-matrix
 
 report() {
     local status=$?
     if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then
-        python3 "$root/test/write_test_report.py" --suite device --target "$device" --status "$status" || true
+        python3 "$root/test/write_test_report.py" --suite device-matrix --target "$device" --status "$status" || true
     fi
     exit "$status"
 }
