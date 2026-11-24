@@ -23,6 +23,9 @@
             <a class="btn primary" href="public/files/SubDirCommand.40.d64" download="SubDirCommand.40.d64">
               Disk image <span>SubDirCommand.40.d64</span>
             </a>
+            <a class="btn" href="public/files/fb.d64" download="fb.d64">
+              Frequently used tools <span>fb.d64 · both programs</span>
+            </a>
             <a class="btn" href="public/files/%25SubDirCommand.40.prg" download="%SubDirCommand40.prg">
               Machine code <span>%SubDirCommand40 · 26 blocks</span>
             </a>
@@ -76,7 +79,8 @@
       <section>
         <h2>Run it</h2>
         <p>In VICE, attach the disk to drive 8:</p>
-        <pre><code>x64sc -8 SubDirCommand.40.d64</code></pre>
+        <pre><code>x64sc -8 SubDirCommand.40.d64
+x64sc -8 fb.d64</code></pre>
         <p>Then on the C64, in lowercase:</p>
         <pre><code>load "%SubDirCommand40",8
 run</code></pre>
