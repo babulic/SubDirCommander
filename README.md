@@ -179,5 +179,7 @@ Each runner rewrites `TEST_REPORT_SUB39.md` on exit, including a failed run
 or a device-adapter `SKIP` (exit 77). It therefore never leaves a stale PASS.
 It also saves an immutable timestamped copy under `test/reports/`; those local
 history reports are ignored by Git. Their names use
-`YYYY-MM-DD_HH-MM-SS-microseconds__runner__target__result.md`; a report is
-created exclusively and gets a numeric suffix on a collision.
+`YYYY-MM-DD_HH-MM-SS-microseconds_runner_target_result.md`; a report is
+created exclusively and gets a numeric suffix on a collision. Before an
+official run begins, its older `.md` history reports are deleted, so the
+directory retains only the report for the current run.

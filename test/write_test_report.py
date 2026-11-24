@@ -105,10 +105,10 @@ def main() -> None:
         label = re.sub(r"[^A-Za-z0-9._-]+", "_", args.target or "all")
         stamp = moment.strftime("%Y-%m-%d_%H-%M-%S-%f")
         result_label = result if args.status == 0 else f"{result}-{args.status}"
-        stem = f"{stamp}__{args.suite}__{label}__{result_label}"
+        stem = f"{stamp}_{args.suite}_{label}_{result_label}"
         attempt = 1
         while True:
-            suffix = "" if attempt == 1 else f"__{attempt}"
+            suffix = "" if attempt == 1 else f"_{attempt}"
             history = HISTORY_DIR / f"{stem}{suffix}.md"
             try:
                 # Exclusive creation makes parallel test invocations safe too.

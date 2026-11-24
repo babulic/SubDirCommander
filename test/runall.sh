@@ -6,6 +6,10 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 work=/tmp/t
 limit=${SDC_TEST_TIMEOUT:-1200}
 
+# Keep the report directory useful: the next official test owns its one
+# historical report.  .gitkeep is not an .md file and is preserved.
+find "$root/test/reports" -maxdepth 1 -type f -name '*.md' -delete
+
 report() {
     local status=$?
     if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then

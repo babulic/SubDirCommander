@@ -121,7 +121,9 @@ Kung Fu Flash, which remain explicit adapter-dependent `SKIP`s.
 The official full-suite, single-scenario and device-matrix runners regenerate
 `TEST_REPORT_SUB39.md` and save a timestamped copy under `test/reports/` in
 their `EXIT` handlers. A later failure or missing device adapter therefore
-replaces an earlier PASS in the latest report without losing the run history.
+replaces an earlier PASS in the latest report. The runners clean previous
+`.md` reports before they start, so the report directory holds only the
+current run rather than accumulating stale history.
 
 ## Remaining test debt
 

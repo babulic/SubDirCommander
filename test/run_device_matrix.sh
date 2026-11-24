@@ -6,6 +6,8 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 device=${1:?"usage: test/run_device_matrix.sh DEVICE"}
 work=/tmp/t
 
+find "$root/test/reports" -maxdepth 1 -type f -name '*.md' -delete
+
 report() {
     local status=$?
     if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then
