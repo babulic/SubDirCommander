@@ -59,23 +59,3 @@ commands may target something other than the displayed entry.
 Reject DOS command delimiters in editable names (and detect them in listed
 names before a destructive action), or add a correct drive-specific quoting
 layer.  Cover `:`, `,`, `=`, and a quote in both BAS and ML prompt tests.
-
-## Test work completed
-
-- Added `test/verify_artifacts.py`: checks that the tokenized BASIC program,
-  ML PRG, all five embedded 6502 helper payloads, and both release D64 images
-  match their source.
-- Reworked `test/mkdisks.sh`: creates every required fixture from source,
-  including paging, NUL-containing SEQ, disk-full, BASIC-load and ML-address
-  cases; it no longer depends on hand-created `/tmp/t` files.
-- Added `test/verify_fixtures.py` and made `test/runall.sh` run the complete
-  BASIC and ML scenario set with `set -euo pipefail`, resetting fixtures
-  before each case.  Failed Python/VICE scenarios can no longer be hidden by
-  `head`, `tail`, or `rg` pipelines.
-- Updated `test/vice.py` so it manages only its own VICE child process instead
-  of killing every host `x64sc` process; it uses Xvfb when available.
-
-The host-side artefact and fixture checks pass.  The interactive VICE tests
-are currently blocked in this execution environment because VICE cannot
-initialise a display and no `xvfb-run` is installed; `test/t4.py` now fails
-explicitly with `no VICE remote monitor` rather than a missing-command error.
