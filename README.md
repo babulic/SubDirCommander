@@ -16,8 +16,8 @@ Rename, validate and format are not in that firmware
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.39.prg` | BASIC V2 | 54 blocks |
-| `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 25 blocks |
+| `dist/SubDirCommand.39.prg` | BASIC V2 | 56 blocks |
+| `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
 | `dist/fb.d64` | 1541 disk with both programs | |
 
 `%` is an ordinary character in a 1541 file name.
@@ -72,7 +72,7 @@ On Kung Fu Flash, use list, load, run, copy, move and delete.
 Copy to another drive streams the file through the C64. PRG, SEQ and USR
 files can be copied; REL files cannot. A failed copy (disk full, write
 error, RUN/STOP) removes the partial file and validates the target so its
-blocks come back. Copy on the same drive still uses the drive's own `C0:`.
+blocks come back. Copy on the same drive still uses the drive's own `C:`.
 
 ## What changed from `.37`
 
