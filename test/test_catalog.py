@@ -16,7 +16,8 @@ SCENARIOS: dict[str, tuple[str, str, str]] = {
     "t12": ("BASIC disk-full copy result", "Copies a selected file to the full target and observes DOS disk-full status.", "basic-disk-full-copy"),
     "t13": ("BASIC direct Load at $C000", "Loads a $C000 program without running it and observes the selected entry.", "basic-direct-load-c000"),
     "t14": ("BASIC and ML start-address display", "Checks start-address display and cross-drive SEQ copy in both frontends.", "basic-ml-start-address"),
-    "t15": ("BASIC unsafe DOS-name rejection", "Proves typed `bad:name` is rejected without changing the source file.", "basic-unsafe-dos-name-rejection"),
+    "t15": ("BASIC INPUT unsafe DOS-name rejection", "Proves quoted `bad:name` is rejected without changing the source file.", "basic-input-unsafe-dos-name-rejection"),
+    "t16": ("BASIC marked-file cross-drive copy", "Marks FILE05 with Space and verifies that Copy transfers that marked file byte-exactly.", "basic-marked-file-cross-drive-copy"),
     "m1": ("ML navigation smoke test", "Shows the ML frontend and exercises basic cursor and page movement.", "ml-navigation-smoke"),
     "m2": ("ML navigation and command workflow", "Exercises page/wrap navigation, start address, rename, delete and validate.", "ml-navigation-command-workflow"),
     "m4": ("ML disk-full and duplicate copy handling", "Exercises cross-drive copy failures on a full target and duplicate outcomes.", "ml-disk-full-duplicate-copy"),
@@ -27,7 +28,7 @@ SCENARIOS: dict[str, tuple[str, str, str]] = {
 }
 
 FULL_SUITE = (
-    "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15",
+    "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14", "t15", "t16",
     "m1", "m2", "m4", "m5", "m6", "m7", "m8",
 )
 

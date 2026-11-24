@@ -108,7 +108,7 @@
  4267 return
  4270 e=0:n=0:gosub4420:ifc$=""thenreturn
  4271 gosub3700:ifrothenreturn
- 4273 n$="":gosub5:print"Rename to:?";:gosub4390:gosub4478:ifj$<>""thenn=-1:printj$:return
+ 4273 n$="":gosub5:input"Rename to:";n$:gosub4478:ifj$<>""thenn=-1:printj$:return
  4274 n=-1:iflen(n$)>16thenn$=left$(n$,16)
  4275 ifn$=""orn$=c$thenreturn
  4277 gosub4100:ifstthenprintj$:return
@@ -131,7 +131,7 @@
  4330 ifk>0thenft=0:goto4620
  4331 e=0:n=0:ft=0:gosub4420:ifc$=""orval(a$)=0thenreturn
  4335 gosub3700:ifrothenreturn
- 4340 n$="":gosub5:print"Copy to:?";:gosub4390:gosub4478:ifj$<>""thenn=-1:printj$:return
+ 4340 n$="":gosub5:input"Copy to:";n$:gosub4478:ifj$<>""thenn=-1:printj$:return
  4341 n=-1:u=d:gosub5:printspc(13);u;:poke781,y:gosub3:input"Target drive";u
  4345 iflen(n$)>16thenn$=left$(n$,16)
  4346 ifn$=""thenn$=c$
@@ -160,13 +160,6 @@
  4371 return
  4376 close2:close1:n=0:printj$:return
  4378 gosub4150:n=0:printj$:return
- 4390 getx$:ifx$=""then4390
- 4392 ifx$=chr$(13)thenreturn
- 4394 ifx$=chr$(20)then4398
- 4396 iflen(n$)<16thenn$=n$+x$:printx$;
- 4397 goto4390
- 4398 iflen(n$)thenn$=left$(n$,len(n$)-1):printchr$(20);
- 4399 goto4390
  4420 a$=m$(p):c$="":d$="":e$="":t$="":p$="":f=0:ifmid$(a$,5,1)<>g$thenreturn
  4421 l=len(a$):c=6:d$=mid$(a$,6,1)
  4422 ifc>lthenreturn
@@ -213,7 +206,7 @@
  4600 ifk>0thenft=1:goto4620
  4601 e=0:n=0:gosub4420:ifc$=""orval(a$)=0thenreturn
  4602 gosub3700:ifrothenreturn
- 4603 n$="":gosub5:print"Move to:?";:gosub4390:gosub4478:ifj$<>""thenn=-1:printj$:return
+ 4603 n$="":gosub5:input"Move to:";n$:gosub4478:ifj$<>""thenn=-1:printj$:return
  4604 n=-1:u=d:gosub5:printspc(13);u;:poke781,y:gosub3:input"Target drive";u
  4605 iflen(n$)>16thenn$=left$(n$,16)
  4606 ifn$=""thenn$=c$
@@ -225,21 +218,21 @@
  4622 ifu<8oru>11oru=dthenreturn
  4623 x=d:d=u:gosub4100:d=x:ifstthenn=0:printj$:return
  4625 a=p:forq=0tom:ifmk%(q)<1then4640
- 4627 p=q:e=0:gosub4420:ifc$=""then4630:n$=c$:gosub4360:ifj$<>""then4645
+ 4627 p=q:e=0:gosub4420:n$=c$:gosub4360:ifj$<>""then4645
  4630 ifftthengosub4305:ifj$<>""then4645
  4635 ifmk%(q)>0thenmk%(q)=0:k=k-1
  4640 next
  4645 p=a:n=-1:return
- 4800 n=-1:n$="":gosub5:print"Format name:?";:gosub4390:ifn$=""thenreturn
+ 4800 n=-1:n$="":gosub5:input"Format name:";n$:ifn$=""thenreturn
  4801 gosub4478:ifj$<>""thenprintj$:return
- 4802 f$=n$:n$="":gosub5:print"ID (Return=quick):?";:gosub4390:x$=n$:n$=f$
+ 4802 x$="":gosub5:input"ID (Return=quick):";x$
  4803 f$=n$:n$=x$:gosub4478:x$=n$:n$=f$:ifj$<>""thenprintj$:return
  4805 gosub5:print"Format drive"d"? y/n":gosub4:getq$:ifq$<>"y"thenreturn
  4810 gosub4100:ifstthenprintj$:return
  4812 ifx$<>""thenn$=n$+","+left$(x$,2)
  4815 gosub5:print"Formatting ...":open1,d,15,"n:"+n$:gosub4000:close1:ifenthenn=0:printj$:return
  4820 o=-1:return
- 4850 n=-1:n$="":gosub5:print"Make dir:?";:gosub4390:ifn$=""thenreturn
+ 4850 n=-1:n$="":gosub5:input"Make dir:";n$:ifn$=""thenreturn
  4852 gosub4478:ifj$<>""thenprintj$:return
  4855 gosub4100:ifstthenprintj$:return
  4860 open1,d,15,"md:"+n$:close1:gosub3750:ifstthenprintj$:return

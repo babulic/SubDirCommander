@@ -14,7 +14,7 @@ v.wait_line(10, 60); time.sleep(1)
 v.show("after any key")
 # copy smallseq (index 52) to drive 8
 v.key(DOWN); v.key(DOWN)
-v.key(ord('4'), at=10); v.wait_line((4340,4390), 60); time.sleep(0.3); v.keys([RET])
+v.key(ord('4'), at=10); v.wait_line(4340, 60); time.sleep(0.3); v.keys([RET])
 v.wait_line(4341, 30); time.sleep(0.3); v.keys(pet("8")+[RET])
 v.wait_line(10, 300); time.sleep(1)
 v.show("after smallseq copy")

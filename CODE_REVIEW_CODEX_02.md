@@ -93,9 +93,9 @@ which is outside the supported direct-return contract.
 ### DOS delimiters
 
 Both frontends now refuse `:`, `,`, `=` and `"` before destructive DOS
-commands. BASIC reads typed names using a V2-compatible `GET` editor, so
-`INPUT` cannot consume a delimiter before validation. ML checks both typed
-and listed names. `t15.py` asserts that BASIC refuses typed `bad:name` and
+commands. BASIC intentionally retains the original C64 `INPUT` editor and
+checks a complete quoted input after it returns; ML checks both typed and
+listed names. `t15.py` asserts that BASIC refuses quoted `"bad:name"` and
 preserves the source file; `m8.py` uses a raw `BAD:NAME` directory fixture to
 cover the ML listed-name path.
 
@@ -132,7 +132,10 @@ matrix), preserving current reports from the other two categories.
 `verify_artifacts.py` now also rejects a BASIC record longer than 200 bytes.
 The asserted VICE coverage includes BASIC cursor/page movement (`t5.py`),
 byte-exact cross-drive PRG copy plus duplicate protection (`t6.py`), typed
-DOS-delimiter rejection (`t15.py`), and ML address/name boundaries (`m8.py`).
+quoted-DOS-delimiter rejection (`t15.py`), and ML address/name boundaries
+(`m8.py`). `t16.py` additionally asserts cross-drive Copy of a file marked
+with Space; it guards the restored direct marked-name copy path in BASIC line
+4627.
 Other scenarios still only print screen/memory observations and can return
 success after a wrong result.
 

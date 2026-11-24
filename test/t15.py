@@ -1,4 +1,4 @@
-"""BASIC frontend rejects a typed DOS-command delimiter without mutation."""
+"""BASIC INPUT passes a quoted DOS delimiter to the validator without mutation."""
 
 import sys
 
@@ -20,8 +20,10 @@ v = start("/tmp/t/fb39w.d64")
 selected(v, "joyst")
 assert v.wait_line(4, 10)
 v.key(ord("3"), at=None)
-assert v.wait_line(4390, 30)
-v.keys(pet("bad:name") + [RET])
+assert v.wait_line(4273, 30)
+# INPUT keeps a delimiter inside quoted text; the BASIC DOS-name guard must
+# reject it while retaining normal INPUT cursor/editing behaviour.
+v.keys(pet('"bad:name"') + [RET])
 assert v.wait_line((4, 2990), 30)
 v.key(ord(" "), at=(4, 2990))
 assert v.wait_line((4, 10), 60)
@@ -30,4 +32,4 @@ v.quit()
 disk = D64("/tmp/t/fb39w.d64")
 assert disk.read(b"JOYST. PORTS TST") is not None
 assert disk.read(b"BAD:NAME") is None
-print("PASS: BASIC rejects typed DOS delimiters")
+print("PASS: BASIC INPUT rejects quoted unsafe DOS delimiters")

@@ -4,13 +4,13 @@
 
 ## Run identity
 
-- **Generated:** 2026-11-24 16:55:58 CET
-- **Git HEAD when report was written:** `0f84309`
+- **Generated:** 2026-11-24 17:21:09 CET
+- **Git HEAD when report was written:** `ac7f4ea`
 - **Runner:** Single VICE scenario
 - **Runner description:** Runs one selected BASIC or ML scenario on fresh deterministic D64 fixtures.
-- **Test ID / target:** `t15`
-- **Test name:** BASIC unsafe DOS-name rejection
-- **Test description:** Proves typed `bad:name` is rejected without changing the source file.
+- **Test ID / target:** `t16`
+- **Test name:** BASIC marked-file cross-drive copy
+- **Test description:** Marks FILE05 with Space and verifies that Copy transfers that marked file byte-exactly.
 - **Exit status:** `0`
 - **Result:** **PASS**
 

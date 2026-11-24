@@ -17,7 +17,7 @@ report() {
 trap report EXIT
 
 case "$scenario" in
-    t4|t5|t6|t7|t8|t9|t10|t11|t12|t13|t14|t15|m1|m2|m4|m5|m6|m7|m8) ;;
+    t4|t5|t6|t7|t8|t9|t10|t11|t12|t13|t14|t15|t16|m1|m2|m4|m5|m6|m7|m8) ;;
     *) echo "unknown scenario: $scenario" >&2; exit 64 ;;
 esac
 
