@@ -1,15 +1,13 @@
-import os, socket, subprocess, time, re
+import os, shutil, socket, subprocess, time, re
 
 class Vice:
     def __init__(self, d8=None, d9=None, port=6510, warp=True, extra=None, truedrive=True):
-        subprocess.run(["pkill", "-f", "x64sc"], capture_output=True)
-        subprocess.run(["pkill", "-f", "Xvfb :.* -screen 0 1024x768x24 -nolisten tcp -auth /tmp/xvfb-run"], capture_output=True)
-        time.sleep(1)
         self.port = port
-        args = ["xvfb-run", "-a", "-s", "-screen 0 1024x768x24", "x64sc",
-                "-default", "-silent", "-sounddev", "dummy",
-                "-remotemonitor", "-remotemonitoraddress", f"ip4://127.0.0.1:{port}",
-                "-ntsc" if False else "-pal"]
+        args = ["x64sc", "-default", "-silent", "-sounddev", "dummy",
+                "-remotemonitor", "-remotemonitoraddress", f"ip4://127.0.0.1:{port}", "-pal"]
+        xvfb = shutil.which("xvfb-run")
+        if xvfb:
+            args = [xvfb, "-a", "-s", "-screen 0 1024x768x24"] + args
         if warp:
             args.append("-warp")
         if d8:
@@ -20,7 +18,8 @@ class Vice:
             args += ["-drive8truedrive", "-drive9truedrive"]
         if extra:
             args += extra
-        self.proc = subprocess.Popen(args, stdout=open("/tmp/t/vice.log", "w"), stderr=subprocess.STDOUT)
+        self.log = open("/tmp/t/vice.log", "w")
+        self.proc = subprocess.Popen(args, stdout=self.log, stderr=subprocess.STDOUT)
         self.sock = None
         for _ in range(200):
             try:
@@ -29,7 +28,13 @@ class Vice:
             except OSError:
                 time.sleep(0.1)
         if not self.sock:
-            raise RuntimeError("no monitor")
+            try:
+                self.proc.terminate()
+                self.proc.wait(5)
+            except Exception:
+                self.proc.kill()
+            self.log.close()
+            raise RuntimeError("no VICE remote monitor; see /tmp/t/vice.log")
         self.sock.settimeout(5)
         self._drain(1.0)
         self.cmd("x", expect=False)
@@ -213,7 +218,7 @@ class Vice:
             self.proc.wait(5)
         except Exception:
             self.proc.kill()
-        subprocess.run(["pkill", "-f", "x64sc"], capture_output=True)
+        self.log.close()
 
 
 def pet(s):
