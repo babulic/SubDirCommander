@@ -18,7 +18,8 @@ Rename, validate and format are not in that firmware
 | --- | --- | --- |
 | `dist/SubDirCommand.39.prg` | BASIC V2 | 56 blocks |
 | `dist/%SubDirCommand39.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
-| `dist/fb.d64` | 1541 disk with both programs | |
+| `dist/SubDirCommand.39.d64` | slim 1541 disk with both programs | |
+| `dist/fb.d64` | frequently-used disk with both programs | |
 
 `%` is an ordinary character in a 1541 file name.
 
