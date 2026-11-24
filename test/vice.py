@@ -110,8 +110,11 @@ class Vice:
             time.sleep(0.2)
         return False
 
-    def key(self, k, at=10, timeout=60):
-        """Send one key once the program sits in its key wait (default BASIC line 10)."""
+    def key(self, k, at=(4, 10), timeout=60):
+        """Send one key once the program sits in its key wait.
+
+        Idle is usually line 4 (the GET subroutine) while the caller is line 10.
+        """
         if at is not None:
             if not self.wait_line(at, timeout):
                 raise RuntimeError(f"not at line {at}, at {self.line()}")
@@ -239,16 +242,17 @@ def start(d8, name=NAME39, d9=None, drive=None, list_line=10, warp=True):
     v.keys(pet('load"') + name + pet('",8\n'))
     v.wait_text("ready.", 120); time.sleep(1)
     v.keys(pet('run\n'))
-    v.wait_line((5007, list_line), 60)
+    idle = (4, list_line) if list_line == 10 else list_line
+    v.wait_line((5007, 4, list_line), 60)
     time.sleep(0.5)
     if v.line() == 5007:
         v.keys(([drive] if drive else []) + [RET])
-        v.wait_line(list_line, 120)
+        v.wait_line(idle, 120)
     elif drive and drive != ord('8'):
-        v.key(ord('1'), at=list_line)
+        v.key(ord('1'), at=idle)
         v.wait_line(5007, 60); time.sleep(0.5)
         v.keys([drive, RET])
-        v.wait_line(list_line, 120)
+        v.wait_line(idle, 120)
     time.sleep(0.5)
     return v
 

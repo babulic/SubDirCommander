@@ -127,7 +127,9 @@ seldef  lda #8
         jmp seldrv
 
 ; ------------------------------------------------------- read and show list
-relist  jsr drawframe
+relist  jsr getos
+        bcs fatal
+        jsr drawframe
         jsr readdir
         bcs fatal
         lda #0
@@ -302,18 +304,11 @@ haslist ldx last
 ; -------------------------------------------------------------- ^, validate
 cdup    jsr cmdi
         .text "cd:"
-        .byte $5f, 0            ; CD:←  (left arrow, SD2IEC parent)
-        jsr doscmd
-        bcc cdok
-        lda errnum
-        cmp #30                 ; a 1541 has no CD command
-        bne fatal
+        .byte $5f, 0            ; CD:←  (left arrow, parent directory)
+        jmp dosfolder
 cdonly  jsr msgi
         .null "SD2IEC only"
         jmp main
-cdok    jsr waitdev
-        bcs fatal
-        jmp relist
 
 cvalid  jsr haslist
         lda bfree+1
@@ -326,7 +321,7 @@ cvalid  jsr haslist
 +       jsr msgi
         .null "Validating disk ..."
         jsr cmdi
-        .null "v0"
+        .null "v"
 dosrelist
         jsr doscmd
         bcs +
@@ -369,7 +364,7 @@ crename jsr parsefile
         jsr msgi
         .null "Renaming ..."
         jsr cmdi
-        .null "r0:"
+        .null "r:"
         jsr cmdnew
         lda #"="
         jsr cmdchr
@@ -419,7 +414,7 @@ delloop lda last
         ora locked
         bne delnext
         jsr cmdi
-        .null "s0:"
+        .null "s:"
         jsr cmdname
         jsr doscmd
         bcs fatalj
@@ -439,7 +434,7 @@ delone  jsr parsefile
         cmp #"y"
         bne restore
         jsr cmdi
-        .null "s0:"
+        .null "s:"
         jsr cmdname
         jsr doscmd
         bcs fatalj
@@ -513,7 +508,7 @@ ccopy   lda #0
         jsr msgi
         .null "Copying ..."
         jsr cmdi
-        .null "c0:"
+        .null "c:"
         jsr cmdnew
         lda #"="
         jsr cmdchr
@@ -597,7 +592,7 @@ cmove   lda #1
         jsr msgi
         .null "Moving ..."
         jsr cmdi
-        .null "r0:"
+        .null "r:"
         jsr cmdnew
         lda #"="
         jsr cmdchr
@@ -606,7 +601,7 @@ cmove   lda #1
 mvx     jsr xcopy
         bcs fatalc
         jsr cmdi
-        .null "s0:"
+        .null "s:"
         jsr cmdname
         jmp dosrelist
 
@@ -675,7 +670,7 @@ faloop  lda walk
         lda ismv
         beq fanext
         jsr cmdi
-        .null "s0:"
+        .null "s:"
         jsr cmdname
         jsr doscmd
         bcs fatalc
@@ -728,7 +723,7 @@ cformat jsr msgi
         jsr msgi
         .null "Formatting ..."
         jsr cmdi
-        .null "n0:"
+        .null "n:"
         jsr cmdnew
         lda idlen
         beq nosend
@@ -755,15 +750,7 @@ cmkdir  jsr msgi
         jsr cmdi
         .null "md:"
         jsr cmdnew
-        jsr doscmd
-        bcc mkok
-        lda errnum
-        cmp #30                 ; a 1541 has no MD command
-        beq cdonly
-        jmp fatal
-mkok    jsr waitdev
-        bcs fatal
-        jmp relist
+        jmp dosfolder
 
 crmdir  jsr parsefile
         bcs nomove
@@ -783,7 +770,7 @@ crmdir  jsr parsefile
         jsr cmdi
         .null "rd:"
         jsr cmdname
-        jmp dosrelist
+        jmp dosfolder
 
 ; --------------------------------------------------------------- marking
 cmark   jsr parsefile
@@ -902,7 +889,7 @@ notamp  lda ro
         jsr cmdi
         .null "cd:"
         jsr cmdname
-        jmp dosrelist
+        jmp dosfolder
 +       jsr getstart
         bcc +
         jmp fatal
@@ -1176,23 +1163,82 @@ delay   clc
         bne -
         rts
 
-; Reset the drive with UI, keep its name, initialize CBM type drives.
-getos   jsr cmdi
+; Version for the header. X? is the pi1541 and SD2IEC query. Anything
+; else is asked with UI, and only CBM DOS is initialized, with plain "i".
+getos   lda oslen
+        beq +
+        lda osdev
+        cmp dev
+        beq gosok
++       lda #0
+        sta cbmdrv
+        jsr cmdi
+        .null "x?"
+        jsr opcmd
+        bcs gosx
+        ldx #15
+        jsr readstat
+        php
+        jsr cl15
+        plp
+        bcs gosx          ; I/O failure only. 31 and 73 are answers.
+        jsr osgood
+        bcs gotype
+        jsr cmdi
         .null "ui"
-        jsr opencmd
+        jsr opcmd
         bcs gosx
         lda #30
         jsr delay
         ldx #15
         jsr readstat
-        bcs gosc
-        ldx #0                  ; message field after the first comma
+        php
+        jsr cl15
+        plp
+        bcs gosx
+        jsr takeos
+gotype  jsr cbmchk
+        bne gosok
+        jsr cmdi
+        .null "i"
+        jsr dosnp
+        bcs gosx
+        jsr waitdev
+gosok   clc
+gosx    rts
+
+; Carry set when the status is a version line and osbuf now holds it.
+osgood  lda errnum
+        cmp #73
+        beq +
+        cmp #30
+        bcs osno
++       jsr takeos
+        lda errnum
+        cmp #73
+        beq osyes
+        lda oslen
+        cmp #4
+        bcs osyes
+osno    lda #0
+        sta oslen
+        clc
+        rts
+osyes   sec
+        rts
+
+; Text between the first and second comma, spaces out to the header width.
+takeos  ldx #0
 -       lda statbuf,x
-        beq gosf
+        beq +
         inx
         cmp #","
         bne -
-gosf    ldy #0
+        lda statbuf,x
+        cmp #" "
+        bne +
+        inx
++       ldy #0
 -       lda statbuf,x
         beq +
         cmp #","
@@ -1205,11 +1251,18 @@ gosf    ldy #0
 +       sty oslen
         lda #" "
 -       cpy #LISTW
-        beq +
+        bcs +
         sta osbuf,y
         iny
         bne -
-+       ldx #2
++       lda dev
+        sta osdev
+        rts
+
+; cbmdrv = 1 and Z set for CBM, a copied ROM, or JiffyDOS.
+cbmchk  lda #0
+        sta cbmdrv
+        ldx #2
 -       lda osbuf
         cmp cbmtab,x
         bne +
@@ -1218,28 +1271,13 @@ gosf    ldy #0
         bne +
         lda osbuf+2
         cmp cbmtab+6,x
-        beq goinit
+        bne +
+        inc cbmdrv
+        lda #0
+        rts
 +       dex
         bpl -
-        bmi gosok
-goinit  ldx #15
-        jsr CHKOUT
-        lda #"i"
-        jsr CHROUT
-        lda #"0"
-        jsr CHROUT
-        lda #$0d
-        jsr CHROUT
-        jsr CLRCHN
-gosok   lda #15
-        jsr CLOSE
-        jsr CLRCHN
-        jmp waitdev
-gosc    lda #15
-        jsr CLOSE
-        jsr CLRCHN
-        sec
-gosx    rts
+        rts
 
 cbmtab  .text "ccj"
         .text "boi"
@@ -1249,26 +1287,77 @@ cbmtab  .text "ccj"
 ; Carry set on a DOS error (>= 2) or I/O error, message in statbuf.
 doscmd  jsr opencmd
         bcs +
-        ldx #15
+dosread ldx #15
         jsr readstat
         php
-        lda #15
-        jsr CLOSE
-        jsr CLRCHN
+        jsr cl15
         plp
         bcs +
         lda errnum
         cmp #2
 +       rts
 
+cl15    lda #15
+        jsr CLOSE
+        jmp CLRCHN
+
+; CD/MD/RD. Reading the status immediately never returns: the drive
+; finishes the directory change after the handshake. Close, wait until
+; it answers, then reread. A 1541 has none of these commands.
+dosfolder
+        jsr opcmd
+        bcs dfbad
+        jsr cl15
+        jsr waitopen
+        bcs dfbad
+        lda cbmdrv
+        bne cdonly
+        jmp relist
+dfbad   jmp fatal
+
+; OPEN/CLOSE probe. A listen with no bytes keeps these drives waiting.
+waitopen
+        lda cbmdrv
+        bne +
+        lda #20
+        jsr delay
++       lda #13
+        sta tries
+wotry   lda #0
+        sta cmdlen
+        sta STATUS
+        lda #15
+        ldx dev
+        ldy #15
+        jsr SETLFS
+        lda #0
+        jsr SETNAM
+        jsr OPEN
+        bcs wofail
+        jsr cl15
+        lda STATUS
+        bmi wofail
+        clc
+        rts
+wofail  jsr cl15
+        lda #20
+        jsr delay
+        dec tries
+        bne wotry
+        jmp devnp
+
 opencmd lda dev
         jsr probe
-        bcc +
+        bcc opcmd
         jmp devnp
-+       lda #15
+opcmd   lda #15
         ldx dev
         ldy #15
         jmp opfile
+dosnp   jsr opcmd
+        bcs dosnx
+        jmp dosread
+dosnx   rts
 
 ; Read the status line of the command channel open as file X.
 readstat
@@ -1362,7 +1451,7 @@ readdir lda #$ff
         sta top
         sta hdrlen
         jsr cmdi
-        .null "$0"
+        .null "$"
         lda #2
         ldx dev
         ldy #0
@@ -1894,13 +1983,12 @@ xdrvnum lda tdev
         lda #<e_abort
         ldx #>e_abort
         jsr seterr
-xclean  jsr xname               ; remove the partial file, free its blocks
-        lda #"s"
-        sta cmdbuf
+xclean  jsr cmdi               ; remove the partial file, free its blocks
+        .null "s:"
         jsr cmdnew
         jsr xsend
         jsr cmdi
-        .null "v0"
+        .null "v"
         jsr xsend
         ldx #4
         jsr CHKIN
@@ -1916,8 +2004,8 @@ xok     jsr closeall
         clc
         rts
 
-xname   jsr cmdi
-        .null "0:"
+xname   lda #0
+        sta cmdlen
         rts
 
 ; Send cmdbuf as one command on the target command channel (file 4).
@@ -2164,11 +2252,18 @@ drawrow0
         lda #0
         jsr rowptr
         ldx #LISTW-1
--       lda s_title,x
+        lda oslen
+        beq dtitle
+-       lda osbuf,x
         sta line,x
         dex
         bpl -
-        lda #C_GRY2
+        bmi row0put
+dtitle  lda s_title,x
+        sta line,x
+        dex
+        bpl dtitle
+row0put lda #C_GRY2
         ldx #$80
         jmp putline
 
@@ -2902,6 +2997,8 @@ kbuf    .fill 10
 cmdbuf  .fill 48
 statbuf .fill 42
 oslen   .byte ?
+osdev   .byte ?
+cbmdrv  .byte ?
 osbuf   .fill LISTW
 hdrlen  .byte ?
 hdr     .fill 32
