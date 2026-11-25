@@ -45,6 +45,7 @@ h1 {
 h2 { margin: 0 0 12px; font-size: 1.3rem; }
 
 .lead { color: var(--muted); font-size: 1.08rem; margin: 0 0 24px; }
+.lead strong { color: var(--ink); font-weight: 700; }
 
 .downloads { display: flex; flex-wrap: wrap; gap: 12px; }
 
