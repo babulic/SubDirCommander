@@ -11,6 +11,7 @@ from vice import DOWN, mlstart
 
 v = mlstart(str(ROOT / "dist" / "SubDirCommand.40.d64"), drive=ord("8"))
 v.require_text("subdir commander")
+v.require_text("numeric keys:")
 first = v.highlighted_row()
 v.mkey(DOWN)
 assert v.highlighted_row() == first + 1

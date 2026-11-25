@@ -111,7 +111,7 @@ p2sc    and #$1f
 ; Reverse count, then the text. $FF ends the list. The count is how
 ; many leading characters are inverse, same as the ML panel.
 rows    .byte 13
-        .null "NumericKeys: "
+        .null "Numeric Keys:"
         .byte 1
         .null "1 List Drive"
         .byte 1

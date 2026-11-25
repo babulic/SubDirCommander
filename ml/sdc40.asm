@@ -2910,7 +2910,7 @@ e_abort .null "Copy aborted !"
 ; Key panel: row, then rich text.
 panel
         .byte 1, 13
-        .null "NumericKeys: "
+        .null "Numeric Keys:"
         .byte 2, 1
         .null "1 List Drive"
         .byte 3, 1
