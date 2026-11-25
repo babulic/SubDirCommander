@@ -67,11 +67,6 @@ def main() -> None:
     BUILD.mkdir(exist_ok=True)
     DIST.mkdir(exist_ok=True)
     WEB_FILES.mkdir(parents=True, exist_ok=True)
-    # These helpers belong only to the 3.9 DATA-loader path.  Do not leave
-    # stale 4.0-looking outputs behind after their removal from the trailer.
-    for stale in ("dataskip.bin", "dataskip.prg", "hexpoke.bin", "hexpoke.prg"):
-        (BUILD / stale).unlink(missing_ok=True)
-
     for name, address, expected_size in HELPERS:
         assembled = BUILD / f"{name}.prg"
         blob = BUILD / f"{name}.bin"
@@ -123,6 +118,7 @@ def main() -> None:
 
     run(
         "64tass", "-q", "-C", "--long-branch", "--cbm-prg",
+        "-l", str(BUILD / "sdc40.lbl"),
         "-o", str(ML_PRG), str(ROOT / "ml" / "sdc40.asm"),
     )
 
@@ -131,14 +127,10 @@ def main() -> None:
     run(
         "c1541", "-attach", str(fb),
         "-delete", "SubDirCommand.37",
-        "-delete", "SubDirCommand.38",
-        "-delete", "SubDirCommand.39",
         "-delete", "SubDirCommand.40",
         "-delete", "dc64",
         "-delete", "unformat.dsk.ib3",
         "-write", str(BASIC_PRG), "SubDirCommand.40",
-        "-delete", "%SubDirCommand38",
-        "-delete", "%SubDirCommand39",
         "-delete", "%SubDirCommand40",
         "-write", str(ML_PRG), "%SubDirCommand40",
     )

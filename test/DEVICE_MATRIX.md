@@ -1,7 +1,7 @@
-# sub39 device integration matrix
+# SubDirCommander 4.0 device integration matrix
 
-`sub39` means both 3.9 frontends: BASIC V2 and machine language. Every
-device run must execute each applicable scenario for both frontends.
+`sub40` means the current BASIC V2 and machine-language frontends. Every
+device run must execute each applicable command for both frontends.
 
 | Target | Virtual backend | Commands under test | Result without firmware adapter |
 | --- | --- | --- | --- |

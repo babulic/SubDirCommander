@@ -24,10 +24,9 @@ maxl    = 27
 HELPER_ADDR = $c000
         .endweak
 
-; 3.9 keeps the original in-image workspace.  4.0 places the header and
-; workspace in its reserved $9880-$98F2 RAM, so a program loaded at $C800
-; cannot corrupt Commander state. At $9BC0 the original tail would cross
-; $A000 into BASIC ROM.
+; The header and workspace are in reserved $9880-$98F2 RAM, so a program
+; loaded at $C800 cannot corrupt Commander state. At $9BC0 the original tail
+; would cross $A000 into BASIC ROM.
         .weak
 HELPER_WORK = 0
         .endweak
@@ -36,8 +35,7 @@ HELPER_WORK = 0
 HELPER_HEADER = $c800
         .endweak
 
-; The 3.9 binary retains its original title rendering.  4.0 enables the
-; compact two-cell inverse margin so its relocated title stays clear of the
+; The compact two-cell inverse margin keeps the relocated title clear of the
 ; right-side panel. The 25th title cell, immediately after the disk ID, is
 ; explicitly output as an inverse space; later trailing cells are not shown.
 .weak

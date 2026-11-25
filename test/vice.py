@@ -281,10 +281,9 @@ def pet(s):
 
 DOWN, UP, RIGHT, LEFT, RET = 0x11, 0x91, 0x1D, 0x9D, 0x0D
 
-NAME39 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.39')
-NAME37 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.37')
+NAME40 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.40')
 
-def start(d8, name=NAME39, d9=None, drive=None, list_line=10, warp=True):
+def start(d8, name=NAME40, d9=None, drive=None, list_line=10, warp=True):
     v = Vice(d8=d8, d9=d9, warp=warp)
     time.sleep(3)
     v.keys(pet('load"') + name + pet('",8\n'))
@@ -305,7 +304,9 @@ def start(d8, name=NAME39, d9=None, drive=None, list_line=10, warp=True):
     time.sleep(0.5)
     return v
 
-def labels(path="/tmp/t/sdc39.lbl"):
+def labels(path=None):
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__), "..", "build40", "sdc40.lbl")
     out = {}
     for l in open(path):
         m = re.match(r'(\w+)\s*=\s*\$([0-9a-f]+)', l)
@@ -353,7 +354,7 @@ class MLVice(Vice):
         for k in keys:
             self.mkey(k, timeout)
 
-NAMEML = [0x25, 0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand39')
+NAMEML = [0x25, 0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand40')
 
 def mlstart(d8, d9=None, drive=None, name=NAMEML):
     v = MLVice(d8=d8, d9=d9)

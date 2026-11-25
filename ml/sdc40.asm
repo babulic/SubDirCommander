@@ -306,9 +306,6 @@ cdup    jsr cmdi
         .text "cd:"
         .byte $5f, 0            ; CD:←  (left arrow, parent directory)
         jmp dosfolder
-cdonly  jsr msgi
-        .null "SD2IEC only"
-        jmp main
 
 cvalid  jsr haslist
         lda bfree+1
@@ -1329,8 +1326,6 @@ dosfolder
         jsr cl15
         jsr waitopen
         bcs dfbad
-        lda cbmdrv
-        bne cdonly
         jmp relist
 dfbad   jmp fatal
 
@@ -1924,16 +1919,6 @@ cmdnew  ldy #0
 -       cpy newlen
         beq +
         lda newname,y
-        jsr cmdchr
-        iny
-        bne -
-+       rts
-
-cmdapp  sta zp2
-        stx zp2+1
-        ldy #0
--       lda (zp2),y
-        beq +
         jsr cmdchr
         iny
         bne -
@@ -2673,17 +2658,6 @@ msgrow  sta zp2
         jmp putrich
 
 
-; Append PETSCII text A/X after the last message (or CHROUT on hand-off).
-strout  sta zp2
-        stx zp2+1
-        ldy #0
--       lda (zp2),y
-        beq +
-        jsr chrout2
-        iny
-        bne -
-+       rts
-
 chrout2 bit hoff
         bmi +
         sty zp3
@@ -3043,13 +3017,11 @@ newname .fill 16
 inbuf   .fill 17
 idlen   .byte ?
 idbuf   .fill 2
-savelen .byte ?
 ismv    .byte ?
 walk    .byte ?
 decbuf  .fill 6
 fldw    .byte ?
 maxcol  .byte ?
-kbuf    .fill 10
 cmdbuf  .fill 48
 statbuf .fill 42
 oslen   .byte ?

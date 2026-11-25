@@ -35,7 +35,7 @@ assert before_source is not None and before_target is not None
 v.key(ord("9"), at=10)
 assert v.wait_line(4603, 30)
 v.keys([RET])
-assert v.wait_line(4604, 30)
+assert v.wait_line(6, 30)
 v.keys(pet("9") + [RET])
 assert v.wait_line(4, 120)
 v.require_text("file exists")
@@ -54,7 +54,7 @@ selected(v, "unformat")
 v.key(ord("4"), at=10)
 assert v.wait_line(4340, 30)
 v.keys([RET])
-assert v.wait_line(4341, 30)
+assert v.wait_line(6, 30)
 v.keys(pet("8") + [RET])
 assert v.wait_line(10, 600)
 
@@ -75,9 +75,18 @@ source = D64(str(source_path)).read(b"UNFORMAT.DSK.IB3")
 target = D64(str(target_path)).read(b"UNFORMAT.DSK.IB3")
 assert source is not None and target == source
 
-# Restart to test the conservative direct-LOAD/RUN warning against every
-# resident service.  Declining must leave the helper byte intact and return
-# to the list for both commands.
+# A real BASIC PRG at $0801 replaces the Commander. Both commands must hand
+# it to BASIC directly; neither may stop at the resident-range confirmation.
+for key, expected in ((ord("7"), "basic handoff"), (ord("8"), "ready.")):
+    v = start(str(target_path), name=NAME40, d9=str(source_path), drive=ord("9"))
+    selected(v, "basic0801")
+    v.key(key, at=10)
+    assert v.wait_text(expected, 60), f"BASIC handoff did not finish after key {chr(key)}"
+    assert not any("program will hit commander's routines!" in row.lower() for row in v.screen())
+    v.quit()
+
+# Restart to test the one-range direct-LOAD/RUN warning. Declining must leave
+# the helper byte intact and return to the list for both commands.
 v = start(str(target_path), name=NAME40, d9=str(source_path), drive=ord("9"))
 selected(v, "overlap")
 for key, action in ((ord("8"), "load"), (ord("7"), "run")):
@@ -89,9 +98,8 @@ for key, action in ((ord("8"), "load"), (ord("7"), "run")):
     if not v.wait_line(4, 30):
         v.show(f"missing {action} overlap dialog")
         raise AssertionError(f"{action} overlap dialog did not wait; BASIC line {v.line()}")
-    for service in ("copy helper", "dir header/work", "key panel", "dir read"):
-        v.require_text(service)
-    v.require_text(f"{action} anyway")
+    v.require_text("program will hit commander's routines!")
+    v.require_text(f"{action}? y/n")
     v.keys(pet("n"))
     assert v.wait_line(10, 60)
     assert v.mem(0x97F0, 0x97F1) == before

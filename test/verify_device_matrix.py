@@ -24,7 +24,7 @@ def main() -> None:
         assert "Kung Fu Flash" in text
     assert "rename, validate and format are not" in readme.lower()
     assert "validate is not implemented" in readme.lower()
-    print("PASS: sub39 device capability matrix agrees with README and web claims")
+    print("PASS: SubDirCommander 4.0 device matrix agrees with README and web claims")
 
 
 if __name__ == "__main__":

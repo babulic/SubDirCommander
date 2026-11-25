@@ -1,9 +1,8 @@
 # Codex review — SubDirCommander 4.0, follow-up 02
 
-This is the authoritative record of the remaining review items after the
-BASIC optimization in `CODE_REVIEW_CODEX.md` and the 4.0 implementation. It
-deliberately excludes the completed identifier shortening, dead assignments
-and tokenized-line length guard.
+This is the authoritative review record for the current 4.0 release. It
+includes the completed identifier shortening, dead-code removal and binary
+trailer architecture where those facts affect the current artifacts.
 
 ## Resolved P1 — BASIC helpers now use a binary transport trailer
 
@@ -11,15 +10,17 @@ and tokenized-line length guard.
 with `$0000`; the raw PRG appends a relocator followed by the three executable
 helper images. The fourth protected region holds directory state at run time;
 it is not an executable trailer image. The transport is not called in place.
+In the current release the BASIC terminator ends at `$2914` and the trailer
+starts at `$2915`.
 
 Its first BASIC line starts with the direct-load reentry gate
 `ON-SGN(RL)GOTO4489`; on an ordinary start it evaluates to zero and falls
 through to this numeric bootstrap:
 
 1. `POKE55,240:POKE56,151:CLR` — reserve the top of BASIC RAM at `$97F0`.
-2. `POKE45,120:POKE46,43:CLR` — set `VARTAB` to the start of this build's
-   trailer (`$2B78`) and rebuild BASIC's allocation pointers below the ceiling.
-3. `SYS11128` — call the still-unreferenced trailer relocator.
+2. `POKE45,21:POKE46,41:CLR` — set `VARTAB` to the start of this build's
+   trailer (`$2915`) and rebuild BASIC's allocation pointers below the ceiling.
+3. `SYS10517` — call the still-unreferenced trailer relocator.
 
 The second `CLR` is necessary. KERNAL has set `VARTAB` after the complete raw
 PRG, including its trailer; changing only `MEMSIZ` would leave BASIC's future
@@ -46,10 +47,8 @@ or strings. The active map is:
 `DIR HEADER/WORK` is fully resident: header `$9880-$989A`, workspace
 `$98A0-$98F2`. This avoids the old high-build workspace crossing `$A000` into
 BASIC ROM and ensures that a program loaded at `$C800` or `$C900` cannot
-corrupt Commander state. `DATA SKIP` was only the 3.9 loader for the discarded
-helper `DATA`; it has no 4.0 caller and is no longer transported. `HEX DECODE`
-was likewise used only to construct those 3.9 helper bytes, so it is neither
-assembled, transported nor called in 4.0.
+corrupt Commander state. The former `DATA` loader and hex decoder have no
+4.0 caller and are not assembled, transported or distributed.
 
 The 4.0 title renderer follows the 3.8 presentation rule: two inverse spaces,
 the complete incoming header stream and one appended inverse space, truncated
@@ -58,8 +57,7 @@ characters are preserved unchanged; a device-supplied byte after `2A` remains
 visible while the appended blank naturally falls outside the area. Only a
 short header receives the appended blank within its 25 cells. `showhead` and
 `I$` use the same stored value, so a fresh list and later Copy/Delete redraw
-have identical attributes. The 3.9 source path retains its original title
-renderer.
+have identical attributes.
 The tail of the fixed `DIR READ` reservation is intentional padding; the full
 `$9B20-$9F6F` range remains unavailable to BASIC. There is no live BASIC
 Commander code or state at `$C000-$CFFF`: `$C800` and `$C900` are safe direct
@@ -75,21 +73,50 @@ normally. A confirmed operation that overwrites resident helpers remains an
 explicitly unsupported return case.
 
 Before commands `7` (Run) and `8` (Load), BASIC calculates a conservative
-range from the PRG load address and its directory-block count. On an overlap
-it lists every exact affected service and asks `Run anyway? y/n` or `Load
-anyway? y/n`; any key other than `y` cancels. A confirmed operation may alter
-the Commander, and it is deliberately not silently reinstalled. The warning
-is still necessary: KERNAL `LOAD` does not obey BASIC's memory ceiling.
+range from the PRG load address and its directory-block count. A PRG at
+`$0801` is immediately handed to BASIC and receives no Commander warning:
+it replaces the BASIC Commander. Every other overlap is checked against the
+single continuous resident interval `$97F0-$9F6F` and shows `Program will hit
+Commande's routines!` before asking `Run? y/n` or `Load? y/n`; any key other
+than `y` cancels. A confirmed operation may alter the Commander, and it is
+deliberately not silently reinstalled. The warning is still necessary: KERNAL
+`LOAD` does not obey BASIC's memory ceiling.
 
 ## Resolved P2 — obsolete `M/m` key-map entries
 
-The two former Make-directory mappings `77,0,205,0` were removed from the
-remaining BASIC key-map `DATA`. Make directory has long used `N/n`; `M/m`
-were explicitly assigned action zero, exactly the initialized value of every
-`K%(0..255)` entry after `DIM`. No code writes those two map entries or treats
-action zero as a command. The initialization now reads the remaining 31
-pairs, so pressing `M/m` still has the same no-op behaviour without storing
-redundant data.
+The two former Make-directory mappings `77,0,205,0` were removed before the
+remaining 31 keyboard/action pairs were compacted into one PETSCII string.
+Make directory has long used `N/n`; `M/m` retain the initialized zero value
+of every `K%(0..255)` entry after `DIM`, so they remain no-ops. The
+structural verifier decodes the tokenized PETSCII literal and compares all 31
+pairs byte-for-byte with the former map; it does not trust the textual
+spelling of control or shifted keys.
+
+## Resolved P2 — 41-block BASIC compaction
+
+The BASIC V2 PRG now occupies 41 1541 blocks. The original `INPUT "Target
+drive";U` statement exists once, in shared line 6, and is reached by Copy,
+Move and marked-file Copy/Move. It therefore keeps the original prompt
+spacing, cursor and C64 BASIC editor behavior; it is not a `GET` substitute.
+
+Line 7 performs the identical `LEFT$(N$,16)` normalization for Rename, Copy
+and Move. DOS status fields are held only while their status string is built,
+using the existing numeric scratch variables `B`, `H` and `J`. The image-type
+check similarly reuses `F`: every caller has consumed the parse result before
+it calls line 3700, which replaces that value immediately.
+
+The current shrink moves the binary transport to `$2915`; the line-1
+`POKE45/46` and `SYS` literals are verified against the tokenized program by
+both the builder and the artifact test.
+
+## Resolved P2 — unused ML code and state
+
+The ML audit found and removed only items with no direct or table reference:
+the `cmdapp` and `strout` routines, plus `savelen` and the ten-byte `kbuf`.
+`hex16` remains: it is the fall-through continuation of the used `hexsa`
+entry. The assembly still aligns `bufstart` to `$2300`; the documented ML
+copy-buffer contract is unchanged. `v40_ml_smoke.py` starts the released ML
+PRG in VICE and asserts live cursor movement.
 
 ## Accepted limitation — BAS and ML can enter RAM hidden by ROM or I/O
 
@@ -99,7 +126,7 @@ currently load into those addresses and then execute the visible ROM/I/O
 bytes instead of the loaded RAM.
 
 - BASIC line 4486 routes any start at or above `$A000` to direct `LOAD ...,1`.
-- ML `ml/sdc39.asm` lines 906–908 take the direct path for any start at or
+- ML `ml/sdc40.asm` takes the direct path for any start at or
   above `$A000`, bypassing the later `$D000` check.
 
 No runtime rejection or bank-switching trampoline will be added. The release
@@ -117,51 +144,25 @@ but deliberately does not execute it.
 the 31.25 KiB `$2300-$9FFF` buffer, and document the direct-return contract:
 only `$2300-$9FFF` and `$C000-$CFFF` are safe.  The ROM/I/O ranges remain a
 documented accepted limitation above; documentation does not claim that the
-current code safely executes them.
-
-`mkdisks.sh` creates exact `$22FF`, `$2300`, `$9FFF`, `$C000`, `$CFFF` and
-`$D000` PRGs. `verify_fixtures.py` validates every load address; `m8.py`
-asserts the `$22FF` handoff, direct return at the four safe boundaries and
-the `$D000` start-address probe. It deliberately does not execute `$D000`,
-which is outside the supported direct-return contract.
+current code safely executes them. The current 4.0 structural verifier keeps
+the generated ML artifact and its documented address contract in sync.
 
 ### DOS delimiters
 
-Both frontends now refuse `:`, `,`, `=` and `"` before destructive DOS
-commands. BASIC intentionally retains the original C64 `INPUT` editor and
-checks a complete quoted input after it returns; ML checks both typed and
-listed names. `t15.py` asserts that BASIC refuses quoted `"bad:name"` and
-preserves the source file; `m8.py` uses a raw `BAD:NAME` directory fixture to
-cover the ML listed-name path.
+Both frontends refuse `:`, `,`, `=` and `"` before destructive DOS commands.
+BASIC intentionally retains the original C64 `INPUT` editor and checks a
+complete quoted input after it returns; ML checks both typed and listed names.
 
 ### Device integration harness
 
 `test/DEVICE_MATRIX.md` is the command contract for SD2IEC, Pi1541 and Kung
-Fu Flash. `test/run_device_matrix.sh pi1541-d64` runs a concrete VICE
-true-drive D64 suite. The SD2IEC, Pi1541 SD-card and Kung Fu Flash modes take
-an explicit firmware/emulator adapter; without it they return exit `77`
-(`SKIP`), never a synthetic PASS. This repository currently has no such
-firmware adapter, so the latter three are documented integration coverage,
-not completed device-validation results.
+Fu Flash. `test/run_device_matrix.sh` accepts an explicit firmware/emulator
+adapter for every physical firmware target; without it it returns exit `77`
+(`SKIP`), never a synthetic PASS. This repository currently has no firmware
+adapter, so those cases are documented integration coverage, not completed
+device-validation results.
 
-## Release verification — 2026-11-24
-
-`tools/build.sh`, `test/verify_artifacts.py`, `test/verify_fixtures.py` and
-`test/verify_device_matrix.py` passed. The complete `test/runall.sh` BASIC
-and ML VICE suite also passed with exit status 0, including the asserted
-`t5.py`, `t6.py`, `t15.py` and `m8.py` coverage. This is true-drive D64
-coverage; it is not a firmware-level PASS for SD2IEC, Pi1541 SD-card mode or
-Kung Fu Flash, which remain explicit adapter-dependent `SKIP`s.
-
-The official full-suite, single-scenario and device-matrix runners regenerate
-`TEST_REPORT_SUB39.md` and save a timestamped copy under `test/reports/` in
-their `EXIT` handlers. A later failure or missing device adapter therefore
-replaces an earlier PASS in the latest report. Reports carry a human-readable
-test name, purpose and execution description. Before a run, the runner cleans
-only prior reports in its own category (full suite, single scenario or device
-matrix), preserving current reports from the other two categories.
-
-### 4.0 binary-trailer release
+## 4.0 binary-trailer release
 
 `tools/build40.py`, `test/verify_artifacts40.py` and `test/run40.sh` passed.
 The final runner report is `TEST_REPORT_SUB40.md`; it records the valid VICE
@@ -172,36 +173,27 @@ and fresh drive selection, and a failed cross-drive Move (`FILE EXISTS`) that
 preserves both files and redraws the title. It also records cross-drive Copy
 through `SYS 38896`, and declined Load and Run of a synthetic nine-block
 `$97F0` PRG. The latter overlaps the complete resident interval and the test
-requires all four exact service names in both dialogs while confirming that
-the first helper byte did not change.
+requires `Program will hit Commander's routines!` in both paths while
+confirming that the first helper byte did not change.
 
-The 4.0 runner replaces only its previous
-`basic40-binary-trailer` history report under `test/reports/`. Its current
-timestamped PASS is therefore separate from the 3.9 full-suite, scenario and
-device reports.
+The 4.0 runner replaces only its previous `basic40-binary-trailer` history
+report under `test/reports/`.
 
 ## Remaining test debt
 
-`test/runall.sh` correctly fails on shell/Python/fixture errors, and
-`verify_artifacts.py` now also rejects a BASIC record longer than 200 bytes.
-The asserted VICE coverage includes BASIC cursor/page movement (`t5.py`),
-byte-exact cross-drive PRG copy plus duplicate protection (`t6.py`), typed
-quoted-DOS-delimiter rejection (`t15.py`), and ML address/name boundaries
-(`m8.py`). `t16.py` additionally asserts cross-drive Copy of a file marked
-with Space; it guards the restored direct marked-name copy path in BASIC line
-4627.
-Other scenarios still only print screen/memory observations and can return
-success after a wrong result.
+`test/run40.sh` fails on every shell, builder, artifact, VICE or assertion
+failure. `verify_artifacts40.py` rejects a BASIC record longer than 200 bytes,
+checks each helper range, the derived trailer address, boot literals, collision
+range and the matching public documentation.
 
 Still add asserted VICE coverage for:
 
 1. ML cursor/page/highlight state after navigation;
 2. full-disk/abort cleanup: no partial target and recovered free blocks;
 3. NUL-containing SEQ cross-drive copy;
-4. BASIC `VARTAB`/`TXTTAB` after Load/Run and restored key-repeat on exit;
-5. the affirmative `y` path for a deliberately destructive resident-overlap
+4. the affirmative `y` path for a deliberately destructive resident-overlap
    Load/Run operation;
-6. relocation integrity after more varied Copy failure/abort paths, including
+5. relocation integrity after more varied Copy failure/abort paths, including
    preserved `MK%` marks.
 
 VICE tests run in VICE console mode when executed outside the filesystem

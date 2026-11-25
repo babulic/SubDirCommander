@@ -16,7 +16,7 @@ Rename, validate and format are not in that firmware
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.40.prg` | BASIC V2 | 43 blocks |
+| `dist/SubDirCommand.40.prg` | BASIC V2 | 41 blocks |
 | `dist/%SubDirCommand.40.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
 | `dist/SubDirCommand.40.d64` | slim 1541 disk with both programs | |
 | `dist/fb.d64` | frequently-used disk with both programs | |
@@ -88,21 +88,25 @@ blocks come back. Copy on the same drive still uses the drive's own `C:`.
   line first detects the return from an in-program `LOAD`; otherwise it
   reserves that RAM, runs `CLR`, sets `VARTAB` to the trailer, runs `CLR`
   again, and only then `SYS`es the relocator.
-- The trailer is only a transport: it is copied from the file image first,
-  then BASIC allocates its variables below `$97F0`. The live services are
-  `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY PANEL`
-  `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. `HEX DECODE` and `DATA SKIP`
-  are retained only as 3.9 source helpers; 4.0 neither transports nor calls them.
-- Before `7` / `8`, BASIC warns with the exact service names when the selected
-  PRG can overwrite any resident range. KERNAL `LOAD` can still write above
-  BASIC's memory ceiling, so this confirmation is required even in 4.0.
+- The tokenized BASIC program ends at `$2914`; the binary trailer begins at
+  `$2915`. The trailer is only a transport: it is copied from the file image
+  first, then BASIC allocates its variables below `$97F0`. The live services
+  are `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY
+  PANEL` `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. No unused loader or
+  hex-decoder routine is distributed.
+- Before `7` / `8`, BASIC checks the complete resident interval
+  `$97F0-$9F6F` and displays `Program will hit Commander's routines!` before
+  it asks whether a PRG may overwrite it. A PRG at `$0801` is handed straight
+  to BASIC without that dialog, because it replaces the Commander. KERNAL
+  `LOAD` can still write above BASIC's memory ceiling, so the confirmation
+  remains necessary for the direct-return path.
 - `$C000-$CFFF` no longer contains any BASIC Commander code or state: a PRG
   loaded at `$C800` or `$C900` is not damaged by Commander state, nor can it
   corrupt it merely by being loaded. The only other temporary high-RAM use is
   the cross-drive Copy buffer at `$A000-$BFFF`, behind BASIC ROM, and it is
   used only while that Copy is running.
 
-Earlier `.39` changes retained in 4.0:
+Current command behavior:
 
 - CRSR right no longer moves up a line. CRSR left/right now page.
 - Copy asks for the target drive.
@@ -111,7 +115,7 @@ Earlier `.39` changes retained in 4.0:
   starts the new program but keeps the old end-of-program pointer
   (`VARTAB`, `$2D/$2E`), so `SAVE` wrote 22 blocks even for a 2-block
   program, and a program longer than the commander had its variables placed
-  inside its own code. `.39` hands the program to BASIC the way you would
+  inside its own code. The current release hands the program to BASIC the way you would
   type it: it prints `LOAD"name",8` then queues `RUN` for BASIC, or
   `LOAD"name",8,1` then queues `SYS address` for machine code, and ends.
   BASIC then sets
@@ -184,33 +188,18 @@ The common helper sources are assembled at the 4.0 resident addresses by
 `tools/build40.py`. `original/` holds the extracted `.37` and the untouched
 `fb.d64`.
 
-`test/` drives VICE through its remote monitor: `vice.py` types keys and
-reads the screen, `t*.py` cover the BASIC version, `m*.py` the machine code
-version (paging, every command, copies across drives including disk full and
-file exists, loading BASIC and machine code, quitting). The scripts expect
-their disk images in `/tmp/t` (`mkdisks.sh` builds them).
+`test/` drives VICE through its remote monitor. The 4.0 runner exercises the
+BASIC bootstrap and relocation, cross-drive Copy/Move, the direct Load/Run
+handoff paths and the exact resident-overlap warning. Device commands that
+need firmware semantics run through explicit adapters.
 
 Use the official runners for a persistent latest result:
 
 ```bash
 test/run40.sh                   # 4.0 trailer, relocation, Copy and warning regression
-test/runall.sh                 # full BASIC + ML VICE suite
-test/run_scenario.sh t6        # one fresh-fixture VICE scenario
 test/run_device_matrix.sh sd2iec
 ```
 
 `test/run40.sh` rewrites `TEST_REPORT_SUB40.md` on every exit and keeps one
-timestamped 4.0 report under `test/reports/`. Its report names both executed
-VICE scenarios and their purpose. The established `.39` runners below retain
-their own `TEST_REPORT_SUB39.md` history.
-
-Each runner rewrites `TEST_REPORT_SUB39.md` on exit, including a failed run
-or a device-adapter `SKIP` (exit 77). It therefore never leaves a stale PASS.
-It also saves an immutable timestamped copy under `test/reports/`; those local
-history reports are ignored by Git. Their names use
-`YYYY-MM-DD_HH-MM-SS-microseconds_runner_target_result.md`; a report is
-created exclusively and gets a numeric suffix on a collision. The report
-contains a human-readable test name, purpose and execution description.
-Before a run, only that runner category's older report is deleted: full-suite
-runs preserve scenario/device reports, scenario runs preserve full-suite/device
-reports, and device runs preserve full-suite/scenario reports.
+timestamped 4.0 report under `test/reports/`. A failed run writes `FAIL`, so
+it cannot leave a stale PASS behind.

@@ -3,10 +3,8 @@
 ; A short row stops before column 39, so that cell stays as the clear
 ; left it. The caller clears the screen first, including the file list.
 ;
-; The default $C5B0 placement is only for the 3.9 DATA-loader build, after
-; the DATA skipper and before the old $C800 hex decoder.  build40.py supplies
-; HELPER_ADDR=$9930, where this image becomes a protected 4.0 resident helper.
-; The first two bytes are $A9 $43; a later 3.9 RUN sees them and skips DATA.
+; build40.py supplies HELPER_ADDR=$9930, where this image becomes a protected
+; 4.0 resident helper.
 
         .cpu "6502"
         .enc "pet"

@@ -1,29 +1,22 @@
 #!/usr/bin/env bash
-# Run a sub39 device suite. Firmware runners are supplied by the test lab.
+# Run a SubDirCommander 4.0 device suite. Firmware runners come from the lab.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 device=${1:?"usage: test/run_device_matrix.sh DEVICE"}
-work=/tmp/t
-
-python3 "$root/test/write_test_report.py" --clear-history device-matrix
+python3 "$root/test/write_test_report40.py" --clear-history device-matrix
 
 report() {
     local status=$?
     if [[ ${SDC_SUPPRESS_TEST_REPORT:-0} != 1 ]]; then
-        python3 "$root/test/write_test_report.py" --suite device-matrix --target "$device" --status "$status" || true
+        python3 "$root/test/write_test_report40.py" --category device-matrix --target "$device" --status "$status" || true
     fi
     exit "$status"
 }
 trap report EXIT
 
 run_pi1541_d64() {
-    bash "$root/test/mkdisks.sh" "$root" "$work"
-    python3 "$root/test/verify_fixtures.py" "$work"
-    for scenario in t5 t6 t7 t8 t11 t15 m2 m4 m5 m6 m8; do
-        echo "### pi1541-d64 / $scenario"
-        timeout "${SDC_TEST_TIMEOUT:-1200}" python3 "$root/test/$scenario.py"
-    done
+    SDC_SUPPRESS_TEST_REPORT=1 bash "$root/test/run40.sh"
 }
 
 run_adapter() {

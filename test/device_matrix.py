@@ -1,4 +1,4 @@
-"""Capability contract for SubDirCommander 3.9 (`sub39`) device suites.
+"""Capability contract for SubDirCommander 4.0 (`sub40`) device suites.
 
 The matrix is intentionally data, not an optimistic compatibility claim.
 An adapter must report every listed command as pass, fail or skip; a missing

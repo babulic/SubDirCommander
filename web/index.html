@@ -30,7 +30,7 @@
               Machine code <span>%SubDirCommand40 · 26 blocks</span>
             </a>
             <a class="btn" href="public/files/SubDirCommand.40.prg" download="SubDirCommand.40.prg">
-              BASIC <span>SubDirCommand.40 · 43 blocks</span>
+              BASIC <span>SubDirCommand.40 · 41 blocks</span>
             </a>
           </div>
         </div>
@@ -144,9 +144,11 @@ run</code></pre>
             list afterward. Same for ROM and I/O addresses.
           </p>
           <p>
-            <strong>BASIC</strong> transports its helpers after the BASIC program, then relocates them
-            to reserved RAM at <code>$97f0-$9fff</code>. Before Load or Run it names every helper a
-            selected PRG would overwrite and asks for confirmation.
+            <strong>BASIC</strong> ends at <code>$2914</code>; its transport trailer starts at
+            <code>$2915</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
+            <code>HEADER/WORK $9880-$98f2</code>, <code>PANEL $9930-$9b14</code> and
+            <code>DIR READ $9b20-$9f6f</code>. Before Load or Run it checks the complete resident
+            range and asks <code>Program will hit Commander's routines!</code> before confirmation.
           </p>
         </div>
         <div>

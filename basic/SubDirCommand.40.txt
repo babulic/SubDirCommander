@@ -1,8 +1,10 @@
- 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,82:poke46,43:clr:sys11090
+ 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,21:poke46,41:clr:sys10517
  2 goto5000
  3 poke782,0:poke783,0:sys65520:return
  4 poke198,0:wait198,1:return
  5 poke646,1:poke781,y:gosub3:printv$;:poke1024+y*40+39,32:poke55296+y*40+39,1:poke781,y:gosub3:return
+ 6 n=-1:u=d:gosub5:printspc(13);u;:poke781,y:gosub3:input"Target drive";u:return
+ 7 n$=left$(n$,16):return
  10 gosub4:geta$:ifj$<>""then5000
  12 onk%(asc(a$))goto100,110,120,130,5000,2100,2200,2300,2400,2500,2600,2700,2800,2950,2950,2960,2970,2980,140,150,4990:goto10
  20 poke781,2:gosub3:fori=ttot+21:ifi>mthenprintw$:goto22
@@ -66,17 +68,17 @@
  3402 print"   SubDirCommander 2026    ";
  3403 print"{rvof}";:sys39216:print"{home}";:return
  3500 gosub3400:poke781,1:gosub3:printi$
- 3700 ro=0:ift$="dir"ore$="d64"ore$="g64"ore$="d81"ore$="t64"thenro=-1
+ 3700 f=0:ift$="dir"ore$="d64"ore$="g64"ore$="d81"ore$="t64"thenf=-1
  3720 return
  3750 j=0
  3760 gosub4100:if(st and128)=0orj>12thenreturn
  3770 w=20:gosub3300:j=j+1:goto3760
- 4000 j$="":input#1,en,p$,tr,se
- 4020 ifen<2thenreturn
- 4030 j$=left$(str$(en)+", "+p$+","+str$(tr)+","+str$(se)+v$,g)+r$
+ 4000 j$="":input#1,b,p$,h,j
+ 4020 ifb<2thenreturn
+ 4030 j$=left$(str$(b)+", "+p$+","+str$(h)+","+str$(j)+v$,g)+r$
  4040 j$="{home}{down}{down}{wht}{rvon}"+j$+"{rvon} PRESS ANY KEY ...         {lblu}"
  4050 return
- 4060 j$="":input#4,en,p$,tr,se:goto4020
+ 4060 j$="":input#4,b,p$,h,j:goto4020
  4100 open2,d,15:close2:poke144,peek(144)and191:gosub4110:return
  4110 j$="":ifst and128thenj$="{rvon} Device is not present !   "+r$
  4120 ifst and64thenj$=j$+"{rvon} End of file !             "+r$
@@ -85,7 +87,7 @@
  4150 ifj$<>""thenj$="{home}{down}{down}{wht}"+j$+"{rvon} PRESS ANY KEY ...         {lblu}"
  4160 return
  4200 e=-1:gosub4420:s=0:ifc$=""thenreturn
- 4210 gosub3700:ifrothenreturn
+ 4210 gosub3700:iffthenreturn
  4215 gosub4100:ifstthenprintj$:return
  4220 open1,d,0,c$:get#1,a$,b$:close1
  4225 if(st and178)thengosub4110:printj$:return
@@ -107,40 +109,40 @@
  4265 open1,d,15,"v":close1:ifstthengosub4110:printj$
  4267 return
  4270 e=0:n=0:gosub4420:ifc$=""thenreturn
- 4271 gosub3700:ifrothenreturn
+ 4271 gosub3700:iffthenreturn
  4273 n$="":gosub5:input"Rename to:";n$:gosub4478:ifj$<>""thenn=-1:printj$:return
- 4274 n=-1:iflen(n$)>16thenn$=left$(n$,16)
+ 4274 n=-1:gosub7
  4275 ifn$=""orn$=c$thenreturn
  4277 gosub4100:ifstthenprintj$:return
  4278 gosub5:print"Renaming ..."
  4279 open1,d,15,"r:"+n$+"="+c$:gosub4000:close1
- 4280 ifenthenn=0:printj$:return
+ 4280 ifbthenn=0:printj$:return
  4283 gosub3750:ifstthenn=0:printj$:return
  4290 s$=left$(a$,5)+left$(n$+w$,16)+right$(a$,6):i=p:gosub33:poke781,y:gosub3:gosub24:n=0:return
  4300 ifk>0then4550
  4301 e=0:n=0:gosub4420:ifc$=""thenreturn
- 4302 gosub3700:ifroorp$="<"thenreturn
+ 4302 gosub3700:ifforp$="<"thenreturn
  4303 poke646,1:gosub5:print"Delete file ? y/n":gosub4:getq$
  4304 ifq$<>"y"thenpoke781,y:gosub3:i=p:gosub24:return
  4305 open1,d,15,"s:"+c$:gosub4000:close1:n=-1
- 4306 ifen>1thenn=0:printj$:return
+ 4306 ifb>1thenn=0:printj$:return
  4307 gosub3750:ifstthenn=0:printj$:return
  4309 z=z+val(a$):ifmk%(p)>0thenk=k-1
  4310 i=p:s$="  0 deleted"+w$:gosub33:mk%(p)=-1
  4320 i=m:s$=right$("    "+mid$(str$(z),2),4)+u$:goto33
  4330 ifk>0thenft=0:goto4620
  4331 e=0:n=0:ft=0:gosub4420:ifc$=""orval(a$)=0thenreturn
- 4335 gosub3700:ifrothenreturn
+ 4335 gosub3700:iffthenreturn
  4340 n$="":gosub5:input"Copy to:";n$:gosub4478:ifj$<>""thenn=-1:printj$:return
- 4341 n=-1:u=d:gosub5:printspc(13);u;:poke781,y:gosub3:input"Target drive";u
- 4345 iflen(n$)>16thenn$=left$(n$,16)
+ 4341 gosub6
+ 4345 gosub7
  4346 ifn$=""thenn$=c$
  4347 ifu<8oru>11or(u=dandn$=c$)thenreturn
  4348 ifu<>dthen4360
  4349 gosub4100:ifstthenprintj$:return
  4350 gosub5:print"Copying ..."
  4351 open1,d,15,"c:"+n$+"="+c$:gosub4000:close1
- 4352 ifenthenn=0:printj$:return
+ 4352 ifbthenn=0:printj$:return
  4353 gosub3750:ifstthenprintj$:return
  4354 ifm>=500thenreturn
  4355 z=z-val(a$):m=m+1:iflen(m$(m))<>gthenm$(m)=mid$(w$,1)
@@ -151,8 +153,8 @@
  4362 gosub5:ifft=0thenprint"Copy";
  4363 ifftthenprint"Mov";
  4364 print"ing to drive"u"..."
- 4365 f$=","+left$(t$,1):open1,d,15:open2,d,2,c$+f$+",r":gosub4000:ifenthen4376
- 4366 open4,u,15:open3,u,3,n$+f$+",w":gosub4060:ifenthenclose3:close4:goto4376
+ 4365 f$=","+left$(t$,1):open1,d,15:open2,d,2,c$+f$+",r":gosub4000:ifbthen4376
+ 4366 open4,u,15:open3,u,3,n$+f$+",w":gosub4060:ifbthenclose3:close4:goto4376
  4367 sys38896:x=peek(2):close3:gosub4060
  4368 ifx<>64andj$=""thenj$="{rvon} Copy aborted !            "+r$:gosub4150
  4369 ifj$<>""thenprint#4,"s:"+n$:print#4,"v":input#4,i,x$,i,i
@@ -179,7 +181,7 @@
  4479 next:return
  4480 gosub4100:ifstthenprintj$:goto10
  4482 ifd$="&"andt$="usr"then4494
- 4483 gosub3700:ifrothenc$="cd:"+c$:goto4494
+ 4483 gosub3700:iffthenc$="cd:"+c$:goto4494
  4484 gosub4200:ifs=0then10
  4486 gosub4530:ifovthenn=-1:goto2990
  4487 ifs=2049or(s<40960ands+val(a$)*254>2049)then4500
@@ -197,19 +199,10 @@
  4515 poke650,0:poke631,13:a=1:ifru=0then4525
  4520 forx=1tolen(k$):poke631+x,asc(mid$(k$,x,1)):next:a=x:poke631+a,13:a=a+1
  4525 x=peek(43)+256*peek(44):pokex,0:pokex+1,0:poke198,a:end
- 4530 gosub4420:ov=0:lo=s:hi=s+val(a$)*254-1:q$=""
- 4531 ifhi<38896orlo>39033then4533
- 4532 q$=q$+"COPY HELPER"+r$
- 4533 ifhi<39040orlo>39154then4535
- 4534 q$=q$+"DIR HEADER/WORK"+r$
- 4535 ifhi<39216orlo>39700then4539
- 4536 q$=q$+"KEY PANEL"+r$
- 4539 ifhi<39712orlo>40815then4541
- 4540 q$=q$+"DIR READ"+r$
- 4541 ifq$=""thenreturn
- 4542 gosub5:print"{rvon}Program overwrites:"r$q$;
- 4543 ifruthenprint"Run anyway? y/n";:goto4545
- 4544 print"Load anyway? y/n";
+ 4530 gosub4420:ov=0:h=s+val(a$)*254:ifs=2049orh<38897ors>40815thenreturn
+ 4531 gosub5:print"{rvon}Program will hit Commander's routines!"r$;
+ 4533 ifruthenprint"Run? y/n";:goto4545
+ 4544 print"Load? y/n";
  4545 gosub4:getq$:ifq$<>"y"thenov=-1
  4546 return
  4550 n=-1:gosub5:print"Delete "k" files ? y/n":gosub4:getq$
@@ -221,16 +214,16 @@
  4562 p=a:n=-1:return
  4600 ifk>0thenft=1:goto4620
  4601 e=0:n=0:gosub4420:ifc$=""orval(a$)=0thenreturn
- 4602 gosub3700:ifrothenreturn
+ 4602 gosub3700:iffthenreturn
  4603 n$="":gosub5:input"Move to:";n$:gosub4478:ifj$<>""thenn=-1:printj$:return
- 4604 n=-1:u=d:gosub5:printspc(13);u;:poke781,y:gosub3:input"Target drive";u
- 4605 iflen(n$)>16thenn$=left$(n$,16)
+ 4604 gosub6
+ 4605 gosub7
  4606 ifn$=""thenn$=c$
  4607 ifu<8oru>11or(u=dandn$=c$)thenreturn
  4608 ifu=dthengosub4277:return
  4609 ft=1:gosub4360:ifj$=""thengosub4305
  4610 n=-1:return
- 4620 n=-1:u=d:gosub5:printspc(13);u;:poke781,y:gosub3:input"Target drive";u
+ 4620 gosub6
  4622 ifu<8oru>11oru=dthenreturn
  4623 x=d:d=u:gosub4100:d=x:ifstthenn=0:printj$:return
  4625 a=p:forq=0tom:ifmk%(q)<1then4640
@@ -246,20 +239,18 @@
  4805 gosub5:print"Format drive"d"? y/n":gosub4:getq$:ifq$<>"y"thenreturn
  4810 gosub4100:ifstthenprintj$:return
  4812 ifx$<>""thenn$=n$+","+left$(x$,2)
- 4815 gosub5:print"Formatting ...":open1,d,15,"n:"+n$:gosub4000:close1:ifenthenn=0:printj$:return
+ 4815 gosub5:print"Formatting ...":open1,d,15,"n:"+n$:gosub4000:close1:ifbthenn=0:printj$:return
  4820 o=-1:return
  4850 n=-1:n$="":gosub5:input"Make dir:";n$:ifn$=""thenreturn
  4852 gosub4478:ifj$<>""thenprintj$:return
  4855 gosub4100:ifstthenprintj$:return
  4860 open1,d,15,"md:"+n$:close1:gosub3750:ifstthenprintj$:return
- 4861 ifl$="cbm"orl$="cop"orl$="jif"thenopen1,d,15:gosub4000:close1:ifenthenn=0:printj$:return
  4865 o=-1:return
  4870 e=0:n=0:gosub4420:ifc$=""ort$<>"dir"thenreturn
  4875 gosub5:print"Remove dir? y/n":gosub4:getq$
  4880 ifq$<>"y"thenpoke781,y:gosub3:i=p:gosub24:return
  4885 gosub4100:ifstthenprintj$:return
  4890 open1,d,15,"rd:"+c$:close1:gosub3750:ifstthenprintj$:return
- 4891 ifl$="cbm"orl$="cop"orl$="jif"thenopen1,d,15:gosub4000:close1:ifenthenn=0:printj$:return
  4895 o=-1:return
  4990 poke650,0:print"{clr}{lblu}";:pokepeek(45)+256*peek(46),96:end
  5000 poke53281,6:poke53280,14:printchr$(14);:ifothen5011
@@ -281,7 +272,4 @@
  5166 goto10
  5900 b=b:p=p:y=y:m=m:i=i:a$=a$:j$=j$:t=t:v=v:c=c:x=x:g=g:h=0:dimm$(500),mk%(500),k%(255):r=-1:r$=chr$(13):g$=chr$(34)
  5910 g=27:v$="                                       ":w$=left$(v$,g)
- 5920 u$=" blocks free.":restore:fori=1to31:readb,v:k%(b)=v:next:return
- 6400 data17,1,145,2,29,3,157,4,49,5,133,5,50,6,137,6,51,7,134,7,52,8,138,8,53,9,135,9
- 6410 data54,10,139,10,55,11,136,11,13,11,56,12,140,12,57,13,48,14,78,17,206,17,94,16
- 6420 data82,18,210,18,32,19,42,20,95,21
+ 5920 u$=" blocks free.":k$="{down}a{up}b{rght}c{left}d1e{f1}e2f{f2}f3g{f3}g4h{f4}h5i{f5}i6j{f6}j7k{f7}k"+chr$(13)+"k8l{f8}l9m0nnq"+chr$(206)+"q^prr"+chr$(210)+"r s*t_u":fori=1to62step2:k%(asc(mid$(k$,i,1)))=asc(mid$(k$,i+1,1))-64:next:return
