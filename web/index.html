@@ -134,9 +134,13 @@ run</code></pre>
             <strong>Machine code</strong> draws the list straight into screen memory, so moving and
             paging are instant. It keeps the directory in the RAM under the BASIC ROM and copies
             between drives through a 31.25 KiB buffer at <code>$2300-$9fff</code>.
-            Its direct-return range is <code>$2300-$9fff</code> or
-            <code>$c000-$cfff</code>; ROM and I/O address ranges are not
-            supported return targets.
+          </p>
+          <p>
+            After Load or Run it can come back into the commander only when the program loaded into
+            <code>$2300-$9fff</code> or <code>$c000-$cfff</code>. Utilities that load low — for
+            example at 336 (<code>$0150</code>) or into the cassette buffer at 828
+            (<code>$033c</code>) — still start, but the commander hands them off and does not
+            return. ROM and I/O addresses are not return targets either.
           </p>
           <p>
             <strong>BASIC</strong> transports its helpers after the BASIC program, then relocates them
@@ -145,12 +149,14 @@ run</code></pre>
           </p>
         </div>
         <div>
-          <h2>Loading done right</h2>
+          <h2>Loading</h2>
           <p>
-            Programs are handed to BASIC the way you would type <code>LOAD</code> and <code>RUN</code>,
-            so BASIC sets its end-of-program pointer itself. A program loaded from the commander
-            saves at its own size.
+            When the commander cannot keep control, it leaves the way you would type it: it prints
+            <code>LOAD"name",8</code> (and <code>RUN</code> or <code>SYS</code>) and ends. BASIC
+            then sets its own end-of-program pointer, so a later <code>SAVE</code> writes the loaded
+            program at its real size, not the size of the commander.
           </p>
+          <h2>Copying</h2>
           <p>
             A failed copy (disk full, write error, RUN/STOP) removes the partial file and gives its
             blocks back.
