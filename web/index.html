@@ -139,9 +139,9 @@ run</code></pre>
             After Load or Run, you get the file list back only if the program loaded into
             <code>$2300-$9fff</code> or <code>$c000-$cfff</code>. Something that loads lower — for
             example Ultraload at 336 (<code>$0150</code>), or a tool in the cassette buffer at 828
-            (<code>$033c</code>) — still runs. The commander steps aside as if you had typed
-            <code>LOAD</code> and <code>RUN</code> yourself, and it does not reopen the list
-            afterward. Same for ROM and I/O addresses.
+            (<code>$033c</code>) — still runs. The commander steps aside as if you had typed the
+            load yourself, and it does not reopen the list afterward. Same for ROM and I/O
+            addresses.
           </p>
           <p>
             <strong>BASIC</strong> transports its helpers after the BASIC program, then relocates them
@@ -152,10 +152,11 @@ run</code></pre>
         <div>
           <h2>Loading</h2>
           <p>
-            When the commander cannot keep control, it prints <code>LOAD"name",8</code> (and
-            <code>RUN</code> or <code>SYS</code>) the way you would type it, then exits. BASIC then
-            owns the loaded program, so a later BASIC <code>SAVE</code> writes that program’s real
-            size — not the size of the commander.
+            When the commander cannot keep control, it prints the load the way you would type it:
+            <code>LOAD"name",8</code> then <code>RUN</code> for a BASIC program, or
+            <code>LOAD"name",8,1</code> then <code>SYS</code> for machine code. Then it exits. BASIC
+            then owns the loaded program, so a later BASIC <code>SAVE</code> writes that program’s
+            real size — not the size of the commander.
           </p>
           <h2>Copying</h2>
           <p>

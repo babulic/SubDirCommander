@@ -112,8 +112,9 @@ Earlier `.39` changes retained in 4.0:
   (`VARTAB`, `$2D/$2E`), so `SAVE` wrote 22 blocks even for a 2-block
   program, and a program longer than the commander had its variables placed
   inside its own code. `.39` hands the program to BASIC the way you would
-  type it: it prints `LOAD"name",8` on the screen, puts RETURN (plus `RUN` or
-  `SYS address`) into the keyboard buffer and ends. BASIC then sets
+  type it: it prints `LOAD"name",8` then queues `RUN` for BASIC, or
+  `LOAD"name",8,1` then queues `SYS address` for machine code, and ends.
+  BASIC then sets
   `VARTAB` itself. Before that it empties the BASIC program (zero link at
   `$0801`), because BASIC re-links the old program text after a direct
   `LOAD` and would otherwise overwrite machine code loaded into that area.
