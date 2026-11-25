@@ -138,10 +138,10 @@ run</code></pre>
           <p>
             After Load or Run, you get the file list back only if the program loaded into
             <code>$2300-$9fff</code> or <code>$c000-$cfff</code>. Something that loads lower — for
-            example Ultraload at 336 (<code>$0150</code>), or a tool in the cassette buffer at 828
-            (<code>$033c</code>) — still runs. The commander steps aside as if you had typed the
-            load yourself, and it does not reopen the list afterward. Same for ROM and I/O
-            addresses.
+            example at 336 (<code>$0150</code>), in unused RAM at <code>$02a7-$02ff</code>, or in
+            the cassette buffer at 828 (<code>$033c</code>) — still runs via
+            <code>LOAD"name",8,1</code> then <code>SYS</code>, but the commander does not reopen the
+            list afterward. Same for ROM and I/O addresses.
           </p>
           <p>
             <strong>BASIC</strong> transports its helpers after the BASIC program, then relocates them
