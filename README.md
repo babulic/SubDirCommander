@@ -1,18 +1,24 @@
 # SubDirCommander 2026 for the Commodore 64
 
-A disk commander for a 1541 / 1541-II, SD2IEC, pi1541 or Kung Fu Flash on a
-stock C64. It lists a directory, moves a cursor through it and runs, loads,
-copies, moves and deletes files. It comes in two versions with the same
-screen and keys.
+https://subdir-commander.apps.grok.bot/
 
-A 1541 does the whole set, including rename, validate and format. SD2IEC does
-that too, and it makes, removes and leaves directories. pi1541 does the same
-inside a disk image. On the SD card it renames, copies, deletes and changes
-folders; validate is not implemented, and format creates a new D64
-([IEC commands](https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md)).
-Kung Fu Flash and Kung Fu Flash 2 list, load, run, delete, copy and move.
-Rename, validate and format are not in that firmware
-([Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2)).
+A file manager for COMMODORE 64.
+List a drive, move through it a line or a page at a time, and run, load, copy,
+move or delete files, including copies from one drive to another. Rename,
+validate and format depend on the drive.
+
+Utilizes 1541 / 1541-II, SD2IEC, pi1541 or Kung Fu Flash on a Commodore C64.
+
+It comes in two versions with the same screen and keys.
+
+- Commodore 1541 does the whole set, including rename, validate and format.
+- SD2IEC does that too, and it makes, removes and leaves directories.
+- pi1541 does the same inside a disk image. On the SD card it renames, copies,
+  deletes and creates folders; validate is not implemented, and format creates
+  a new D64 ([IEC commands](https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md)).
+- Kung Fu Flash and Kung Fu Flash 2 list, load, run, delete, copy and move.
+  Rename, validate and format are not in that firmware
+  ([Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2)).
 
 | File | Kind | Size |
 | --- | --- | --- |
