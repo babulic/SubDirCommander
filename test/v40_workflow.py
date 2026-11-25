@@ -47,6 +47,17 @@ assert D64(str(target_path)).read(b"OVERLAP") == before_source
 assert D64(str(source_path)).read(b"OVERLAP") == before_target
 v.quit()
 
+# Delete must reach its confirmation dialog without a BASIC syntax error.
+# Declining preserves the release file and returns to the active list.
+v = start(str(target_path), name=NAME40, d9=str(source_path))
+selected(v, "subdircommand.40")
+v.key(ord("6"), at=10)
+assert v.wait_line(4, 30), f"Delete did not reach confirmation; BASIC line {v.line()}"
+v.require_text("delete file")
+v.keys(pet("n"))
+assert v.wait_line(10, 60)
+v.quit()
+
 v = start(str(target_path), name=NAME40, d9=str(source_path), drive=ord("9"))
 selected(v, "unformat")
 

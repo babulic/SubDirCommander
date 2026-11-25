@@ -88,8 +88,8 @@ blocks come back. Copy on the same drive still uses the drive's own `C:`.
   line first detects the return from an in-program `LOAD`; otherwise it
   reserves that RAM, runs `CLR`, sets `VARTAB` to the trailer, runs `CLR`
   again, and only then `SYS`es the relocator.
-- The tokenized BASIC program ends at `$2914`; the binary trailer begins at
-  `$2915`. The trailer is only a transport: it is copied from the file image
+- The tokenized BASIC program ends at `$2916`; the binary trailer begins at
+  `$2917`. The trailer is only a transport: it is copied from the file image
   first, then BASIC allocates its variables below `$97F0`. The live services
   are `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY
   PANEL` `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. No unused loader or

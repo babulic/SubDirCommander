@@ -10,17 +10,17 @@ trailer architecture where those facts affect the current artifacts.
 with `$0000`; the raw PRG appends a relocator followed by the three executable
 helper images. The fourth protected region holds directory state at run time;
 it is not an executable trailer image. The transport is not called in place.
-In the current release the BASIC terminator ends at `$2914` and the trailer
-starts at `$2915`.
+In the current release the BASIC terminator ends at `$2916` and the trailer
+starts at `$2917`.
 
 Its first BASIC line starts with the direct-load reentry gate
 `ON-SGN(RL)GOTO4489`; on an ordinary start it evaluates to zero and falls
 through to this numeric bootstrap:
 
 1. `POKE55,240:POKE56,151:CLR` — reserve the top of BASIC RAM at `$97F0`.
-2. `POKE45,21:POKE46,41:CLR` — set `VARTAB` to the start of this build's
-   trailer (`$2915`) and rebuild BASIC's allocation pointers below the ceiling.
-3. `SYS10517` — call the still-unreferenced trailer relocator.
+2. `POKE45,23:POKE46,41:CLR` — set `VARTAB` to the start of this build's
+   trailer (`$2917`) and rebuild BASIC's allocation pointers below the ceiling.
+3. `SYS10519` — call the still-unreferenced trailer relocator.
 
 The second `CLR` is necessary. KERNAL has set `VARTAB` after the complete raw
 PRG, including its trailer; changing only `MEMSIZ` would leave BASIC's future
@@ -105,7 +105,7 @@ using the existing numeric scratch variables `B`, `H` and `J`. The image-type
 check similarly reuses `F`: every caller has consumed the parse result before
 it calls line 3700, which replaces that value immediately.
 
-The current shrink moves the binary transport to `$2915`; the line-1
+The current shrink moves the binary transport to `$2917`; the line-1
 `POKE45/46` and `SYS` literals are verified against the tokenized program by
 both the builder and the artifact test.
 

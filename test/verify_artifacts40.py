@@ -72,7 +72,7 @@ vartab = int(match.group(1)) + 256 * int(match.group(2))
 assert vartab == trailer_address
 assert int(match.group(3)) == trailer_address
 assert program[end:] == TRAILER_PRG.read_bytes()[2:], "raw trailer differs from assembler output"
-assert trailer_address == 0x2915, f"unexpected BASIC/trailer boundary ${trailer_address:04X}"
+assert trailer_address == 0x2917, f"unexpected BASIC/trailer boundary ${trailer_address:04X}"
 assert (len(program) + 253) // 254 == 41, "BASIC release must fit in 41 blocks"
 
 for old_sys in (828, 49152, 50432, 50608, 51200):
@@ -99,6 +99,7 @@ assert "HEX DECODE" not in source
 assert "gosub4420:ov=0:h=s+val(a$)*254:ifs=2049orh<38897ors>40815thenreturn" in source.lower()
 assert "program will hit commander's routines!" in source.lower()
 assert 'ifl$="cbm"orl$="cop"orl$="jif"thenopen1,d,15:gosub4000' not in source.lower()
+assert '4302 gosub3700:iff orp$="<"thenreturn' in source.lower()
 
 # One exact map governs binary sources, BASIC checks and public docs.  The
 # builder derives the trailer boundary from tokenized BASIC; these assertions
@@ -112,7 +113,7 @@ assert "panel_dest = $9930" in trailer_source
 assert "dir_dest = $9b20" in trailer_source
 for public in (ROOT / "README.md", ROOT / "CODE_REVIEW_CODEX_02.md", ROOT / "web" / "index.html"):
     text = public.read_text(encoding="utf-8").lower()
-    for value in ("$2914", "$2915", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
+    for value in ("$2916", "$2917", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
         assert value in text, f"{public.name} is missing {value}"
     assert "program will hit commander's routines!" in text, f"{public.name} has stale warning text"
     assert "$2976" not in text, f"{public.name} has stale trailer address"

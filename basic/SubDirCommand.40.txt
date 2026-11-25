@@ -1,4 +1,4 @@
- 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,21:poke46,41:clr:sys10517
+ 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,23:poke46,41:clr:sys10519
  2 goto5000
  3 poke782,0:poke783,0:sys65520:return
  4 poke198,0:wait198,1:return
@@ -121,7 +121,7 @@
  4290 s$=left$(a$,5)+left$(n$+w$,16)+right$(a$,6):i=p:gosub33:poke781,y:gosub3:gosub24:n=0:return
  4300 ifk>0then4550
  4301 e=0:n=0:gosub4420:ifc$=""thenreturn
- 4302 gosub3700:ifforp$="<"thenreturn
+ 4302 gosub3700:iff orp$="<"thenreturn
  4303 poke646,1:gosub5:print"Delete file ? y/n":gosub4:getq$
  4304 ifq$<>"y"thenpoke781,y:gosub3:i=p:gosub24:return
  4305 open1,d,15,"s:"+c$:gosub4000:close1:n=-1

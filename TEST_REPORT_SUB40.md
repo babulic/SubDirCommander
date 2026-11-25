@@ -4,8 +4,8 @@
 
 ## Run identity
 
-- **Generated:** 2026-11-25 15:18:59 CET
-- **Git HEAD when report was written:** `156a775`
+- **Generated:** 2026-11-25 15:36:18 CET
+- **Git HEAD when report was written:** `bb8ff37`
 - **Runner:** BASIC 4.0 binary-trailer regression
 - **Purpose:** verifies the BASIC transport trailer, relocated resident helpers, cross-drive Copy, and direct Load/Run overwrite warnings.
 - **Exit status:** `0`
@@ -16,7 +16,7 @@
 1. `tools/build40.py` builds `SubDirCommand.40.prg`, `%SubDirCommand.40.prg`, `SubDirCommand.40.d64`, and `fb.d64`.
 2. `verify_artifacts40.py` checks the BASIC `$0000` terminator, literal bootstrap, exact trailer, three executable helper images plus the reserved directory-state range, and both disk images.
 3. `v40_bootstrap.py` starts BASIC 4.0 in VICE, proves `$37/$38 = $97F0`, verifies valid directory text, the two-cell inverse title margin and the inverse space immediately after the disk ID, compares each relocated helper byte-for-byte, then verifies clean Exit followed by ordinary `RUN`, fresh drive selection and relisting.
-4. `v40_workflow.py` first attempts a Move to an already-present target, requires `FILE EXISTS`, verifies title redraw and both original files, then copies a file across drives via `SYS $97F0`. It directly loads a test PRG at `$C800`, proving that this address no longer contains Commander state. It then Load/Runs a BASIC PRG at `$0801` without a Commander warning. Finally it declines Load and Run of a nine-block PRG spanning `$97F0-$9FFF`, requiring the exact `Program will hit Commander's routines!` warning and unchanged helper memory.
+4. `v40_workflow.py` first attempts a Move to an already-present target, requires `FILE EXISTS`, verifies title redraw and both original files, then opens and declines a Delete dialog without a BASIC syntax error. It copies a file across drives via `SYS $97F0`, directly loads a test PRG at `$C800`, then Load/Runs a BASIC PRG at `$0801` without a Commander warning. Finally it declines Load and Run of a nine-block PRG spanning `$97F0-$9FFF`, requiring the exact `Program will hit Commander's routines!` warning and unchanged helper memory.
 5. `v40_ml_smoke.py` starts the machine-language frontend from the release D64 and asserts that its live directory cursor moves down one entry.
 
 ## Report locations
