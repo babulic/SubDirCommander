@@ -4,8 +4,8 @@
 
 ## Run identity
 
-- **Generated:** 2026-11-25 14:28:03 CET
-- **Git HEAD when report was written:** `09b2d0e`
+- **Generated:** 2026-11-25 14:42:01 CET
+- **Git HEAD when report was written:** `5ef2dff`
 - **Runner:** BASIC 4.0 binary-trailer regression
 - **Purpose:** verifies the BASIC transport trailer, relocated resident helpers, cross-drive Copy, and direct Load/Run overwrite warnings.
 - **Exit status:** `0`
