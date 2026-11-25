@@ -136,13 +136,12 @@ run</code></pre>
             Copying between drives uses a 31.25&nbsp;KiB buffer at <code>$2300-$9fff</code>.
           </p>
           <p>
-            After Load or Run, the machine-code commander can bring you back to the file list only if
-            the program loaded into <code>$2300-$9fff</code> or <code>$c000-$cfff</code>. Programs
-            may still load elsewhere — for example Ultraload at 336 (<code>$0150</code>) or into the
-            cassette buffer at 828 (<code>$033c</code>). Those start normally; the commander prints
-            <code>LOAD</code>/<code>RUN</code>/<code>SYS</code> like BASIC and exits, so you stay in
-            the loaded program instead of returning to the list. ROM and I/O addresses cannot return
-            either.
+            After Load or Run, you get the file list back only if the program loaded into
+            <code>$2300-$9fff</code> or <code>$c000-$cfff</code>. Something that loads lower — for
+            example Ultraload at 336 (<code>$0150</code>), or a tool in the cassette buffer at 828
+            (<code>$033c</code>) — still runs. The commander steps aside as if you had typed
+            <code>LOAD</code> and <code>RUN</code> yourself, and it does not reopen the list
+            afterward. Same for ROM and I/O addresses.
           </p>
           <p>
             <strong>BASIC</strong> transports its helpers after the BASIC program, then relocates them
