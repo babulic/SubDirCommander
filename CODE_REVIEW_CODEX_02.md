@@ -10,18 +10,18 @@ trailer architecture where those facts affect the current artifacts.
 with `$0000`; the raw PRG appends a relocator followed by the three executable
 helper images. The fourth protected region holds directory state at run time;
 it is not an executable trailer image. The transport is not called in place.
-In the current release the BASIC terminator ends at `$2C5C` and the trailer
-starts at `$2C5D`.
+In the current release the BASIC terminator ends at `$2DB1` and the trailer
+starts at `$2DB2`.
 
 Its first BASIC line starts with the direct-load reentry gate
 `ON-SGN(RL)GOTO4489`; on an ordinary start it evaluates to zero and falls
 through to this numeric bootstrap:
 
 1. `POKE55,240:POKE56,151:CLR` — reserve the top of BASIC RAM at `$97F0`.
-2. `POKE45,93:POKE46,44:CLR` — set `VARTAB` to the start of this build's
-   trailer (`$2C5D`) and rebuild BASIC's allocation pointers below the ceiling.
+2. `POKE45,178:POKE46,45:CLR` — set `VARTAB` to the start of this build's
+   trailer (`$2DB2`) and rebuild BASIC's allocation pointers below the ceiling.
 3. On a mismatch of `PEEK(38896)=169` and `PEEK(38898)=133`, call
-   `SYS11357`; those two bytes are the signature of the relocated COPY
+   `SYS11698`; those two bytes are the signature of the relocated COPY
    HELPER. A match naturally falls through to line 2 without executing the
    consumed transport.
 
@@ -109,7 +109,7 @@ using the existing numeric scratch variables `B`, `H` and `J`. The image-type
 check similarly reuses `F`: every caller has consumed the parse result before
 it calls line 3700, which replaces that value immediately.
 
-The active feature set moves the binary transport to `$2C5D`; the line-1
+The active feature set moves the binary transport to `$2DB2`; the line-1
 `POKE45/46`, signature and `SYS` literals are verified against the tokenized
 program by both the builder and the artifact test.
 
@@ -138,7 +138,7 @@ already created.
 ## Resolved P1 — root files, folders and duplicate targets
 
 `RO` had incorrectly meant both “enter this item with `CD:`” and “do not
-modify this item.” A `.D64`, `.G64`, `.D81` or `.T64` is openable, but is
+modify this item.” A root `.D64`, `.D41`, `.D71`, `.D81`, `.DNP`, `.M2I`, `.G64` or `.T64` is openable, but is
 still a file when shown at an SD2IEC/pi1541/KFF root. BAS now distinguishes
 the actual `DIR` type from an image extension; ML has the explicit `ISDIR`
 test. `3` therefore renames a file/image or a root-level folder, while `6`

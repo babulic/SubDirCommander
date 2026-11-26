@@ -31,7 +31,7 @@
               Machine code <span>%SubDirCommand40 · 28 blocks</span>
             </a>
             <a class="btn" href="public/files/SubDirCommand.40.prg" download="SubDirCommand.40.prg">
-              BASIC <span>SubDirCommand.40 · 44 blocks</span>
+              BASIC <span>SubDirCommand.40 · 46 blocks</span>
             </a>
           </div>
         </div>
@@ -167,7 +167,9 @@ run</code></pre>
         <p>
           Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
           At a virtual-device root, 3/4/6/9 treat disk images and normal files as files;
-          a true DIR entry is a folder. New folder and go up are for SD2IEC and pi1541
+          a true DIR entry is a folder. At a root, 7/8 open a mountable image
+          (.d64 .d41 .d71 .d81 .dnp, pi1541 also .g64 .t64) and run .prg; other extensions such as .crt
+          are host files and are not loaded. New folder and go up are for SD2IEC and pi1541
           on the SD card; folder commands on Kung Fu Flash report unavailable.
         </p>
       </section>
@@ -189,8 +191,8 @@ run</code></pre>
             list afterward. Same for ROM and I/O addresses.
           </p>
           <p>
-            <strong>BASIC</strong> ends at <code>$2c5c</code>; its transport trailer starts at
-            <code>$2c5d</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
+            <strong>BASIC</strong> ends at <code>$2db1</code>; its transport trailer starts at
+            <code>$2db2</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
             <code>HEADER/WORK $9880-$98f2</code>, <code>PANEL $9930-$9b14</code> and
             <code>DIR READ $9b20-$9f6f</code>. An ordinary RUN verifies the relocated helper signature before
             it can reuse the consumed transport. Before Load or Run it checks the complete resident
@@ -210,8 +212,9 @@ run</code></pre>
           <p>
             A failed copy between drives (disk full, write error, RUN/STOP) deletes the partial
             file and frees its blocks. On <code>FILE EXISTS</code>, the commander asks before
-            replacing that one target; another key skips it. At an SD2IEC/pi1541/KFF root the
-            cross-device target must also be a root, never an opened disk image. An empty Disk ID
+            replacing that one target; another key skips it. Plain C64 files copy anywhere; a folder or disk
+            image taken from an SD2IEC/pi1541/KFF root needs another root as its cross-device target,
+            never an opened disk image. An empty Disk ID
             becomes <code>00</code> only at such a root; an opened disk keeps quick <code>N:name</code>.
           </p>
         </div>

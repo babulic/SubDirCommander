@@ -19,7 +19,8 @@ MATRIX = {
         "assertions": (
             "PRG and NUL-containing SEQ copy are byte exact",
             "duplicate and full-media copy leave no partial target",
-            "root-file Copy/Move rejects an opened-disk target",
+            "root folder/image Copy/Move rejects an opened-disk target; plain C64 files may go there",
+            "7/8 at the root mount D64/D41/D71/D81/DNP/M2I and refuse non-PRG host extensions",
             "duplicate target asks once; decline skips only that item",
             "MD, RD and CD:_ change only the requested directory",
             "CD:_ after an image refreshes the actual SD2IEC firmware title",
@@ -44,7 +45,7 @@ MATRIX = {
             "validate is reported unsupported rather than treated as success",
             "format creates the requested D64 without changing siblings",
             "blank root Disk ID sends ,00; blank mounted-image ID remains quick format",
-            "root-file image/PRG Rename/Delete/Copy/Move require another root target",
+            "root-file image Copy/Move requires another root target; a plain PRG does not",
             "CD:_ after an image refreshes the actual Pi1541 firmware title",
         ),
     },
@@ -53,6 +54,7 @@ MATRIX = {
         "commands": ("list", "load", "run", "copy", "move", "delete", "rename", "root-files"),
         "assertions": (
             "root-file image/PRG Rename/Delete/Copy/Move preserve bytes and DOS status",
+            "7/8 on a CRT or other non-PRG extension reports Not a C64 program and does not load it",
             "folder commands report unavailable and do not mutate media",
             "CD:_ after an image refreshes the actual KFF firmware title",
             "a firmware-supplied FAT 8.3 alias is displayed and used byte for byte",

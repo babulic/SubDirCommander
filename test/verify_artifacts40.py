@@ -72,8 +72,8 @@ vartab = int(match.group(1)) + 256 * int(match.group(2))
 assert vartab == trailer_address
 assert int(match.group(3)) == trailer_address
 assert program[end:] == TRAILER_PRG.read_bytes()[2:], "raw trailer differs from assembler output"
-assert trailer_address == 0x2C5D, f"unexpected BASIC/trailer boundary ${trailer_address:04X}"
-assert (len(program) + 253) // 254 == 44, "BASIC release must fit in 44 blocks"
+assert trailer_address == 0x2DB2, f"unexpected BASIC/trailer boundary ${trailer_address:04X}"
+assert (len(program) + 253) // 254 == 46, "BASIC release must fit in 46 blocks"
 
 for old_sys in (828, 49152, 50432, 50608, 51200):
     assert f"sys{old_sys}" not in source.lower(), f"old helper SYS {old_sys} remains"
@@ -104,7 +104,17 @@ assert '4302 ifp$="<"thenreturn' in source.lower()
 assert '4303 ift$="dir"then4872' in source.lower()
 assert '4304 poke646,1:gosub5:print"delete item ? y/n"' in source.lower()
 assert '4271 ift$<>"dir"then4274' in source.lower()
-assert '4241 x=d:d=u:od=0:o$="":l$="":gosub4250:e=(l$="cbm"orl$="cop"orl$="jif"):d=x:od=0' in source.lower()
+assert '4241 gosub3700:iff=0thenreturn' in source.lower()
+assert '4242 x=d:d=u:od=0:o$="":y$=l$:l$="":gosub4250:e=(l$="cbm"orl$="cop"orl$="jif"):d=x:od=0:l$=y$' in source.lower()
+assert '4627 p=q:e=0:gosub4420:n$=c$:gosub4240:ifethen4645' in source.lower()
+assert 'ifx$<>""andx$<>"prg"thenj$=' in source.lower()
+assert 'gosub4150:printj$:o=-1:return\n 4215' in source.lower()
+# pi1541 keeps the 73 from X? until its next command; a later OPEN is still fine.
+assert '4020 ifb<2orb=73thenb=0:return' in source.lower()
+# INPUT# leaves ST=64; an empty list after a drive change came from that.
+assert '4255 ifo$=""thenclose1:poke144,0:return' in source.lower()
+# After CD the status read waits until pi1541 has mounted or saved the image.
+assert '4497 gosub4901:ifj$<>""then10' in source.lower()
 assert '4812 ifx$=""andl$<>"cbm"andl$<>"cop"andl$<>"jif"thenx$="00"' in source.lower()
 assert '4250 ifod=dthenpoke144,0:return' in source.lower()
 assert '4251 open1,d,15,"x?":input#1,b,o$,w,j:ifst and146then4268' in source.lower()
@@ -129,7 +139,7 @@ assert "panel_dest = $9930" in trailer_source
 assert "dir_dest = $9b20" in trailer_source
 for public in (ROOT / "README.md", ROOT / "CODE_REVIEW_CODEX_02.md", ROOT / "web" / "index.html"):
     text = public.read_text(encoding="utf-8").lower()
-    for value in ("$2c5c", "$2c5d", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
+    for value in ("$2db1", "$2db2", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
         assert value in text, f"{public.name} is missing {value}"
     assert "program will hit commander's routines!" in text, f"{public.name} has stale warning text"
     assert "$2977" not in text and "$2978" not in text, f"{public.name} has stale trailer address"

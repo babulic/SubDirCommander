@@ -1,4 +1,4 @@
- 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,93:poke46,44:clr:ifpeek(38896)<>169orpeek(38898)<>133thensys11357
+ 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,178:poke46,45:clr:ifpeek(38896)<>169orpeek(38898)<>133thensys11698
  2 goto5000
  3 poke782,0:poke783,0:sys65520:return
  4 poke198,0:wait198,1:return
@@ -69,13 +69,18 @@
  3402 print"   SubDirCommander 2026    ";
  3403 print"{rvof}";:sys39216:print"{home}";:return
  3500 gosub3400:poke781,1:gosub3:printi$
- 3700 f=0:ift$="dir"ore$="d64"ore$="g64"ore$="d81"ore$="t64"thenf=-1
+ 3700 f=(t$="dir"):x$="":ifl$="cbm"orl$="cop"orl$="jif"thenreturn
+ 3705 gosub3730:fore1=1to8:ifx$=mid$("d64d41d71d81dnpg64t64m2i",e1*3-2,3)thenf=-1
+ 3710 next
  3720 return
+ 3730 fore1=len(c$)to2step-1:ifmid$(c$,e1,1)="."thenx$=mid$(c$,e1+1):e1=2
+ 3735 next:y$="":iflen(x$)>3orx$=""thenx$="":return
+ 3740 fore1=1tolen(x$):e2=asc(mid$(x$,e1)):y$=y$+chr$(e2+128*(e2>192)):next:x$=y$:return
  3750 j=0
  3760 gosub4100:if(st and128)=0orj>12thenreturn
  3770 w=20:gosub3300:j=j+1:goto3760
  4000 j$="":input#1,b,p$,h,j
- 4020 ifb<2thenreturn
+ 4020 ifb<2orb=73thenb=0:return
  4030 j$=left$(str$(b)+", "+p$+","+str$(h)+","+str$(j)+v$,g)+r$
  4040 j$="{home}{down}{down}{wht}{rvon}"+j$+"{rvon} PRESS ANY KEY ...         {lblu}"
  4050 return
@@ -89,6 +94,7 @@
  4160 return
  4200 e=-1:gosub4420:s=0:ifc$=""thenreturn
  4210 gosub3700:iffthenreturn
+ 4212 ifx$<>""andx$<>"prg"thenj$="{rvon} Not a C64 program !       "+r$:gosub4150:printj$:o=-1:return
  4215 gosub4100:ifstthenprintj$:return
  4220 open1,d,0,c$:get#1,a$,b$:close1
  4225 if(st and178)thengosub4110:printj$:return
@@ -96,16 +102,17 @@
  4235 h$="":x=s:fori=1to4:h=x-int(x/16)*16:h$=mid$("0123456789ABCDEF",h+1,1)+h$:x=int(x/16):next
  4236 poke781,y:gosub3:printw$;:poke781,y:gosub3:print"{wht}Start From:"s"($"h$")":poke781,y:gosub3:print:return
  4240 e=0:ifl$="cbm"orl$="cop"orl$="jif"thenreturn
- 4241 x=d:d=u:od=0:o$="":l$="":gosub4250:e=(l$="cbm"orl$="cop"orl$="jif"):d=x:od=0
- 4242 ife=0thenreturn
- 4243 e=-1:j$="{rvon}Target must be root device!"+r$:gosub4150:return
+ 4241 gosub3700:iff=0thenreturn
+ 4242 x=d:d=u:od=0:o$="":y$=l$:l$="":gosub4250:e=(l$="cbm"orl$="cop"orl$="jif"):d=x:od=0:l$=y$
+ 4243 ife=0thenreturn
+ 4244 e=-1:j$="{rvon}Target must be root device!"+r$:gosub4150:printj$:return
  4250 ifod=dthenpoke144,0:return
  4251 open1,d,15,"x?":input#1,b,o$,w,j:ifst and146then4268
  4252 close1:ifb=73then4256
  4253 ifb<30andlen(o$)>3then4256
  4254 open1,d,15,"ui":w=30:gosub3300:input#1,b,o$,w,j:ifst and146then4268
- 4255 ifo$=""thenclose1:return
- 4256 o$=left$(o$+w$,g):l$=left$(o$,3):od=d:ifl$<>"cbm"andl$<>"cop"andl$<>"jif"thenclose1:return
+ 4255 ifo$=""thenclose1:poke144,0:return
+ 4256 o$=left$(o$+w$,g):l$=left$(o$,3):od=d:ifl$<>"cbm"andl$<>"cop"andl$<>"jif"thenclose1:poke144,0:return
  4257 print"{home}{down}{down}Initialize ...":print#1,"i"
  4258 close1:gosub3750:ifstthenprintj$
  4259 return
@@ -181,17 +188,16 @@
  4375 close4:close2:close1:goto4365
  4376 close2:close1:n=0:printj$:return
  4378 gosub4150:n=0:printj$:return
- 4420 a$=m$(p):c$="":d$="":e$="":t$="":p$="":f=0:ifmid$(a$,5,1)<>g$thenreturn
+ 4420 a$=m$(p):c$="":d$="":t$="":p$="":f=0:ifmid$(a$,5,1)<>g$thenreturn
  4421 l=len(a$):c=6:d$=mid$(a$,6,1)
  4422 ifc>lthenreturn
  4424 ifmid$(a$,c,1)<>g$thenc=c+1:goto4422
  4426 c$=mid$(a$,6,c-6):gosub4476:x=c+1
  4427 ifx<=landmid$(a$,x,1)=" "thenx=x+1:goto4427
  4428 t$=left$(mid$(a$,x)+w$,3):ifmid$(mid$(a$,x)+w$,4,1)="<"thenp$="<"
- 4429 ifnotethenf=2:goto4470
+ 4429 ifnotethenf=2:goto4472
  4432 ifnot(d$="&"ort$="dir")and(t$<>"prg"orval(a$)=0)thenc$="":return
  4436 f=2
- 4470 iflen(c$)>4thene$=right$(c$,4):ifleft$(e$,1)="."thene$=right$(e$,3)
  4472 ife=0thenn$=c$:gosub4478:ifj$<>""thenc$="":n=-1:printj$
  4475 return
  4476 iflen(c$)andright$(c$,1)=" "thenc$=left$(c$,len(c$)-1):goto4476
@@ -209,9 +215,10 @@
  4490 ifruthenru=0:ifs>0thensyss:poke646,1:poke781,y:gosub3:print"{wht}";left$("Ran OK, press any key"+w$,g):gosub4
  4491 n=-1:goto2990
  4494 o=-1:rd=0:open1,d,15,c$
- 4495 poke781,y:gosub3:print"{gry2}Waiting for device ..."
- 4496 gosub3750:close1:ifstthenprintj$:goto10
- 4497 goto5000
+ 4495 poke781,y:gosub3:print"{gry2}Waiting for device ...":w=60:gosub3300
+ 4496 j=-36:gosub3760:close1:ifstthenprintj$:goto10
+ 4497 gosub4901:ifj$<>""then10
+ 4498 goto5000
  4500 x$="":k$="run":ifs<>2049thenx$=",1":k$="sys"+mid$(str$(s),2)
  4505 print"{clr}{wht}Load";:ifruthenprint" & "k$;
  4510 print"{lblu}":print"{down}load"g$c$g$","mid$(str$(d),2)x$"{home}";
@@ -251,10 +258,10 @@
  4611 n=-1:return
  4620 gosub6
  4622 ifu<8oru>11oru=dthenreturn
- 4623 gosub4240:ifethenreturn
  4624 x=d:d=u:gosub4100:d=x:ifstthenn=0:printj$:return
  4625 a=p:forq=0tom:ifmk%(q)<1then4640
- 4627 p=q:e=0:gosub4420:n$=c$:gosub4360:ifj$<>""then4645
+ 4627 p=q:e=0:gosub4420:n$=c$:gosub4240:ifethen4645
+ 4628 gosub4360:ifj$<>""then4645
  4630 ifethen4640
  4631 ifftthengosub4306:ifj$<>""then4645
  4635 ifmk%(q)>0thenmk%(q)=0:k=k-1

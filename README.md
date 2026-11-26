@@ -24,7 +24,7 @@ It comes in two versions with the same screen and keys.
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.40.prg` | BASIC V2 | 44 blocks |
+| `dist/SubDirCommand.40.prg` | BASIC V2 | 46 blocks |
 | `dist/%SubDirCommand.40.prg` | 6502 machine code, `SYS2061` stub | 28 blocks |
 | `dist/SubDirCommand.40.d64` | slim 1541 disk with both programs | |
 | `dist/fb.d64` | frequently-used disk with both programs | |
@@ -97,9 +97,16 @@ or replacement succeeded. Copy on the same drive still uses the drive's own
 
 The virtual-root distinction is DOS based, not a firmware-version guess:
 `CBM`, `COP` and `JIF` OS headers mean an open disk or image; every other
-header is a device root. A root-file cross-device Copy/Move requires its
-target to be a virtual root as well, so it cannot accidentally write into an
-opened D64. An empty Disk ID sends `N:<name>,00` at such a root (needed by
+header is a device root. Plain C64 files copy and move anywhere, but a folder
+or disk image taken from a root needs a virtual root as its cross-device
+target, so it cannot be written into an opened D64.
+
+At a root, a name extension decides what `5`, `7` and `8` do. A mountable
+image opens with `CD:` like a folder: SD2IEC mounts `.D64`, `.D41`, `.D71`,
+`.D81`, `.DNP` (and the deprecated `.M2I`), pi1541 also `.G64` and `.T64`.
+`.PRG` is a normal program. Any other extension (`.CRT`, `.SID` ...) is a host
+file and is reported as `Not a C64 program !` instead of being loaded. Inside
+an opened disk, a dot in a name has no meaning. An empty Disk ID sends `N:<name>,00` at such a root (needed by
 pi1541); inside an open disk it retains the bare `N:<name>` quick format.
 
 Entering an image and returning with `CD:` + left-arrow always invalidates the
@@ -126,8 +133,8 @@ charset. This follows the directory writers in the
   again, then checks a two-byte signature of the relocated COPY HELPER.
   A fresh launch calls the relocator; a normal `RUN` after `RUN/STOP` uses the
   already-resident helpers and never executes the consumed transport.
-- The tokenized BASIC program ends at `$2C5C`; the binary trailer begins at
-  `$2C5D`. The trailer is only a transport: it is copied from the file image
+- The tokenized BASIC program ends at `$2DB1`; the binary trailer begins at
+  `$2DB2`. The trailer is only a transport: it is copied from the file image
   first, then BASIC allocates its variables below `$97F0`. The live services
   are `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY
   PANEL` `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. No unused loader or

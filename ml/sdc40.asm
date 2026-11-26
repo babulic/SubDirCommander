@@ -327,6 +327,7 @@ dosrelist
 cstart  jsr parseprg
         bcs nomove
         lda ro
+        ora hostf
         bne nomove
         lda type
         cmp #"p"
@@ -455,7 +456,11 @@ delone  jsr parsefile
         lda ent+1
         adc bfree+1
         sta bfree+1
-        lda #0
+        bcc +
+        lda #$ff                ; a root reports at most 65535 blocks free
+        sta bfree
+        sta bfree+1
++       lda #0
         sta ent
         sta ent+1
         lda #8
@@ -660,8 +665,6 @@ fileall jsr msgi
         cmp dev
         beq nomove              ; same names need another drive
         sta tdev
-        jsr rootpair
-        bcs fatalc
         lda #0
         sta walk
 faloop  lda walk
@@ -676,6 +679,8 @@ faloop  lda walk
         bcs fanext
         jsr safeold
         bcs fanext
+        jsr rootpair
+        bcs fatalc
         jsr oldtonew
         jsr xcopy
         bcs fatalc
@@ -915,7 +920,12 @@ cload   lda #0
         bcs ampbad
         jmp relist
 ampbad  jmp fatal
-notamp  lda ro
+notamp  lda hostf
+        beq +
+        jsr nothost
+        jsr showerr
+        jmp redraw
++       lda ro
         beq +
         jsr cmdi
         .null "cd:"
@@ -1303,9 +1313,18 @@ dosread ldx #15
         jsr cl15
         plp
         bcs +
-        lda errnum
-        cmp #2
+        jmp errchk
 +       rts
+
+; Carry set when errnum is a DOS error. 73 is the version line: pi1541 keeps
+; it after X?/UI until the next command, even across a successful OPEN.
+errchk  lda errnum
+        cmp #73
+        beq +
+        cmp #2
+        rts
++       clc
+        rts
 
 cl15    lda #15
         jsr CLOSE
@@ -1379,12 +1398,16 @@ rootok  lda cbmdrv
 rootyes clc
         rts
 
-; A root-file Copy/Move may target only another virtual root.  `getos` is
-; deliberately reused: it performs the X?/UI distinction that the main list
-; uses, then the next relist refreshes the source header because OSDEV differs.
+; A root folder or disk image (ro) may be copied or moved only to another
+; virtual root, never into an opened disk; plain C64 files go anywhere.
+; `getos` is deliberately reused: it performs the X?/UI distinction that the
+; main list uses, then the next relist refreshes the source header because
+; OSDEV differs.
 rootpair
         lda cbmdrv
         bne rppass
+        lda ro
+        beq rppass
         lda tdev
         cmp dev
         beq rppass
@@ -1406,6 +1429,9 @@ rpbad   pla
         sta dev
         jsr erri
         .null "Target root only !"
+
+nothost jsr erri
+        .null "Not a C64 program !"
 
 folderbad
         jsr showerr
@@ -1795,35 +1821,57 @@ pfok    clc
 pfno    sec
         rts
 
-; Disk images (.d64 .g64 .d81 .t64) open with CD like directories.
-imgext  ldx namelen
-        cpx #5
-        bcc imgx
-        lda namebuf-4,x
-        cmp #"."
+; Only at a device root does a name extension mean anything: a mountable
+; image (SD2IEC D64/D41/D71/D81/DNP/M2I, pi1541 G64/T64) opens with CD,
+; .prg is a program, any other extension (CRT, SID ...) is a host file
+; that is never loaded or started. Inside a CBM disk a dot is just a dot.
+imgext  lda #0
+        sta hostf
+        lda cbmdrv
         bne imgx
-        ldy #3
+        lda namelen
+        sec
+        sbc #2
+        bcc imgx
+        tax
+        ldy #3                  ; extension of 1, 2 or 3 characters
+-       cpx #1
+        bcc imgx
+        lda namebuf,x
+        cmp #"."
+        beq imgdot
+        dex
+        dey
+        bne -
+imgx    rts
+imgdot  cpy #1
+        bne imghost
+        ldx namelen
+        ldy #8
 -       lda namebuf-3,x
         and #$7f
         cmp imgtab,y
         bne +
         lda namebuf-2,x
         and #$7f
-        cmp imgtab+4,y
+        cmp imgtab+9,y
         bne +
         lda namebuf-1,x
         and #$7f
-        cmp imgtab+8,y
+        cmp imgtab+18,y
         bne +
+        cpy #8
+        beq imgx
         inc ro
         rts
 +       dey
         bpl -
-imgx    rts
+imghost inc hostf
+        rts
 
-imgtab  .text "dgdt"
-        .text "6686"
-        .text "4414"
+imgtab  .text "dddddgtmp"
+        .text "6478n662r"
+        .text "4111p44ig"
 
 ; Directory text of a renamed/copied entry in ent: same layout, newname
 ; padded to the 16 character name field.
@@ -2187,8 +2235,7 @@ xdrvnum lda tdev
         ldx #1
         jsr readstat
         bcs xfail
-        lda errnum
-        cmp #2
+        jsr errchk
         bcs xfail
 xtarget lda #0                  ; target: 4 = command channel, 3 = file
         sta cmdlen
@@ -2210,9 +2257,9 @@ xtarget lda #0                  ; target: 4 = command channel, 3 = file
         ldx #4
         jsr readstat
         bcs xfail
-        lda errnum
-        cmp #2
+        jsr errchk
         bcc xwrite
+        lda errnum
         cmp #63
         bne xfail
         lda #3
@@ -3273,6 +3320,7 @@ inbuf   .fill 17
 idlen   .byte ?
 idbuf   .fill 2
 ismv    .byte ?
+hostf   .byte ?
 ovskip  .byte ?
 walk    .byte ?
 decbuf  .fill 6

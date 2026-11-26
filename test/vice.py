@@ -284,8 +284,8 @@ DOWN, UP, RIGHT, LEFT, RET = 0x11, 0x91, 0x1D, 0x9D, 0x0D
 
 NAME40 = [0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand.40')
 
-def start(d8, name=NAME40, d9=None, drive=None, list_line=10, warp=True):
-    v = Vice(d8=d8, d9=d9, warp=warp)
+def start(d8, name=NAME40, d9=None, drive=None, list_line=10, warp=True, extra=None):
+    v = Vice(d8=d8, d9=d9, warp=warp, extra=extra)
     time.sleep(3)
     v.keys(pet('load"') + name + pet('",8\n'))
     v.wait_text("ready.", 120); time.sleep(1)
@@ -357,8 +357,8 @@ class MLVice(Vice):
 
 NAMEML = [0x25, 0xD3] + pet('ub') + [0xC4] + pet('ir') + [0xC3] + pet('ommand40')
 
-def mlstart(d8, d9=None, drive=None, name=NAMEML):
-    v = MLVice(d8=d8, d9=d9)
+def mlstart(d8, d9=None, drive=None, name=NAMEML, extra=None):
+    v = MLVice(d8=d8, d9=d9, extra=extra)
     v.setlabels(labels())
     time.sleep(3)
     v.keys(pet('load"') + name + pet('",8\n'))
