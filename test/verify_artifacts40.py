@@ -222,5 +222,8 @@ for image in (ROOT / "dist" / "SubDirCommand.40.d64", ROOT / "dist" / "fb.d64"):
     assert "SubDirCommand.40" in listing, image
     assert "%SubDirCommand40" in listing, image
 assert ML_PRG.exists() and ML_PRG.stat().st_size > 2
+for name in ("SubDirCommand.40.prg", "%SubDirCommand.40.prg", "SubDirCommand.40.d64", "fb.d64"):
+    published = ROOT / "web" / "public" / "files" / name
+    assert published.read_bytes() == (ROOT / "dist" / name).read_bytes(), f"web copy of {name} is stale"
 
 print(f"PASS: 4.0 BASIC ends at ${trailer_address:04X}; binary trailer and media are exact")

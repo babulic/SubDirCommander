@@ -145,6 +145,7 @@ def main() -> None:
     shutil.copyfile(BASIC_PRG, WEB_FILES / BASIC_PRG.name)
     shutil.copyfile(ML_PRG, WEB_FILES / ML_PRG.name)
     shutil.copyfile(slim, WEB_FILES / slim.name)
+    shutil.copyfile(fb, WEB_FILES / fb.name)
 
     blocks = (len(BASIC_PRG.read_bytes()) + 253) // 254
     print(
