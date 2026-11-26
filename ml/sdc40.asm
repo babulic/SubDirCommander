@@ -33,10 +33,6 @@ CHROUT  = $ffd2
 LOAD    = $ffd5
 STOP    = $ffe1
 GETIN   = $ffe4
-LISTEN  = $ffb1
-SECOND  = $ff93
-UNLSN   = $ffae
-
 STATUS  = $90
 JIFFY   = $a2
 FA      = $ba
@@ -198,8 +194,6 @@ keytab  .byte $11
         .word cmkdir-1
         .byte "N"
         .word cmkdir-1
-        .byte "r"
-        .word crmdir-1
         .byte " "
         .word cmark-1
         .byte "*"
@@ -305,6 +299,8 @@ haslist ldx last
 cdup    jsr cmdi
         .text "cd:"
         .byte $5f, 0            ; CD:←  (left arrow, parent directory)
+        lda #0                  ; CD changes the DOS context, not the device.
+        sta oslen               ; Do not reuse an image's cached CBM title.
         jmp dosfolder
 
 cvalid  jsr haslist
@@ -348,8 +344,13 @@ crename jsr parsefile
         bcs restore
         jsr safeold
         bcs restore
-        lda ro
-        bne restore
+        jsr isdir
+        bcc renameok
+        jsr folderok
+        bcs folderbad
+        jsr rootok
+        bcs folderbad
+renameok
         jsr msgi
         .null "Rename to:"
         lda #11
@@ -425,13 +426,14 @@ delnext inc walk
 ddone   jmp relist
 delone  jsr parsefile
         bcs restore
-        lda ro
-        ora locked
+        jsr isdir
+        bcs crmdir
+        lda locked
         bne restore
         jsr safeold
         bcs restore
         jsr msgi
-        .null "Delete file ? y/n"
+        .null "Delete item ? y/n"
         jsr flushk
         jsr getkey
         and #$7f
@@ -478,8 +480,6 @@ ccopy   lda #0
         bcs restore
         jsr safeold
         bcs restore
-        lda ro
-        bne restore
         lda blocks
         ora blocks+1
         beq restore
@@ -504,6 +504,8 @@ ccopy   lda #0
         cmp #12
         bcs restore2
         sta tdev
+        jsr rootpair
+        bcs fatalc
         lda newlen
         bne +
         jsr oldtonew
@@ -514,14 +516,10 @@ ccopy   lda #0
         bcs restore2
         jsr msgi
         .null "Copying ..."
-        jsr cmdi
-        .null "c:"
-        jsr cmdnew
-        lda #"="
-        jsr cmdchr
-        jsr cmdname
-        jsr doscmd
+        jsr copysame
         bcs fatalc
+        lda ovskip
+        bne restore2
         jsr waitdev
         bcs fatalc
         lda last
@@ -565,8 +563,6 @@ cmove   lda #1
         bcs nomove
         jsr safeold
         bcs nomove
-        lda ro
-        bne nomove
         lda blocks
         ora blocks+1
         beq nomove
@@ -591,6 +587,8 @@ cmove   lda #1
         cmp #12
         bcs nomove
         sta tdev
+        jsr rootpair
+        bcs fatalc
         lda newlen
         bne +
         jsr oldtonew
@@ -601,15 +599,17 @@ cmove   lda #1
         bcs nomove
         jsr msgi
         .null "Moving ..."
-        jsr cmdi
-        .null "r:"
-        jsr cmdnew
-        lda #"="
-        jsr cmdchr
-        jsr cmdname
-        jmp dosrelist
+        jsr movesame
+        bcs fatalc
+        lda ovskip
+        bne nomove
+        jsr waitdev
+        bcs fatalc
+        jmp relist
 mvx     jsr xcopy
         bcs fatalc
+        lda ovskip
+        bne nomove
         jsr cmdi
         .null "s:"
         jsr cmdname
@@ -660,6 +660,8 @@ fileall jsr msgi
         cmp dev
         beq nomove              ; same names need another drive
         sta tdev
+        jsr rootpair
+        bcs fatalc
         lda #0
         sta walk
 faloop  lda walk
@@ -672,13 +674,13 @@ faloop  lda walk
         sta pos
         jsr parsefile
         bcs fanext
-        lda ro
-        bne fanext
         jsr safeold
         bcs fanext
         jsr oldtonew
         jsr xcopy
         bcs fatalc
+        lda ovskip
+        bne fanext
         lda ismv
         beq fanext
         jsr cmdi
@@ -692,7 +694,7 @@ fadone  jmp relist
 
 ; ---------------------------------------------------------------- N format
 cformat jsr msgi
-        .null "Format name:"
+        .null "Disk name:"
         lda #13
         jsr namefield
         bcs nomove
@@ -701,7 +703,7 @@ cformat jsr msgi
         lda newlen
         beq nomove
         jsr msgi
-        .null "ID (Return=quick):"
+        .null "Disk ID:"
         lda #0
         sta inlen
         sta inmode
@@ -722,7 +724,7 @@ cformat jsr msgi
         inx
         bne -
 +       jsr msgi
-        .null "Format drive "
+        .null "New disk on drive "
         lda dev
         ldx #0
         jsr decout
@@ -739,6 +741,15 @@ cformat jsr msgi
         .null "n:"
         jsr cmdnew
         lda idlen
+        bne +
+        lda cbmdrv
+        bne nosend
+        lda #2
+        sta idlen
+        lda #"0"
+        sta idbuf
+        sta idbuf+1
++       lda idlen
         beq nosend
         lda #","
         jsr cmdchr
@@ -749,10 +760,14 @@ cformat jsr msgi
         jsr cmdchr
         iny
         bne -
-nosend  jmp dosrelist
+nosend  jmp dosasyncrelist
 
 ; ------------------------------------------------------- M / R directories
-cmkdir  jsr msgi
+cmkdir  jsr folderok
+        bcs folderbad
+        jsr rootok
+        bcs folderbad
+        jsr msgi
         .null "Make dir:"
         lda #10
         jsr namefield
@@ -770,14 +785,14 @@ crmdir  jsr parsefile
         bcs nomove
         jsr safeold
         bcs nomove
-        lda type
-        cmp #"d"
-        bne nomove
-        lda type+1
-        cmp #"i"
-        bne nomove
+        jsr isdir
+        bcc nomove
+        jsr folderok
+        bcs folderbad
+        jsr rootok
+        bcs folderbad
         jsr msgi
-        .null "Remove dir? y/n"
+        .null "Delete item ? y/n"
         jsr flushk
         jsr getkey
         and #$7f
@@ -905,6 +920,8 @@ notamp  lda ro
         jsr cmdi
         .null "cd:"
         jsr cmdname
+        lda #0                  ; mounted image: refresh the firmware title
+        sta oslen
         jmp dosfolder
 +       jsr getstart
         bcc +
@@ -1147,31 +1164,8 @@ zpbasic ldx #zpend-ZPVARS-1
         rts
 
 ; ========================================================== drive commands
-; Probe the device in A. Carry set when it does not answer.
-probe   pha
-        lda #0
-        sta STATUS
-        pla
-        jsr LISTEN
-        lda #$6f
-        jsr SECOND
-        jsr UNLSN
-        lda STATUS
-        asl
-        rts
-
 ; Wait until the current drive answers again (after UI, CD, copy...).
-waitdev lda #13
-        sta tries
--       lda dev
-        jsr probe
-        bcc +
-        lda #20
-        jsr delay
-        dec tries
-        bne -
-        jmp devnp
-+       rts
+waitdev jmp waitopen
 
 delay   clc
         adc JIFFY
@@ -1317,17 +1311,107 @@ cl15    lda #15
         jsr CLOSE
         jmp CLRCHN
 
-; CD/MD/RD. Reading the status immediately never returns: the drive
-; finishes the directory change after the handshake. Close, wait until
-; it answers, then reread. A 1541 has none of these commands.
-dosfolder
-        jsr opcmd
+; Some command-channel operations (N:, CD:, MD:, RD:) complete only after
+; their initial OPEN has returned.  Close, wait for the next ordinary
+; OPEN/CLOSE to work, then read the resulting DOS status.
+dosasync
+        jsr opencmd
         bcs dfbad
         jsr cl15
         jsr waitopen
         bcs dfbad
+        lda #0
+        sta cmdlen
+        jsr doscmd
+        bcs dfbad
+        rts
+
+; CD/MD/RD share the asynchronous protocol. A 1541 has none of these
+; commands, while KFF is stopped earlier by folderok.
+dosfolder
+        jsr dosasync
+        bcs dfbad
         jmp relist
-dfbad   jmp fatal
+
+; Pi1541 N: creates and enters a new image asynchronously as well.
+dosasyncrelist
+        jsr dosasync
+        bcs dfbad
+        jmp relist
+dfbad   jmp folderbad
+
+; KFF's virtual disk has no MD/RD implementation and returns an empty
+; command-channel response.  Do not pretend that this did anything.  The
+; narrow tag test leaves SD2IEC and pi1541 commands entirely probe-free.
+folderok
+        ldx #0
+-       lda osbuf,x
+        cmp kfftag,x
+        bne fokok
+        inx
+        cpx #3
+        bne -
+        lda #<e_nofold
+        ldx #>e_nofold
+        jmp seterr
+fokok   clc
+        rts
+
+; A directory entry is a real SD2IEC/Pi folder.  Disk-image filenames are
+; openable too, but remain ordinary files for Rename/Delete/Copy/Move.
+isdir   lda type
+        cmp #"d"
+        bne idirno
+        lda type+1
+        cmp #"i"
+        bne idirno
+        sec
+        rts
+idirno  clc
+        rts
+
+; Folder commands are valid only at a virtual device root.  A mounted image
+; identifies itself as CBM/COP/JIF DOS and must retain its disk semantics.
+rootok  lda cbmdrv
+        beq rootyes
+        jsr erri
+        .null "Root device only !"
+rootyes clc
+        rts
+
+; A root-file Copy/Move may target only another virtual root.  `getos` is
+; deliberately reused: it performs the X?/UI distinction that the main list
+; uses, then the next relist refreshes the source header because OSDEV differs.
+rootpair
+        lda cbmdrv
+        bne rppass
+        lda tdev
+        cmp dev
+        beq rppass
+        lda dev
+        pha
+        lda tdev
+        sta dev
+        lda #0
+        sta oslen
+        jsr getos
+        bcs rpbad
+        lda cbmdrv
+        bne rpbad
+        pla
+        sta dev
+rppass  clc
+        rts
+rpbad   pla
+        sta dev
+        jsr erri
+        .null "Target root only !"
+
+folderbad
+        jsr showerr
+        jmp relist
+
+kfftag  .text "kun"
 
 ; OPEN/CLOSE probe. A listen with no bytes keeps these drives waiting.
 waitopen
@@ -1337,8 +1421,7 @@ waitopen
         jsr delay
 +       lda #13
         sta tries
-wotry   lda #0
-        sta cmdlen
+wotry   lda #0              ; keep cmdlen: opencmd sends cmdbuf after this probe
         sta STATUS
         lda #15
         ldx dev
@@ -1360,10 +1443,10 @@ wofail  jsr cl15
         bne wotry
         jmp devnp
 
-opencmd lda dev
-        jsr probe
+opencmd
+        jsr waitopen
         bcc opcmd
-        jmp devnp
+        rts
 opcmd   lda #15
         ldx dev
         ldy #15
@@ -1839,6 +1922,116 @@ oldtonew
         sta newlen
         rts
 
+; FILE EXISTS is the only point at which Copy/Move asks whether to replace
+; the target.  Any key other than Y skips this one item; the batch loop then
+; continues and a Move never scratches its source.
+askover lda #0
+        sta ovskip
+        jsr currow
+        lda row
+        jsr rowptr
+        ldx #0
+        lda #" "
+-       sta line,x
+        inx
+        cpx #40
+        bne -
+        ldx #0
+-       lda overpre,x
+        beq +
+        sta line,x
+        inx
+        bne -
++       lda #$22
+        sta line,x
+        inx
+        ldy #0
+-       cpy newlen
+        beq +
+        lda newname,y
+        sta line,x
+        inx
+        iny
+        bne -
++       lda #$22
+        sta line,x
+        inx
+        ldy #0
+-       lda overpost,y
+        beq +
+        sta line,x
+        inx
+        iny
+        bne -
++       jsr putwide            ; full 40 cells fit a 16-char target + y/n
+        jsr flushk
+        jsr getkey
+        and #$7f
+        cmp #"y"
+        beq overyes
+        inc ovskip
+overyes jsr drawpanel          ; restore the right panel covered by the prompt
+        clc
+        rts
+
+scratchnew
+        jsr cmdi
+        .null "s:"
+        jsr cmdnew
+        jmp doscmd
+
+copysame
+        lda #0
+        sta ovskip
+copyagain
+        jsr cmdi
+        .null "c:"
+        jsr cmdnew
+        lda #"="
+        jsr cmdchr
+        jsr cmdname
+        jsr doscmd
+        bcc sameok
+        lda errnum
+        cmp #63
+        bne samebad
+        jsr askover
+        lda ovskip
+        bne sameok
+        jsr scratchnew
+        bcs samebad
+        jmp copyagain
+samebad sec
+        rts
+sameok  clc
+        rts
+
+movesame
+        lda #0
+        sta ovskip
+moveagain
+        jsr cmdi
+        .null "r:"
+        jsr cmdnew
+        lda #"="
+        jsr cmdchr
+        jsr cmdname
+        jsr doscmd
+        bcc moveok
+        lda errnum
+        cmp #63
+        bne movebad
+        jsr askover
+        lda ovskip
+        bne moveok
+        jsr scratchnew
+        bcs movebad
+        jmp moveagain
+movebad sec
+        rts
+moveok  clc
+        rts
+
 ; ------------------------------------------------------ inline texts
 ; cmdi, stri and erri take the 0-terminated text that follows the JSR.
 ; cmdi: text -> cmdbuf. stri: print it after the last message.
@@ -1938,7 +2131,9 @@ opfile  jsr SETLFS
 ; ====================================================== drive to drive copy
 ; Copies the selected PRG/SEQ/USR file from dev to tdev as newname,
 ; through the free BASIC RAM. Carry set with a message on failure.
-xcopy   lda type
+xcopy   lda #0
+        sta ovskip
+        lda type
         ldx #2
 -       cmp okty,x
         beq +
@@ -1946,15 +2141,24 @@ xcopy   lda type
         bpl -
         jsr erri
         .null "Only prg/seq/usr files !"
-+       lda tdev
-        jsr probe
-        bcc xdrvchk
-        jmp devnp
-xdrvchk lda ismv
++       lda dev
+        pha
+        lda tdev
+        sta dev
+        jsr waitopen
+        bcs xtargetbad
+        pla
+        sta dev
+        lda ismv
         beq xcopymsg
         jsr msgi
         .null "Moving to drive "
         jmp xdrvnum
+xtargetbad
+        pla
+        sta dev
+        sec
+        rts
 xcopymsg
         jsr msgi
         .null "Copying to drive "
@@ -1986,7 +2190,7 @@ xdrvnum lda tdev
         lda errnum
         cmp #2
         bcs xfail
-        lda #0                  ; target: 4 = command channel, 3 = file
+xtarget lda #0                  ; target: 4 = command channel, 3 = file
         sta cmdlen
         lda #4
         ldx tdev
@@ -2008,7 +2212,21 @@ xdrvnum lda tdev
         bcs xfail
         lda errnum
         cmp #2
+        bcc xwrite
+        cmp #63
+        bne xfail
+        lda #3
+        jsr CLOSE
+        jsr askover
+        lda ovskip
+        bne xskip
+        jsr xscratch
         bcs xfail
+        jmp xtarget
+xskip  jsr closeall
+        clc
+        rts
+xwrite
         jsr xloop
         ror xbad                ; bit 7: transfer failed
         lda #3
@@ -2048,6 +2266,24 @@ xok     jsr closeall
 xname   lda #0
         sta cmdlen
         rts
+
+; File 4 is the already-open target command channel.  Scratch only after Y;
+; this is portable across the virtual devices, unlike an implicit @ overwrite.
+xscratch
+        jsr cmdi
+        .null "s:"
+        jsr cmdnew
+        jsr xsend
+        ldx #4
+        jsr readstat
+        bcs +
+        lda errnum
+        cmp #2
+        bcs +
+        lda #4                 ; xtarget reopens the target command channel.
+        jsr CLOSE               ; Do not OPEN an already-open logical file.
+        clc
++       rts
 
 ; Send cmdbuf as one command on the target command channel (file 4).
 xsend   ldx #4
@@ -2260,13 +2496,14 @@ cls     ldx #0
 drawframe
         jsr cls
         jsr drawrow0
+drawpanel
         lda #<panel
         sta zp2
         lda #>panel
         sta zp2+1
-dfnext  ldy #0
+dpnext  ldy #0
         lda (zp2),y
-        bmi dfend
+        bmi dpend
         jsr rowptr
         ldy #1
         lda (zp2),y
@@ -2284,8 +2521,8 @@ dfnext  ldy #0
         lda #C_GRY2
         sta tcol
         jsr putrich
-        jmp dfnext
-dfend   rts
+        jmp dpnext
+dpend   rts
 
 ; Row 0 is the gray title, same colour as the help headers. The disk
 ; name is on row 1.
@@ -2541,6 +2778,19 @@ putline stx rvs
         ora rvs
         sta (scr),y
         lda tcol
+        sta (col),y
+        dey
+        bpl -
+        rts
+
+; Write all 40 screen cells from LINE in reverse white.  ASKOVER uses this
+; instead of the 27-cell list field so the target name is never omitted.
+putwide ldy #39
+-       lda line,y
+        jsr p2s
+        ora #$80
+        sta (scr),y
+        lda #C_WHT
         sta (col),y
         dey
         bpl -
@@ -2903,9 +3153,14 @@ s_deleted
 s_bfree .null " blocks free."
 s_cr    .null ",r"
 s_cw    .null ",w"
+overpre .null "Rewrite target "
+overpost
+        .null "? y/n"
 e_devnp .null "Device is not present !"
 e_rd    .null "Read error !"
 e_abort .null "Copy aborted !"
+e_nofold
+        .null "No folders on KFF !"
 
 ; Key panel: row, then rich text.
 panel
@@ -2914,15 +3169,15 @@ panel
         .byte 2, 1
         .null "1 List Drive"
         .byte 3, 1
-        .null "2 Validate Dr"
+        .null "2 ValidateDsk"
         .byte 4, 1
-        .null "3 Rename File"
+        .null "3 RenameFl/Fd"
         .byte 5, 1
         .null "4 Copy File/s"
         .byte 6, 1
         .null "5 Start From"
         .byte 7, 1
-        .null "6 Del. File/s"
+        .null "6 DeleteFl/Fd"
         .byte 8, 1
         .null "7 Run / Open"
         .byte 9, 1
@@ -2930,7 +3185,7 @@ panel
         .byte 10, 1
         .null "9 Move File/s"
         .byte 11, 1
-        .null "0 Format Disk"
+        .null "0 New/FormDsk"
         .byte 12, 13
         .null "SD2IEC Keys: "
         .byte 13, 1
@@ -2938,22 +3193,22 @@ panel
         .byte 14, 1
         .null "N New Folder"
         .byte 15, 1
-        .null "R Remove Fold"
-        .byte 16, 13
+        .null ""
+        .byte 15, 13
         .null "CRSR Keys:   "
-        .byte 17, 3
+        .byte 16, 3
         .null "U/D Move CRSR"
-        .byte 18, 3
+        .byte 17, 3
         .null "L/R Page UpDn"
-        .byte 19, 13
+        .byte 18, 13
         .null "Other Keys:  "
-        .byte 20, 3
+        .byte 19, 3
         .null "Spc Mark File"
-        .byte 21, 1
+        .byte 20, 1
         .null "* Mark All F."
-        .byte 22, 4
+        .byte 21, 4
         .null "Ret. Run/Open"
-        .byte 23, 1
+        .byte 22, 1
         .null "_ Exit Appl."
         .byte $ff
 
@@ -3018,6 +3273,7 @@ inbuf   .fill 17
 idlen   .byte ?
 idbuf   .fill 2
 ismv    .byte ?
+ovskip  .byte ?
 walk    .byte ?
 decbuf  .fill 6
 fldw    .byte ?
@@ -3030,7 +3286,7 @@ cbmdrv  .byte ?
 osbuf   .fill LISTW
 hdrlen  .byte ?
 hdr     .fill 32
-line    .fill LISTW + 1
+line    .fill 40
 ent     .fill ENTSZ
         .align 256
 bufstart

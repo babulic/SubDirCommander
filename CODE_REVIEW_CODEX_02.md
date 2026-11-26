@@ -10,17 +10,20 @@ trailer architecture where those facts affect the current artifacts.
 with `$0000`; the raw PRG appends a relocator followed by the three executable
 helper images. The fourth protected region holds directory state at run time;
 it is not an executable trailer image. The transport is not called in place.
-In the current release the BASIC terminator ends at `$2916` and the trailer
-starts at `$2917`.
+In the current release the BASIC terminator ends at `$2C5C` and the trailer
+starts at `$2C5D`.
 
 Its first BASIC line starts with the direct-load reentry gate
 `ON-SGN(RL)GOTO4489`; on an ordinary start it evaluates to zero and falls
 through to this numeric bootstrap:
 
 1. `POKE55,240:POKE56,151:CLR` — reserve the top of BASIC RAM at `$97F0`.
-2. `POKE45,23:POKE46,41:CLR` — set `VARTAB` to the start of this build's
-   trailer (`$2917`) and rebuild BASIC's allocation pointers below the ceiling.
-3. `SYS10519` — call the still-unreferenced trailer relocator.
+2. `POKE45,93:POKE46,44:CLR` — set `VARTAB` to the start of this build's
+   trailer (`$2C5D`) and rebuild BASIC's allocation pointers below the ceiling.
+3. On a mismatch of `PEEK(38896)=169` and `PEEK(38898)=133`, call
+   `SYS11357`; those two bytes are the signature of the relocated COPY
+   HELPER. A match naturally falls through to line 2 without executing the
+   consumed transport.
 
 The second `CLR` is necessary. KERNAL has set `VARTAB` after the complete raw
 PRG, including its trailer; changing only `MEMSIZ` would leave BASIC's future
@@ -64,12 +67,12 @@ Commander code or state at `$C000-$CFFF`: `$C800` and `$C900` are safe direct
 load targets.  The sole other high-RAM use is the temporary cross-drive Copy
 buffer at `$A000-$BFFF`, behind BASIC ROM, and it is used only while Copy runs.
 
-At a clean Commander exit, line 4990 writes an `RTS` at `VARTAB`, the former
-raw trailer entry. During the first run BASIC correctly reuses that transport
-RAM for variables; without this single-byte handoff a later ordinary `RUN`
-would `SYS` into variable bytes and return to `READY`. The resident helpers
-remain at `$97F0-$9FFF`, so the next `RUN` returns from this `RTS` and starts
-normally. A confirmed operation that overwrites resident helpers remains an
+During the first run BASIC correctly reuses raw trailer RAM for variables.
+Line 1 therefore no longer relies on clean exit writing an `RTS` at `VARTAB`:
+after `RUN/STOP`, RESTORE or a command that returns to BASIC, the relocated
+COPY HELPER signature makes the next ordinary `RUN` skip the consumed trailer.
+The fresh file image has no such helper signature, so it relocates before line
+2. A confirmed operation that overwrites resident helpers remains an
 explicitly unsupported return case.
 
 Before commands `7` (Run) and `8` (Load), BASIC calculates a conservative
@@ -77,24 +80,25 @@ range from the PRG load address and its directory-block count. A PRG at
 `$0801` is immediately handed to BASIC and receives no Commander warning:
 it replaces the BASIC Commander. Every other overlap is checked against the
 single continuous resident interval `$97F0-$9F6F` and shows `Program will hit
-Commande's routines!` before asking `Run? y/n` or `Load? y/n`; any key other
+Commander's routines!` before asking `Run? y/n` or `Load? y/n`; any key other
 than `y` cancels. A confirmed operation may alter the Commander, and it is
 deliberately not silently reinstalled. The warning is still necessary: KERNAL
 `LOAD` does not obey BASIC's memory ceiling.
 
 ## Resolved P2 — obsolete `M/m` key-map entries
 
-The two former Make-directory mappings `77,0,205,0` were removed before the
-remaining 31 keyboard/action pairs were compacted into one PETSCII string.
+The two former Make-directory mappings `77,0,205,0` and the obsolete `R/r`
+remove-folder mappings were removed before the remaining 29 keyboard/action
+pairs were compacted into one PETSCII string.
 Make directory has long used `N/n`; `M/m` retain the initialized zero value
 of every `K%(0..255)` entry after `DIM`, so they remain no-ops. The
-structural verifier decodes the tokenized PETSCII literal and compares all 31
+structural verifier decodes the tokenized PETSCII literal and compares all 29
 pairs byte-for-byte with the former map; it does not trust the textual
 spelling of control or shifted keys.
 
-## Resolved P2 — 41-block BASIC compaction
+## Resolved P2 — BASIC compaction and current feature budget
 
-The BASIC V2 PRG now occupies 41 1541 blocks. The original `INPUT "Target
+The BASIC V2 PRG currently occupies 44 1541 blocks. The original `INPUT "Target
 drive";U` statement exists once, in shared line 6, and is reached by Copy,
 Move and marked-file Copy/Move. It therefore keeps the original prompt
 spacing, cursor and C64 BASIC editor behavior; it is not a `GET` substitute.
@@ -105,9 +109,83 @@ using the existing numeric scratch variables `B`, `H` and `J`. The image-type
 check similarly reuses `F`: every caller has consumed the parse result before
 it calls line 3700, which replaces that value immediately.
 
-The current shrink moves the binary transport to `$2917`; the line-1
-`POKE45/46` and `SYS` literals are verified against the tokenized program by
-both the builder and the artifact test.
+The active feature set moves the binary transport to `$2C5D`; the line-1
+`POKE45/46`, signature and `SYS` literals are verified against the tokenized
+program by both the builder and the artifact test.
+
+## Resolved P1 — KFF command path and folder errors
+
+The ML command path used a low-level `LISTEN`/`SECOND $6F` probe before every
+command-channel `OPEN`. Kung Fu Flash lists successfully but does not accept
+that empty secondary-address probe, so Copy, Move, Rename, Delete, Validate
+and Format could incorrectly stop at `Device is not present !`. The raw probe
+is replaced with the same normal command-channel `OPEN/CLOSE` preflight as
+BASIC, followed by the actual command.
+
+`MD:` and `RD:` are asynchronous on SD2IEC and Pi1541. Both frontends now
+wait for the command channel to become available and then read its status
+before relisting. A failed Pi1541 `RD:` consequently reports its real DOS
+error instead of silently redrawing the unchanged list. Kung Fu Flash exposes
+no MD/RD implementation and gives no usable error for it; the narrow `KUN`
+OS tag therefore reports a folder-unavailable message without applying any SD2IEC/Pi1541
+classification or capability gate.
+
+Pi1541 `N:` is asynchronous too: both frontends now close the formatting
+command, wait for a normal command-channel open and only then fetch final
+status. This avoids waiting forever at `Formatting ...` after the new D64 was
+already created.
+
+## Resolved P1 — root files, folders and duplicate targets
+
+`RO` had incorrectly meant both “enter this item with `CD:`” and “do not
+modify this item.” A `.D64`, `.G64`, `.D81` or `.T64` is openable, but is
+still a file when shown at an SD2IEC/pi1541/KFF root. BAS now distinguishes
+the actual `DIR` type from an image extension; ML has the explicit `ISDIR`
+test. `3` therefore renames a file/image or a root-level folder, while `6`
+uses `S:` for a file/image and `RD:` for the selected folder. Marking remains
+file-only, so a marked Delete stays a file batch and never sends an accidental
+batch `RD:`.
+
+There is no firmware-name/version capability guess. BAS uses the already-read
+three-character OS header and ML's identical `CBMDRV` classification:
+`CBM`, `COP` and `JIF` mean a mounted disk/image; any other response is a
+virtual-device root. On a root-file cross-device Copy/Move, the target is
+queried with the same `X?`/`UI` sequence and must also be a root. The source
+context is explicitly invalidated afterwards so the next list refreshes it.
+That invalidation now occurs in both directions: when entering an image and
+when `CD:` + left-arrow leaves it. BAS clears its `OD` status cache before
+the subsequent `X?`/`UI`; ML clears `OSLEN`, which makes `GETOS` obtain the
+new device header rather than reusing the previous `CBM DOS` string.
+
+The directory-name contract remains the standard fixed 16-character field;
+neither frontend tries to reconstruct a host filesystem long filename. This
+is important at SD2IEC/Kung Fu Flash roots. SD2IEC's directory writer copies
+16 name bytes and its FAT layer selects the short FAT name when the long name
+cannot be represented; Kung Fu Flash/Kung Fu Flash 2 likewise select an
+alternate short name for input longer than 16 characters and pad it to 16.
+Thus a visible PETSCII graphics glyph may be the device's `~` in an alias
+such as `NAME56~1.D64`, not a character introduced by Commander. The exact
+alias is retained for display and every later command because expanding it
+would address a name the device never supplied. Sources:
+[SD2IEC](https://github.com/thierer/sd2iec),
+[Kung Fu Flash](https://github.com/KimJorgensen/KungFuFlash), and
+[Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2).
+
+`FILE EXISTS` no longer ends Copy/Move as a generic failure. Both frontends
+ask at that point only; `Y` scratches the target and retries the one command,
+while any other key skips that item. A cross-device Move scratches the source
+only after the replacement copy completed. The constrained 27-cell ML message
+shows `Rewrite target? y/n`; the selected row and typed target identify it.
+
+Format labels now say `Disk name`, `Disk ID` and `New disk on drive`. An empty
+ID at a virtual root becomes `00`, yielding `N:<name>,00` for pi1541. At a
+mounted disk `CBMDRV`/the BAS header says disk mode, so blank remains the
+existing bare `N:<name>` quick format.
+
+The BASIC initial drive query now follows the same rule: its first operation
+is the real `X?` command-channel request, with its own I/O status checked; it
+does not perform a preliminary open/close probe. Physical KFF and Pi1541
+validation remains an adapter-backed integration test, not a VICE PASS.
 
 ## Resolved P2 — unused ML code and state
 
@@ -168,7 +246,8 @@ device-validation results.
 The final runner report is `TEST_REPORT_SUB40.md`; it records the valid VICE
 startup directory and preserved disk title, `$37/$38 = $97F0`, byte-exact
 relocation of the three executable images and validation of the fourth reserved
-directory-state range, clean Exit followed by ordinary RUN
+directory-state range, ordinary RUN after deliberately consuming the raw
+trailer
 and fresh drive selection, and a failed cross-drive Move (`FILE EXISTS`) that
 preserves both files and redraws the title. It also records cross-drive Copy
 through `SYS 38896`, and declined Load and Run of a synthetic nine-block

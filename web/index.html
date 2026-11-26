@@ -28,10 +28,10 @@
               Frequently used tools <span>fb.d64 · both programs</span>
             </a>
             <a class="btn" href="public/files/%25SubDirCommand.40.prg" download="%SubDirCommand40.prg">
-              Machine code <span>%SubDirCommand40 · 26 blocks</span>
+              Machine code <span>%SubDirCommand40 · 28 blocks</span>
             </a>
             <a class="btn" href="public/files/SubDirCommand.40.prg" download="SubDirCommand.40.prg">
-              BASIC <span>SubDirCommand.40 · 41 blocks</span>
+              BASIC <span>SubDirCommand.40 · 44 blocks</span>
             </a>
           </div>
         </div>
@@ -99,13 +99,24 @@
               <tr>
                 <th>Kung Fu Flash</th>
                 <td>
-                  Kung Fu Flash and Kung Fu Flash 2 list, load, run, delete, copy and move.
-                  There is no rename, no validate and no format.
+                  Kung Fu Flash and Kung Fu Flash 2 use the standard root-file path for
+                  list, load, run, delete, copy, move and rename. Folder commands are unavailable;
+                  validate and format remain firmware-dependent.
                   <a href="https://github.com/KimJorgensen/KungFuFlash2">Kung Fu Flash 2</a>.
                 </td>
               </tr>
             </tbody>
           </table>
+          <p>
+            Returning from a mounted image refreshes the device's own status title.
+            SD2IEC and Kung Fu Flash can return a long host-file name as a FAT 8.3
+            alias in the normal 16-character directory field, such as
+            <code>NAME56~1.D64</code>. Commander displays and uses exactly that
+            received alias; it cannot reconstruct a long filename that IEC did not
+            send. In the usual C64 character set <code>~</code> is a graphics glyph.
+            See the <a href="https://github.com/thierer/sd2iec">SD2IEC source</a>
+            and <a href="https://github.com/KimJorgensen/KungFuFlash2">Kung Fu Flash 2 source</a>.
+          </p>
         </div>
       </section>
 
@@ -138,15 +149,15 @@ run</code></pre>
               <tr><th>CRSR left / right</th><td>page up / page down (22 lines)</td></tr>
               <tr><th>1 · F1</th><td>choose the drive and list it</td></tr>
               <tr><th>2 · F2</th><td>validate the disk</td></tr>
-              <tr><th>3 · F3</th><td>rename</td></tr>
+              <tr><th>3 · F3</th><td>rename a file, disk image or root-level folder</td></tr>
               <tr><th>4 · F4</th><td>copy: new name, then target drive (default: the current one)</td></tr>
               <tr><th>5 · F5</th><td>start address of a program</td></tr>
-              <tr><th>6 · F6</th><td>delete, after y/n</td></tr>
+              <tr><th>6 · F6</th><td>delete an item, after y/n</td></tr>
               <tr><th>7 · F7 · RETURN</th><td>run a program, open a directory or disk image</td></tr>
               <tr><th>8 · F8</th><td>load a program without running it</td></tr>
               <tr><th>9</th><td>move a file, on this drive or to another</td></tr>
-              <tr><th>0</th><td>format the disk</td></tr>
-              <tr><th>N / R</th><td>SD2IEC and pi1541: make or remove a directory</td></tr>
+              <tr><th>0</th><td>new/form disk</td></tr>
+              <tr><th>N</th><td>SD2IEC and pi1541: make a directory</td></tr>
               <tr><th>Space / *</th><td>mark one file, or mark and clear all</td></tr>
               <tr><th>↑</th><td>SD2IEC and pi1541: one directory level up</td></tr>
               <tr><th>←</th><td>quit to BASIC</td></tr>
@@ -155,8 +166,9 @@ run</code></pre>
         </div>
         <p>
           Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
-          New folder, remove folder and go up are for SD2IEC and for pi1541 on the SD card.
-          On Kung Fu Flash, use list, load, run, copy, move and delete.
+          At a virtual-device root, 3/4/6/9 treat disk images and normal files as files;
+          a true DIR entry is a folder. New folder and go up are for SD2IEC and pi1541
+          on the SD card; folder commands on Kung Fu Flash report unavailable.
         </p>
       </section>
 
@@ -177,10 +189,11 @@ run</code></pre>
             list afterward. Same for ROM and I/O addresses.
           </p>
           <p>
-            <strong>BASIC</strong> ends at <code>$2916</code>; its transport trailer starts at
-            <code>$2917</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
+            <strong>BASIC</strong> ends at <code>$2c5c</code>; its transport trailer starts at
+            <code>$2c5d</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
             <code>HEADER/WORK $9880-$98f2</code>, <code>PANEL $9930-$9b14</code> and
-            <code>DIR READ $9b20-$9f6f</code>. Before Load or Run it checks the complete resident
+            <code>DIR READ $9b20-$9f6f</code>. An ordinary RUN verifies the relocated helper signature before
+            it can reuse the consumed transport. Before Load or Run it checks the complete resident
             range and asks <code>Program will hit Commander's routines!</code> before confirmation.
           </p>
         </div>
@@ -196,7 +209,10 @@ run</code></pre>
           <h2>Copying</h2>
           <p>
             A failed copy between drives (disk full, write error, RUN/STOP) deletes the partial
-            file and frees its blocks.
+            file and frees its blocks. On <code>FILE EXISTS</code>, the commander asks before
+            replacing that one target; another key skips it. At an SD2IEC/pi1541/KFF root the
+            cross-device target must also be a root, never an opened disk image. An empty Disk ID
+            becomes <code>00</code> only at such a root; an opened disk keeps quick <code>N:name</code>.
           </p>
         </div>
       </section>

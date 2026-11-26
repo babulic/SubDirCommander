@@ -1,5 +1,5 @@
 ; Help panel for the BASIC SubDirCommander.
-; Rows 1-23, from column 27, go straight into screen and colour RAM.
+; Rows 1-22, from column 27, go straight into screen and colour RAM.
 ; A short row stops before column 39, so that cell stays as the clear
 ; left it. The caller clears the screen first, including the file list.
 ;
@@ -115,15 +115,15 @@ rows    .byte 13
         .byte 1
         .null "1 List Drive"
         .byte 1
-        .null "2 Validate Dr"
+        .null "2 ValidateDsk"
         .byte 1
-        .null "3 Rename File"
+        .null "3 RenameFl/Fd"
         .byte 1
         .null "4 Copy File/s"
         .byte 1
         .null "5 Start From"
         .byte 1
-        .null "6 Del. File/s"
+        .null "6 DeleteFl/Fd"
         .byte 1
         .null "7 Run / Open"
         .byte 1
@@ -131,15 +131,13 @@ rows    .byte 13
         .byte 1
         .null "9 Move File/s"
         .byte 1
-        .null "0 Format Disk"
+        .null "0 New/FormDsk"
         .byte 13
         .null "SD2IEC Keys: "
         .byte 1
         .null "^ Go Level Up"
         .byte 1
         .null "N New Folder"
-        .byte 1
-        .null "R Remove Fold"
         .byte 13
         .null "CRSR Keys:   "
         .byte 3

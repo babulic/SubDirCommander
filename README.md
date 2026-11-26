@@ -16,14 +16,16 @@ It comes in two versions with the same screen and keys.
 - pi1541 does the same inside a disk image. On the SD card it renames, copies,
   deletes and creates folders; validate is not implemented, and format creates
   a new D64 ([IEC commands](https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md)).
-- Kung Fu Flash and Kung Fu Flash 2 list, load, run, delete, copy and move.
-  Rename, validate and format are not in that firmware
+- Kung Fu Flash and Kung Fu Flash 2 use the standard root-file paths for
+  list, load, run, delete, copy, move and rename. Folder commands are
+  explicitly unavailable; validate/format support remains firmware-dependent
+  and is covered only by the hardware adapter matrix
   ([Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2)).
 
 | File | Kind | Size |
 | --- | --- | --- |
-| `dist/SubDirCommand.40.prg` | BASIC V2 | 41 blocks |
-| `dist/%SubDirCommand.40.prg` | 6502 machine code, `SYS2061` stub | 26 blocks |
+| `dist/SubDirCommand.40.prg` | BASIC V2 | 44 blocks |
+| `dist/%SubDirCommand.40.prg` | 6502 machine code, `SYS2061` stub | 28 blocks |
 | `dist/SubDirCommand.40.d64` | slim 1541 disk with both programs | |
 | `dist/fb.d64` | frequently-used disk with both programs | |
 
@@ -65,27 +67,55 @@ x64sc -8 dist/fb.d64 -9 other.d64
 | CRSR left / right | page up / page down (22 lines; on the first or last page: first or last entry) |
 | 1 / F1 | choose the drive and list it |
 | 2 / F2 | validate the disk and list again |
-| 3 / F3 | rename |
+| 3 / F3 | rename a file, disk image or root-level folder |
 | 4 / F4 | copy: name (RETURN = same name), then target drive (default: current) |
 | 5 / F5 | show the start address of a PRG |
-| 6 / F6 | delete (asks y/n; not locked files) |
+| 6 / F6 | delete an item (file/image, or the selected root-level folder; asks y/n) |
 | 7 / F7 / RETURN | run a program, enter a directory or disk image, run an `&` USR file in the drive |
 | 8 / F8 | load a program without running it (directories and images open like 7) |
 | 9 | move a file, on this drive or to another |
-| 0 | format the disk |
-| N / R | SD2IEC and pi1541: make or remove a directory |
+| 0 | new/form disk (`Disk name`, optional `Disk ID`) |
+| N | SD2IEC and pi1541: make a directory |
 | Space / * | mark one file, or mark and clear all |
 | ↑ | SD2IEC and pi1541: one directory level up (`CD:←`) |
 | ← | quit to BASIC |
 
 The key panel on the right says `U/D Move CRSR` and `L/R Page UpDn`.
 Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
-On Kung Fu Flash, use list, load, run, copy, move and delete.
+At an SD2IEC/pi1541/KFF device root, `3`, `4`, `6` and `9` treat a listed
+disk image or normal file as a file; a true `DIR` entry is renamed or deleted
+as a folder. Folder creation and deletion are unavailable on Kung Fu Flash.
 
 Copy to another drive streams the file through the C64. PRG, SEQ and USR
-files can be copied; REL files cannot. A failed copy (disk full, write
-error, RUN/STOP) removes the partial file and validates the target so its
-blocks come back. Copy on the same drive still uses the drive's own `C:`.
+files (including an image listed as PRG) can be copied; REL files cannot. A
+failed copy (disk full, write error, RUN/STOP) removes the partial file and
+validates the target so its blocks come back. If DOS returns `FILE EXISTS`,
+the commander asks before scratching and replacing that one target; any other
+answer skips only that item. A Move scratches its source only after the copy
+or replacement succeeded. Copy on the same drive still uses the drive's own
+`C:`.
+
+The virtual-root distinction is DOS based, not a firmware-version guess:
+`CBM`, `COP` and `JIF` OS headers mean an open disk or image; every other
+header is a device root. A root-file cross-device Copy/Move requires its
+target to be a virtual root as well, so it cannot accidentally write into an
+opened D64. An empty Disk ID sends `N:<name>,00` at such a root (needed by
+pi1541); inside an open disk it retains the bare `N:<name>` quick format.
+
+Entering an image and returning with `CD:` + left-arrow always invalidates the
+cached status title before the next listing, so the title is read again from
+the current device. This is deliberately a refresh, not a firmware-name
+guess: SD2IEC, pi1541 and Kung Fu Flash supply their own status text.
+
+At an SD2IEC or Kung Fu Flash root, a long host-file name may be returned as
+a device-selected FAT 8.3 alias in the standard 16-character directory-name
+field, for example `NAME56~1.D64`. SubDirCommander displays and sends that
+exact received name; it never invents missing characters from an unseen long
+filename. The `~` is a normal PETSCII graphics glyph in the usual C64
+charset. This follows the directory writers in the
+[SD2IEC source](https://github.com/thierer/sd2iec) and the
+[Kung Fu Flash](https://github.com/KimJorgensen/KungFuFlash) /
+[Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2) sources.
 
 ## What changed in `.40`
 
@@ -93,9 +123,11 @@ blocks come back. Copy on the same drive still uses the drive's own `C:`.
   the BASIC terminator copies them at startup into `$97F0-$9FFF`. The first
   line first detects the return from an in-program `LOAD`; otherwise it
   reserves that RAM, runs `CLR`, sets `VARTAB` to the trailer, runs `CLR`
-  again, and only then `SYS`es the relocator.
-- The tokenized BASIC program ends at `$2916`; the binary trailer begins at
-  `$2917`. The trailer is only a transport: it is copied from the file image
+  again, then checks a two-byte signature of the relocated COPY HELPER.
+  A fresh launch calls the relocator; a normal `RUN` after `RUN/STOP` uses the
+  already-resident helpers and never executes the consumed transport.
+- The tokenized BASIC program ends at `$2C5C`; the binary trailer begins at
+  `$2C5D`. The trailer is only a transport: it is copied from the file image
   first, then BASIC allocates its variables below `$97F0`. The live services
   are `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY
   PANEL` `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. No unused loader or

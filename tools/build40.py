@@ -54,12 +54,12 @@ def basic_end(program: bytes) -> int:
 
 def bootstrap_literals(source: str) -> tuple[int, int, int]:
     match = re.search(
-        r"^\s*1\s+on-sgn\(rl\)goto4489:poke55,240:poke56,151:clr:poke45,(\d+):poke46,(\d+):clr:sys(\d+)\s*$",
+        r"^\s*1\s+on-sgn\(rl\)goto4489:poke55,240:poke56,151:clr:poke45,(\d+):poke46,(\d+):clr:ifpeek\(38896\)<>169orpeek\(38898\)<>133thensys(\d+)\s*$",
         source,
         re.IGNORECASE | re.MULTILINE,
     )
     if not match:
-        raise ValueError("line 1 must be the literal MEMSIZ/VARTAB/CLR/SYS bootstrap")
+        raise ValueError("line 1 must be the literal MEMSIZ/VARTAB/CLR/signature/SYS bootstrap")
     return int(match.group(1)), int(match.group(2)), int(match.group(3))
 
 

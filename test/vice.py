@@ -34,6 +34,7 @@ class Vice:
             args += ["-drive8truedrive", "-drive9truedrive"]
         if extra:
             args += extra
+        os.makedirs("/tmp/t", exist_ok=True)
         self.log = open("/tmp/t/vice.log", "w")
         self.proc = subprocess.Popen(args, stdout=self.log, stderr=subprocess.STDOUT)
         atexit.register(self.quit)

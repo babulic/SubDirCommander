@@ -6,9 +6,9 @@ device run must execute each applicable command for both frontends.
 | Target | Virtual backend | Commands under test | Result without firmware adapter |
 | --- | --- | --- | --- |
 | Pi1541, D64 mode | VICE true-drive D64 | list, load, run, copy, move, delete, rename, validate, format | runnable |
-| Pi1541, SD-card mode | Pi1541 firmware adapter | list, load, run, copy, move, delete, rename, MD, RD, CD:_, format | `SKIP` |
-| SD2IEC | SD2IEC firmware adapter | list, load, run, copy, move, delete, rename, validate, format, MD, RD, CD:_ | `SKIP` |
-| Kung Fu Flash / 2 | KFF firmware adapter | list, load, run, copy, move, delete | `SKIP` |
+| Pi1541, SD-card mode | Pi1541 firmware adapter | list, load, run, root-file copy/move/delete/rename, MD, RD, CD:_, format | `SKIP` |
+| SD2IEC | SD2IEC firmware adapter | list, load, run, root-file copy/move/delete/rename, validate, format, MD, RD, CD:_ | `SKIP` |
+| Kung Fu Flash / 2 | KFF firmware adapter | list, load, run, root-file copy/move/delete/rename; MD/RD must report unavailable | `SKIP` |
 
 VICE's host-filesystem IEC backend is useful for a KERNAL file-system smoke
 test, but it does not implement the SD2IEC DOS/folder contract. It must not
@@ -19,6 +19,18 @@ be reported as SD2IEC coverage.
 - PRG and NUL-containing SEQ copies are byte-exact.
 - Duplicate, abort and full-media failures leave no partial output and retain
   the expected free blocks.
+- On `FILE EXISTS`, `Y` replaces only the named target; another key skips only
+  that item, and a Move leaves its source until replacement succeeds.
+- A root-file cross-device Copy/Move rejects a target that identifies as an
+  opened `CBM`, `COP` or `JIF` disk/image; root-to-root succeeds.
+- A blank Disk ID at a virtual root sends `N:<name>,00`; a blank ID inside an
+  opened disk sends bare `N:<name>`.
+- Entering an image and returning with `CD:` + left-arrow refreshes the
+  actual root firmware title; it must not retain the image's `CBM DOS` title.
+- For an SD2IEC/KFF root entry whose firmware supplies a FAT 8.3 alias for a
+  long host filename, the displayed and command-used 16-byte name is the
+  exact alias supplied by the device (including `~`); Commander must not
+  synthesize a longer name.
 - Every supported command checks its DOS status; unsupported commands are
   reported as unavailable and leave the medium unchanged.
 - Folder operations affect only the selected path.

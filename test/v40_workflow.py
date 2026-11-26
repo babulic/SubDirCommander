@@ -1,13 +1,15 @@
 """Exercise relocated 4.0 copy code and both overlap-warning prompts."""
 
 import os
+import shutil
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = Path(os.environ["SDC40_WORK"])
 sys.path.insert(0, str(ROOT / "test"))
-from d64 import D64
+from d64 import D64, name_str
 from vice import DOWN, RET, pet, start
 
 
@@ -24,8 +26,8 @@ def selected(v, name: str) -> None:
     raise AssertionError(f"not selected: {name}")
 
 
-# A failed cross-drive Move must preserve both files and redraw the source
-# title correctly after the FILE EXISTS status is dismissed.
+# A declined duplicate-target Move must preserve both files and redraw the
+# source title.  The prompt is issued only after DOS reports FILE EXISTS.
 v = start(str(target_path), name=NAME40, d9=str(source_path))
 selected(v, "overlap")
 title_tail = v.mem(0x0442, 0x0442)
@@ -38,7 +40,7 @@ v.keys([RET])
 assert v.wait_line(6, 30)
 v.keys(pet("9") + [RET])
 assert v.wait_line(4, 120)
-v.require_text("file exists")
+v.require_text("rewrite target")
 v.keys(pet("x"))
 assert v.wait_line(10, 120)
 v.require_text("frequently used")
@@ -47,13 +49,34 @@ assert D64(str(target_path)).read(b"OVERLAP") == before_source
 assert D64(str(source_path)).read(b"OVERLAP") == before_target
 v.quit()
 
+# Accepting the same prompt must scratch and replace only the target.  The
+# fixture has a different load address on drive 9, so byte equality proves
+# that the source was transferred rather than merely left in place.
+v = start(str(target_path), name=NAME40, d9=str(source_path))
+selected(v, "overlap")
+replace_source = D64(str(target_path)).read(b"OVERLAP")
+replace_old_target = D64(str(source_path)).read(b"OVERLAP")
+assert replace_source is not None and replace_old_target != replace_source
+v.key(ord("4"), at=10)
+assert v.wait_line(4340, 30)
+v.keys([RET])
+assert v.wait_line(6, 30)
+v.keys(pet("9") + [RET])
+assert v.wait_line(4, 120)
+v.require_text("rewrite target")
+v.keys(pet("y"))
+assert v.wait_line(10, 180)
+v.quit()
+assert D64(str(target_path)).read(b"OVERLAP") == replace_source
+assert D64(str(source_path)).read(b"OVERLAP") == replace_source
+
 # Delete must reach its confirmation dialog without a BASIC syntax error.
 # Declining preserves the release file and returns to the active list.
 v = start(str(target_path), name=NAME40, d9=str(source_path))
 selected(v, "subdircommand.40")
 v.key(ord("6"), at=10)
 assert v.wait_line(4, 30), f"Delete did not reach confirmation; BASIC line {v.line()}"
-v.require_text("delete file")
+v.require_text("delete item")
 v.keys(pet("n"))
 assert v.wait_line(10, 60)
 v.quit()
@@ -114,6 +137,94 @@ for key, action in ((ord("8"), "load"), (ord("7"), "run")):
     v.keys(pet("n"))
     assert v.wait_line(10, 60)
     assert v.mem(0x97F0, 0x97F1) == before
+v.quit()
+
+# Declining a cross-drive Rewrite target must close the source channels too;
+# the next DOS command opens channel 2 in line 4100.
+v = start(str(target_path), name=NAME40, d9=str(source_path))
+selected(v, "overlap")
+v.key(ord("4"), at=10)
+assert v.wait_line(4340, 30)
+v.keys([RET])
+assert v.wait_line(6, 30)
+v.keys(pet("9") + [RET])
+assert v.wait_line(4, 120)
+v.require_text("rewrite target")
+v.keys(pet("n"))
+assert v.wait_line(10, 120)
+v.key(ord("3"), at=10)
+assert v.wait_line(4274, 30), f"Rename did not prompt; BASIC line {v.line()}"
+v.keys(pet("renamed") + [RET])
+if not v.wait_line(10, 120):
+    v.show("Rename after declined rewrite did not return")
+    raise AssertionError(f"Rename after declined rewrite stopped at BASIC line {v.line()}")
+assert not any("file open" in row.lower() for row in v.screen())
+v.quit()
+assert D64(str(target_path)).read(b"RENAMED") is not None
+assert D64(str(target_path)).read(b"OVERLAP") is None
+
+# Rename and a declined Delete clear the whole prompt row; when they return
+# without a full redraw, the help panel cells on that row must be restored.
+v = start(str(target_path), name=NAME40, d9=str(source_path))
+selected(v, "fast load")
+row = v.highlighted_row()
+help_cells = v.screen()[row][27:]
+assert help_cells.strip(), "fixture row is outside the help panel"
+v.key(ord("3"), at=10)
+assert v.wait_line(4274, 30)
+v.keys(pet("fastload2") + [RET])
+assert v.wait_line(10, 120)
+time.sleep(1)
+assert v.screen()[row][27:] == help_cells, "help panel not restored after Rename"
+v.key(ord("6"), at=10)
+assert v.wait_line(4, 30)
+v.require_text("delete item")
+v.keys(pet("n"))
+assert v.wait_line(10, 60)
+time.sleep(1)
+assert v.screen()[row][27:] == help_cells, "help panel not restored after declined Delete"
+v.quit()
+
+# Validate must send V: an unclosed (splat) file disappears afterwards.
+validate_path = WORK / "validate.d64"
+shutil.copy2(source_path, validate_path)
+image = D64(str(validate_path))
+for (track, sector, index), entry in image.entries():
+    if entry[2] & 0x80 and name_str(entry[5:21]) == "turbo ii":
+        block = bytearray(image.sec(track, sector))
+        block[index * 32 + 2] &= 0x7F
+        image.setsec(track, sector, bytes(block))
+        break
+else:
+    raise AssertionError("turbo ii fixture entry not found")
+image.save()
+v = start(str(target_path), name=NAME40, d9=str(validate_path), drive=ord("9"))
+v.key(ord("2"), at=10)
+assert v.wait_line(10, 300), f"Validate did not return; BASIC line {v.line()}"
+time.sleep(1)
+assert not any("turbo ii" in row.lower() for row in v.screen()), "Validate kept the splat file"
+v.quit()
+assert not any(
+    name_str(entry[5:21]) == "turbo ii" and entry[2] for _, entry in D64(str(validate_path)).entries()
+)
+
+# Format must relist the empty disk; its status INPUT leaves ST=64 behind.
+format_path = WORK / "format.d64"
+shutil.copy2(source_path, format_path)
+v = start(str(target_path), name=NAME40, d9=str(format_path), drive=ord("9"))
+v.key(ord("0"), at=10)
+assert v.wait_line(4800, 30)
+v.keys(pet("fresh") + [RET])
+assert v.wait_line(4802, 30)
+v.keys(pet("ab") + [RET])
+assert v.wait_line(4, 30)
+v.require_text("new disk on drive")
+v.keys(pet("y"))
+assert v.wait_line(10, 600)
+time.sleep(1)
+if not (v.wait_text("fresh", 30) and v.wait_text("blocks free", 30)):
+    v.show("empty list after format")
+    raise AssertionError("Format did not relist the new disk")
 v.quit()
 
 print("PASS: BASIC 4.0 copy and LOAD/RUN overlap warnings use relocated helpers")
