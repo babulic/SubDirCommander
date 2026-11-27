@@ -110,6 +110,13 @@ th { white-space: nowrap; color: var(--hi); font-weight: 600; width: 1%; }
   gap: 32px;
 }
 
+.support p .c64-heart {
+  color: var(--hi);
+  font-family: ui-monospace, "Courier New", monospace;
+  font-weight: 700;
+  margin-left: 0.2em;
+}
+
 .support-actions {
   display: flex;
   flex-wrap: wrap;
