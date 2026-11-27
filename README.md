@@ -14,7 +14,9 @@ with the same screen and keys.
 ## Support
 
 Please support the project with a small contribution as it consumes a
-significant amount of time & AI tokens. Thank you very much!
+significant amount of time & AI tokens.
+
+Thank you very much!
 
 - [Pay by card (SumUp · card, Apple Pay, Google Pay)](https://pay.sumup.com/b2c/Q2TQPIJA)
 - [Donate with PayPal](https://www.paypal.com/donate/?business=ivan.babulic%40gmail.com&currency_code=EUR)
