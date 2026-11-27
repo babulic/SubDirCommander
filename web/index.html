@@ -16,9 +16,10 @@
           <h1>SubDirCommander 2026</h1>
           <p class="lead">
             <strong>A file manager for COMMODORE 64.</strong>
-            List a drive, move through it a line or a page at a time, and run, load, copy,
-            move or delete files, including copies from one drive to another. Rename, validate
-            and format depend on the drive.
+            List a drive, move through a list of files and folders a line or a page at a time,
+            load and run files, rename and delete files, copy and move files including copies
+            from one drive to another, format a CBM disk and create a new D64 disk image on
+            SD2IEC/pi1541/KFF, validate a CBM disk.
           </p>
           <div class="downloads">
             <a class="btn primary" href="public/files/SubDirCommand.40.d64" download="SubDirCommand.40.d64">
@@ -38,7 +39,7 @@
         <figure class="screen">
           <img src="./public/screen.png" width="894" height="615"
                alt="SubDir Commander on a C64 screen: the file list on the left, the key panel on the right" />
-          <figcaption>Current machine-code screen, from VICE on a PAL C64</figcaption>
+          <figcaption>Screenshot of a C64C run</figcaption>
         </figure>
       </header>
 
@@ -85,35 +86,33 @@
               </tr>
               <tr>
                 <th>SD2IEC</th>
-                <td>The same as a 1541, and directories: go up, make a folder, remove a folder.</td>
+                <td>
+                  Navigate through folders; make or remove a folder. File operations: rename,
+                  copy, move, delete. Format creates a new D64 image.
+                </td>
               </tr>
               <tr>
                 <th>pi1541</th>
                 <td>
-                  A mounted disk image behaves as a 1541. On the SD card it also changes
-                  folders, and it renames, copies and deletes. Validate is not implemented
-                  there, and format creates a new D64 instead of wiping the card.
+                  Navigate through folders; make or remove a folder. File operations: rename,
+                  copy, move, delete. Format creates a new D64 image. Names in folders are cut
+                  to 16 characters.
                   <a href="https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md">Command list</a>.
                 </td>
               </tr>
               <tr>
                 <th>Kung Fu Flash</th>
                 <td>
-                  Kung Fu Flash and Kung Fu Flash 2 use the standard root-file path for
-                  list, load, run, delete, copy, move and rename. Folder commands are unavailable;
-                  validate and format remain firmware-dependent.
+                  Navigate through folders; make or remove a folder. File operations: rename,
+                  copy, move, delete. Format creates a new D64 image.
                   <a href="https://github.com/KimJorgensen/KungFuFlash2">Kung Fu Flash 2</a>.
                 </td>
               </tr>
             </tbody>
           </table>
           <p>
-            Returning from a mounted image refreshes the device's own status title.
-            SD2IEC and Kung Fu Flash can return a long host-file name as a FAT 8.3
-            alias in the normal 16-character directory field, such as
-            <code>NAME56~1.D64</code>. Commander displays and uses exactly that
-            received alias; it cannot reconstruct a long filename that IEC did not
-            send. In the usual C64 character set <code>~</code> is a graphics glyph.
+            SD2IEC and Kung Fu Flash return a long host-file name as a FAT 8.3 alias such as
+            <code>NAME56~1.D64</code>.
             See the <a href="https://github.com/thierer/sd2iec">SD2IEC source</a>
             and <a href="https://github.com/KimJorgensen/KungFuFlash2">Kung Fu Flash 2 source</a>.
           </p>
@@ -122,22 +121,15 @@
 
       <section>
         <h2>Run it</h2>
-        <p>In VICE, attach the disk to drive 8:</p>
-        <pre><code>x64sc -8 SubDirCommand.40.d64
-x64sc -8 fb.d64</code></pre>
-        <p>Then on the C64, in lowercase:</p>
+        <p>In VICE:</p>
+        <pre><code>x64sc -8 SubDirCommand.40.d64 -9 fb.d64</code></pre>
+        <p>On C64 run:</p>
         <pre><code>load "%SubDirCommand40",8
 run</code></pre>
         <p>for the machine code version, or</p>
         <pre><code>load "SubDirCommand.40",8
 run</code></pre>
         <p>for the BASIC one.</p>
-        <p>
-          A copy from one drive to another needs a second disk. In VICE on the computer,
-          attach it as drive 9. That is a flag for <code>x64sc</code>, not a command on the C64:
-        </p>
-        <pre><code>x64sc -8 SubDirCommand.40.d64 -9 other.d64</code></pre>
-        <p><code>other.d64</code> is any second disk image. On a real C64, use the two drives you have and pick the target drive in the commander.</p>
       </section>
 
       <section>
@@ -164,14 +156,6 @@ run</code></pre>
             </tbody>
           </table>
         </div>
-        <p>
-          Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
-          At a virtual-device root, 3/4/6/9 treat disk images and normal files as files;
-          a true DIR entry is a folder. At a root, 7/8 open a mountable image
-          (.d64 .d41 .d71 .d81 .dnp, pi1541 also .g64 .t64) and run .prg; other extensions such as .crt
-          are host files and are not loaded. New folder and go up are for SD2IEC and pi1541
-          on the SD card; folder commands on Kung Fu Flash report unavailable.
-        </p>
       </section>
 
       <section class="cols">
