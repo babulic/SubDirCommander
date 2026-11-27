@@ -193,11 +193,10 @@ run</code></pre>
           <h2>Copying</h2>
           <p>
             A failed copy between drives (disk full, write error, RUN/STOP) deletes the partial
-            file and frees its blocks. On <code>FILE EXISTS</code>, the commander asks before
-            replacing that one target; another key skips it. Plain C64 files copy anywhere; a folder or disk
-            image taken from an SD2IEC/pi1541/KFF root needs another root as its cross-device target,
-            never an opened disk image. An empty Disk ID
-            becomes <code>00</code> only at such a root; an opened disk keeps quick <code>N:name</code>.
+            file and frees its blocks via the Validate command. On <code>FILE EXISTS</code>, the
+            commander asks before replacing that one target; another key skips it. Plain C64 files
+            copy anywhere; a folder or disk image taken from an SD2IEC/pi1541/KFF root needs another
+            root as its cross-device target, never an opened disk image.
           </p>
         </div>
       </section>
