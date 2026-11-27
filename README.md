@@ -205,15 +205,15 @@ listing.
 `ml/sdc40.asm` (64tass). Same screen, keys and behaviour; the list is drawn
 straight into screen RAM, so moving and paging are instant.
 
-- Code `$0801-$1B1A`, work variables up to `$1C86`.
+- Code `$0801-$23F9`, with `bufstart` aligned after it.
 - Directory: RAM under the BASIC ROM, `$A000-$BFFF`, 32 bytes per entry,
   up to 242 entries.
-- Copy buffer: `$2300-$9FFF` (31.25 KiB), so most files copy in one pass.
+- Copy buffer: `$2600-$9FFF` (30.5 KiB), so most files copy in one pass.
 - Zero page `$4B-$72` holds the hot variables; BASIC's own bytes there
   (including its `JMP` at `$54`) are saved at start and put back on exit and
   while a loaded program runs.
-- The copy buffer begins at the assembled `bufstart` label, `$2300`.
-  The ML direct-return contract is only `$2300-$9FFF` or `$C000-$CFFF`.
+- The copy buffer begins at the assembled `bufstart` label, `$2600`.
+  The ML direct-return contract is only `$2600-$9FFF` or `$C000-$CFFF`.
   `$A000-$BFFF` (BASIC ROM), `$D000-$DFFF` (I/O) and `$E000-$FFFF`
   (KERNAL ROM) are not direct-return targets; unsupported addresses must be
   handed to BASIC rather than executed inside the commander.

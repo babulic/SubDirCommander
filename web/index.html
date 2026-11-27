@@ -164,11 +164,11 @@ run</code></pre>
           <p>
             <strong>Machine code</strong> draws the directory list straight into screen memory, so
             scrolling and paging are instant. It keeps the directory in the RAM under the BASIC ROM.
-            Copying between drives uses a 31.25&nbsp;KiB buffer at <code>$2300-$9fff</code>.
+            Copying between drives uses a 30.5&nbsp;KiB buffer at <code>$2600-$9fff</code>.
           </p>
           <p>
             After Load or Run, you get the file list back only if the program loaded into
-            <code>$2300-$9fff</code> or <code>$c000-$cfff</code>. Something that loads lower — for
+            <code>$2600-$9fff</code> or <code>$c000-$cfff</code>. Something that loads lower — for
             example at 336 (<code>$0150</code>), in unused RAM at <code>$02a7-$02ff</code>, or in
             the cassette buffer at 828 (<code>$033c</code>) — still runs via
             <code>LOAD"name",8,1</code> then <code>SYS</code>, but the commander does not reopen the
@@ -178,9 +178,7 @@ run</code></pre>
             <strong>BASIC</strong> ends at <code>$2db1</code>; its transport trailer starts at
             <code>$2db2</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
             <code>HEADER/WORK $9880-$98f2</code>, <code>PANEL $9930-$9b14</code> and
-            <code>DIR READ $9b20-$9f6f</code>. An ordinary RUN verifies the relocated helper signature before
-            it can reuse the consumed transport. Before Load or Run it checks the complete resident
-            range and asks <code>Program will hit Commander's routines!</code> before confirmation.
+            <code>DIR READ $9b20-$9f6f</code>.
           </p>
         </div>
         <div>

@@ -141,8 +141,13 @@ for public in (ROOT / "README.md", ROOT / "CODE_REVIEW_CODEX_02.md", ROOT / "web
     text = public.read_text(encoding="utf-8").lower()
     for value in ("$2db1", "$2db2", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
         assert value in text, f"{public.name} is missing {value}"
-    assert "program will hit commander's routines!" in text, f"{public.name} has stale warning text"
     assert "$2977" not in text and "$2978" not in text, f"{public.name} has stale trailer address"
+for public in (ROOT / "README.md", ROOT / "CODE_REVIEW_CODEX_02.md"):
+    text = public.read_text(encoding="utf-8").lower()
+    assert "program will hit commander's routines!" in text, f"{public.name} has stale warning text"
+web = (ROOT / "web" / "index.html").read_text(encoding="utf-8").lower()
+assert "$2600-$9fff" in web, "web/index.html has a stale ML copy-buffer range"
+assert "$2300-$9fff" not in web, "web/index.html still mentions the old $2300 buffer"
 
 ml_source = (ROOT / "ml" / "sdc40.asm").read_text()
 assert "SD2IEC only" not in ml_source
