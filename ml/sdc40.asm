@@ -1308,7 +1308,7 @@ cbmtab  .text "ccj"
 doscmd  jsr opencmd
         bcs +
 dosread ldx #15
-        jsr readstat
+        jsr readwait
         php
         jsr cl15
         plp
@@ -1481,6 +1481,26 @@ dosnp   jsr opcmd
         bcs dosnx
         jmp dosread
 dosnx   rts
+
+; pi1541 answers no ATN while it writes a closed file to SD or redraws its
+; browser after S:, R:, N:, MD: or RD:. Retry only "device not present".
+readwait
+        lda #25
+        sta tries
+-       txa
+        pha
+        jsr readstat
+        pla
+        tax
+        bcc +
+        lda STATUS
+        bpl +
+        lda #20
+        jsr delay
+        dec tries
+        bne -
+        sec
++       rts
 
 ; Read the status line of the command channel open as file X.
 readstat
@@ -2233,7 +2253,7 @@ xdrvnum lda tdev
         jsr opfile
         bcs xfail
         ldx #1
-        jsr readstat
+        jsr readwait
         bcs xfail
         jsr errchk
         bcs xfail
@@ -2255,7 +2275,7 @@ xtarget lda #0                  ; target: 4 = command channel, 3 = file
         jsr opfile
         bcs xfail
         ldx #4
-        jsr readstat
+        jsr readwait
         bcs xfail
         jsr errchk
         bcc xwrite
@@ -2279,30 +2299,34 @@ xwrite
         lda #3
         jsr CLOSE
         ldx #4
-        jsr readstat
+        jsr readwait
         bcs +
-        lda errnum
-        cmp #2
+        jsr errchk
 +       bcs xclean              ; DOS error after the write, message kept
         bit xbad
         bpl xok
         lda #<e_abort
         ldx #>e_abort
         jsr seterr
-xclean  jsr cmdi               ; remove the partial file, free its blocks
+xclean  lda #0                  ; remove the partial file; it is closed,
+        sta cmdlen              ; so S: frees its blocks without V
+        jsr cmdi
         .null "s:"
         jsr cmdnew
         jsr xsend
-        jsr cmdi
-        .null "v"
-        jsr xsend
+        bcs xfail
+        ldx #40                 ; the S: reply must not replace the message
+-       lda statbuf,x
+        sta bufstart,x
+        dex
+        bpl -
         ldx #4
-        jsr CHKIN
--       jsr CHRIN
-        ldx STATUS
-        bne xfail
-        cmp #$0d
-        bne -
+        jsr readwait
+        ldx #40
+-       lda bufstart,x
+        sta statbuf,x
+        dex
+        bpl -
 xfail   jsr closeall
         sec
         rts
@@ -2321,11 +2345,11 @@ xscratch
         .null "s:"
         jsr cmdnew
         jsr xsend
-        ldx #4
-        jsr readstat
         bcs +
-        lda errnum
-        cmp #2
+        ldx #4
+        jsr readwait
+        bcs +
+        jsr errchk
         bcs +
         lda #4                 ; xtarget reopens the target command channel.
         jsr CLOSE               ; Do not OPEN an already-open logical file.
@@ -2333,9 +2357,20 @@ xscratch
 +       rts
 
 ; Send cmdbuf as one command on the target command channel (file 4).
-xsend   ldx #4
+; Carry set when the drive never listens; output must not reach the screen.
+xsend   lda #25
+        sta tries
+-       ldx #4
         jsr CHKOUT
-        ldy #0
+        bcc +
+        jsr CLRCHN
+        lda #20
+        jsr delay
+        dec tries
+        bne -
+        sec
+        rts
++       ldy #0
 -       lda cmdbuf,y
         jsr CHROUT
         iny
@@ -2343,7 +2378,9 @@ xsend   ldx #4
         bne -
         lda #$0d
         jsr CHROUT
-        jmp CLRCHN
+        jsr CLRCHN
+        clc
+        rts
 
 xtype   sta zp2
         stx zp2+1
