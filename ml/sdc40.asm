@@ -347,8 +347,6 @@ crename jsr parsefile
         bcs restore
         jsr isdir
         bcc renameok
-        jsr folderok
-        bcs folderbad
         jsr rootok
         bcs folderbad
 renameok
@@ -768,9 +766,7 @@ cformat jsr msgi
 nosend  jmp dosasyncrelist
 
 ; ------------------------------------------------------- M / R directories
-cmkdir  jsr folderok
-        bcs folderbad
-        jsr rootok
+cmkdir  jsr rootok
         bcs folderbad
         jsr msgi
         .null "Make dir:"
@@ -792,8 +788,6 @@ crmdir  jsr parsefile
         bcs nomove
         jsr isdir
         bcc nomove
-        jsr folderok
-        bcs folderbad
         jsr rootok
         bcs folderbad
         jsr msgi
@@ -1307,6 +1301,12 @@ cbmtab  .text "ccj"
 ; Carry set on a DOS error (>= 2) or I/O error, message in statbuf.
 doscmd  jsr opencmd
         bcs +
+        lda cbmdrv
+        bne dosread
+        lda cmdlen
+        beq dosread
+        lda #40                 ; pi1541 redraws its browser after S:, R:,
+        jsr delay               ; C:; an early ATN can deadlock it
 dosread ldx #15
         jsr readwait
         php
@@ -1337,7 +1337,12 @@ dosasync
         jsr opencmd
         bcs dfbad
         jsr cl15
-        jsr waitopen
+        lda cmdbuf
+        cmp #"c"
+        beq +
+        lda #60                 ; N:, MD:, RD: rewrite the SD card first
+        jsr delay
++       jsr waitopen
         bcs dfbad
         lda #0
         sta cmdlen
@@ -1346,7 +1351,7 @@ dosasync
         rts
 
 ; CD/MD/RD share the asynchronous protocol. A 1541 has none of these
-; commands, while KFF is stopped earlier by folderok.
+; commands; rootok stops them inside an image.
 dosfolder
         jsr dosasync
         bcs dfbad
@@ -1358,23 +1363,6 @@ dosasyncrelist
         bcs dfbad
         jmp relist
 dfbad   jmp folderbad
-
-; KFF's virtual disk has no MD/RD implementation and returns an empty
-; command-channel response.  Do not pretend that this did anything.  The
-; narrow tag test leaves SD2IEC and pi1541 commands entirely probe-free.
-folderok
-        ldx #0
--       lda osbuf,x
-        cmp kfftag,x
-        bne fokok
-        inx
-        cpx #3
-        bne -
-        lda #<e_nofold
-        ldx #>e_nofold
-        jmp seterr
-fokok   clc
-        rts
 
 ; A directory entry is a real SD2IEC/Pi folder.  Disk-image filenames are
 ; openable too, but remain ordinary files for Rename/Delete/Copy/Move.
@@ -1436,8 +1424,6 @@ nothost jsr erri
 folderbad
         jsr showerr
         jmp relist
-
-kfftag  .text "kun"
 
 ; OPEN/CLOSE probe. A listen with no bytes keeps these drives waiting.
 waitopen
@@ -3243,8 +3229,6 @@ overpost
 e_devnp .null "Device is not present !"
 e_rd    .null "Read error !"
 e_abort .null "Copy aborted !"
-e_nofold
-        .null "No folders on KFF !"
 
 ; Key panel: row, then rich text.
 panel

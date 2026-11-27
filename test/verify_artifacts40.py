@@ -72,7 +72,7 @@ vartab = int(match.group(1)) + 256 * int(match.group(2))
 assert vartab == trailer_address
 assert int(match.group(3)) == trailer_address
 assert program[end:] == TRAILER_PRG.read_bytes()[2:], "raw trailer differs from assembler output"
-assert trailer_address == 0x2DB2, f"unexpected BASIC/trailer boundary ${trailer_address:04X}"
+assert trailer_address == 0x2D80, f"unexpected BASIC/trailer boundary ${trailer_address:04X}"
 assert (len(program) + 253) // 254 == 46, "BASIC release must fit in 46 blocks"
 
 for old_sys in (828, 49152, 50432, 50608, 51200):
@@ -121,8 +121,8 @@ assert '4251 open1,d,15,"x?":input#1,b,o$,w,j:ifst and146then4268' in source.low
 assert '4268 gosub4110:printj$:close1:od=0:return' in source.lower()
 # Validate falls from 4260 into the DOS V command, not into the OS-probe error exit.
 assert re.search(r"^ 4260 [^\n]*\n 4263 ", source, re.M)
-assert '4900 e=-1:j$="{rvon}no dirs!"+r$:gosub4150:return' in source.lower()
-assert '4920 e=0:ifl$="kun"then4900' in source.lower()
+assert "no dirs!" not in source.lower()
+assert '4920 e=0\n' in source.lower()
 assert 'gosub4547:ifethenreturn' in source.lower()
 assert '2960 od=0:o$="":c$="cd:_":goto4494' in source.lower()
 assert '4483 gosub3700:iffthenod=0:o$="":c$="cd:"+c$:goto4494' in source.lower()
@@ -139,7 +139,7 @@ assert "panel_dest = $9930" in trailer_source
 assert "dir_dest = $9b20" in trailer_source
 for public in (ROOT / "README.md", ROOT / "CODE_REVIEW_CODEX_02.md", ROOT / "web" / "index.html"):
     text = public.read_text(encoding="utf-8").lower()
-    for value in ("$2db1", "$2db2", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
+    for value in ("$2d7f", "$2d80", "$97f0-$9879", "$9880-$98f2", "$9930-$9b14", "$9b20-$9f6f"):
         assert value in text, f"{public.name} is missing {value}"
     assert "$2977" not in text and "$2978" not in text, f"{public.name} has stale trailer address"
 for public in (ROOT / "README.md", ROOT / "CODE_REVIEW_CODEX_02.md"):
@@ -158,7 +158,7 @@ assert "jsr waitopen\n        bcs dfbad\n        lda #0\n        sta cmdlen\n   
 assert "opencmd\n        jsr waitopen\n        bcc opcmd\n        rts\nopcmd   lda #15" in ml_source
 assert "\nprobe   " not in ml_source
 assert "lda tdev\n        sta dev\n        jsr waitopen\n        bcs xtargetbad" in ml_source
-assert "No folders on KFF !" in ml_source
+assert "No folders on KFF" not in ml_source
 assert "rootpair\n        lda cbmdrv" in ml_source
 assert "rootok  lda cbmdrv" in ml_source
 assert "isdir   lda type" in ml_source

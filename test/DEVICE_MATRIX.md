@@ -8,7 +8,7 @@ device run must execute each applicable command for both frontends.
 | Pi1541, D64 mode | VICE true-drive D64 | list, load, run, copy, move, delete, rename, validate, format | runnable |
 | Pi1541, SD-card mode | Pi1541 firmware adapter | list, load, run, root-file copy/move/delete/rename, MD, RD, CD:_, format | `SKIP` |
 | SD2IEC | SD2IEC firmware adapter | list, load, run, root-file copy/move/delete/rename, validate, format, MD, RD, CD:_ | `SKIP` |
-| Kung Fu Flash / 2 | KFF firmware adapter | list, load, run, root-file copy/move/delete/rename; MD/RD must report unavailable | `SKIP` |
+| Kung Fu Flash / 2 | KFF firmware adapter | list, load, run, root-file copy/move/delete/rename, MD/RD like SD2IEC | `SKIP` |
 
 VICE's host-filesystem IEC backend is useful for a KERNAL file-system smoke
 test, but it does not implement the SD2IEC DOS/folder contract. It must not

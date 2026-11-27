@@ -1,4 +1,4 @@
- 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,178:poke46,45:clr:ifpeek(38896)<>169orpeek(38898)<>133thensys11698
+ 1 on-sgn(rl)goto4489:poke55,240:poke56,151:clr:poke45,128:poke46,45:clr:ifpeek(38896)<>169orpeek(38898)<>133thensys11648
  2 goto5000
  3 poke782,0:poke783,0:sys65520:return
  4 poke198,0:wait198,1:return
@@ -290,10 +290,9 @@
  4885 gosub4100:ifstthenprintj$:return
  4890 open1,d,15,"rd:"+c$:close1:gosub3750:ifstthenprintj$:return
  4895 goto4901
- 4900 e=-1:j$="{rvon}No dirs!"+r$:gosub4150:return
  4901 open1,d,15:gosub4000:close1:ifbthenprintj$:return
  4902 o=-1:return
- 4920 e=0:ifl$="kun"then4900
+ 4920 e=0
  4921 ifl$="cbm"orl$="cop"orl$="jif"thene=-1
  4922 return
  4990 poke650,0:print"{clr}{lblu}";:end

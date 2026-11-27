@@ -191,8 +191,8 @@ run</code></pre>
             list afterward. Same for ROM and I/O addresses.
           </p>
           <p>
-            <strong>BASIC</strong> ends at <code>$2db1</code>; its transport trailer starts at
-            <code>$2db2</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
+            <strong>BASIC</strong> ends at <code>$2d7f</code>; its transport trailer starts at
+            <code>$2d80</code>, then relocates the services to <code>COPY $97f0-$9879</code>,
             <code>HEADER/WORK $9880-$98f2</code>, <code>PANEL $9930-$9b14</code> and
             <code>DIR READ $9b20-$9f6f</code>.
           </p>
@@ -209,7 +209,7 @@ run</code></pre>
           <h2>Copying</h2>
           <p>
             A failed copy between drives (disk full, write error, RUN/STOP) deletes the partial
-            file and frees its blocks via the <code>VALIDATE</code> command. On <code>FILE EXISTS</code>, the
+            file with <code>S:</code> (BASIC then also sends <code>VALIDATE</code>). On <code>FILE EXISTS</code>, the
             commander asks before replacing that one target; another key skips it. Plain C64 files
             copy anywhere; a folder or disk image taken from an SD2IEC/pi1541/KFF root needs another
             root as its cross-device target, never an opened disk image.

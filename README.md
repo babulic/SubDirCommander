@@ -101,7 +101,7 @@ After Load or Run, you get the file list back only if the program loaded into
 828 (`$033c`) — still runs via `LOAD"name",8,1` then `SYS`, but the commander
 does not reopen the list afterward. Same for ROM and I/O addresses.
 
-**BASIC** ends at `$2db1`; its transport trailer starts at `$2db2`, then
+**BASIC** ends at `$2d7f`; its transport trailer starts at `$2d80`, then
 relocates the services to `COPY $97f0-$9879`, `HEADER/WORK $9880-$98f2`,
 `PANEL $9930-$9b14` and `DIR READ $9b20-$9f6f`.
 
@@ -116,7 +116,7 @@ size of the commander.
 ## Copying
 
 A failed copy between drives (disk full, write error, RUN/STOP) deletes the
-partial file and frees its blocks via the `VALIDATE` command. On
+partial file with `S:` (BASIC then also sends `VALIDATE`). On
 `FILE EXISTS`, the commander asks before replacing that one target; another
 key skips it. Plain C64 files copy anywhere; a folder or disk image taken from
 an SD2IEC/pi1541/KFF root needs another root as its cross-device target, never
@@ -152,8 +152,8 @@ guess: SD2IEC, pi1541 and Kung Fu Flash supply their own status text.
   again, then checks a two-byte signature of the relocated COPY HELPER.
   A fresh launch calls the relocator; a normal `RUN` after `RUN/STOP` uses the
   already-resident helpers and never executes the consumed transport.
-- The tokenized BASIC program ends at `$2DB1`; the binary trailer begins at
-  `$2DB2`. The trailer is only a transport: it is copied from the file image
+- The tokenized BASIC program ends at `$2D7F`; the binary trailer begins at
+  `$2D80`. The trailer is only a transport: it is copied from the file image
   first, then BASIC allocates its variables below `$97F0`. The live services
   are `COPY HELPER` `$97F0-$9879`, `DIR HEADER/WORK` `$9880-$98F2`, `KEY
   PANEL` `$9930-$9B14` and `DIR READ` `$9B20-$9F6F`. No unused loader or

@@ -23,9 +23,8 @@ def main() -> None:
         assert "SD2IEC" in text
         assert "pi1541" in text
         assert "Kung Fu Flash" in text
-    assert "root-file paths" in readme.lower()
-    assert "folder commands are" in readme.lower()
-    assert "validate is not implemented" in readme.lower()
+    assert readme.lower().count("make or remove a folder") == 3
+    assert "delete, validate and format" in readme.lower()
     assert "cached status title" in readme.lower()
     assert "fat 8.3 alias" in readme.lower()
     assert "fat 8.3 alias" in web.lower()

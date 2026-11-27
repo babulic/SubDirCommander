@@ -10,18 +10,18 @@ trailer architecture where those facts affect the current artifacts.
 with `$0000`; the raw PRG appends a relocator followed by the three executable
 helper images. The fourth protected region holds directory state at run time;
 it is not an executable trailer image. The transport is not called in place.
-In the current release the BASIC terminator ends at `$2DB1` and the trailer
-starts at `$2DB2`.
+In the current release the BASIC terminator ends at `$2D7F` and the trailer
+starts at `$2D80`.
 
 Its first BASIC line starts with the direct-load reentry gate
 `ON-SGN(RL)GOTO4489`; on an ordinary start it evaluates to zero and falls
 through to this numeric bootstrap:
 
 1. `POKE55,240:POKE56,151:CLR` — reserve the top of BASIC RAM at `$97F0`.
-2. `POKE45,178:POKE46,45:CLR` — set `VARTAB` to the start of this build's
-   trailer (`$2DB2`) and rebuild BASIC's allocation pointers below the ceiling.
+2. `POKE45,128:POKE46,45:CLR` — set `VARTAB` to the start of this build's
+   trailer (`$2D80`) and rebuild BASIC's allocation pointers below the ceiling.
 3. On a mismatch of `PEEK(38896)=169` and `PEEK(38898)=133`, call
-   `SYS11698`; those two bytes are the signature of the relocated COPY
+   `SYS11648`; those two bytes are the signature of the relocated COPY
    HELPER. A match naturally falls through to line 2 without executing the
    consumed transport.
 
@@ -109,7 +109,7 @@ using the existing numeric scratch variables `B`, `H` and `J`. The image-type
 check similarly reuses `F`: every caller has consumed the parse result before
 it calls line 3700, which replaces that value immediately.
 
-The active feature set moves the binary transport to `$2DB2`; the line-1
+The active feature set moves the binary transport to `$2D80`; the line-1
 `POKE45/46`, signature and `SYS` literals are verified against the tokenized
 program by both the builder and the artifact test.
 
@@ -125,10 +125,8 @@ BASIC, followed by the actual command.
 `MD:` and `RD:` are asynchronous on SD2IEC and Pi1541. Both frontends now
 wait for the command channel to become available and then read its status
 before relisting. A failed Pi1541 `RD:` consequently reports its real DOS
-error instead of silently redrawing the unchanged list. Kung Fu Flash exposes
-no MD/RD implementation and gives no usable error for it; the narrow `KUN`
-OS tag therefore reports a folder-unavailable message without applying any SD2IEC/Pi1541
-classification or capability gate.
+error instead of silently redrawing the unchanged list. Kung Fu Flash handles
+MD/RD like SD2IEC, so no KFF-specific folder gate remains.
 
 Pi1541 `N:` is asynchronous too: both frontends now close the formatting
 command, wait for a normal command-channel open and only then fetch final
