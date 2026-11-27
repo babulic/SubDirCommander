@@ -2,25 +2,35 @@
 
 https://subdir-commander.apps.grok.bot/
 
-A file manager for COMMODORE 64.
-List a drive, move through it a line or a page at a time, and run, load, copy,
-move or delete files, including copies from one drive to another. Rename,
-validate and format depend on the drive.
+**A file manager for COMMODORE 64.** List a drive, move through a list of files
+and folders a line or a page at a time, load and run files, rename and delete
+files, copy and move files including copies from one drive to another, format a
+CBM disk and create a new D64 disk image on SD2IEC/pi1541/KFF, validate a CBM
+disk.
 
-Utilizes 1541 / 1541-II, SD2IEC, pi1541 or Kung Fu Flash on a Commodore C64.
+Commodore 64 · 1541 / 1541-II · SD2IEC · pi1541 · Kung Fu Flash. Two versions
+with the same screen and keys.
 
-It comes in two versions with the same screen and keys.
+## Support
 
-- Commodore 1541 does the whole set, including rename, validate and format.
-- SD2IEC does that too, and it makes, removes and leaves directories.
-- pi1541 does the same inside a disk image. On the SD card it renames, copies,
-  deletes and creates folders; validate is not implemented, and format creates
-  a new D64 ([IEC commands](https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md)).
-- Kung Fu Flash and Kung Fu Flash 2 use the standard root-file paths for
-  list, load, run, delete, copy, move and rename. Folder commands are
-  explicitly unavailable; validate/format support remains firmware-dependent
-  and is covered only by the hardware adapter matrix
-  ([Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2)).
+Please support the project with a small contribution, as it consumes a
+significant amount of time and AI tokens.
+
+- [Pay by card (SumUp · card, Apple Pay, Google Pay)](https://pay.sumup.com/b2c/Q2TQPIJA)
+- [Donate with PayPal](https://www.paypal.com/donate/?business=ivan.babulic%40gmail.com&currency_code=EUR)
+- [PayPal.me](https://paypal.me/IvanBabulic)
+
+## Drives
+
+| Drive | What it can do |
+| --- | --- |
+| 1541 / 1541-II | The whole set: rename, copy, move, delete, validate and format. |
+| SD2IEC | Navigate through folders; make or remove a folder. File operations: rename, copy, move, delete. Format creates a new D64 image. [SD2IEC](https://github.com/thierer/sd2iec). |
+| pi1541 | Navigate through folders; make or remove a folder. File operations: rename, copy, move, delete. Format creates a new D64 image. Names in folders are cut to 16 characters. [Command list](https://github.com/pi1541/Pi1541/blob/master/docs/IEC%20Commands.md). |
+| Kung Fu Flash | Navigate through folders; make or remove a folder. File operations: rename, copy, move, delete. Format creates a new D64 image. [Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2). |
+
+SD2IEC and Kung Fu Flash return a long host-file name as a FAT 8.3 alias such
+as `NAME56~1.D64`.
 
 | File | Kind | Size |
 | --- | --- | --- |
@@ -33,96 +43,103 @@ It comes in two versions with the same screen and keys.
 
 ## Run it
 
-In VICE on the Mac:
+As VICE emulation:
 
 ```bash
-x64sc -8 dist/fb.d64
+x64sc -8 dist/SubDirCommand.40.d64 -9 dist/fb.d64
 ```
 
-Then on the C64, in lowercase:
-
-```text
-load "SubDirCommand.40",8
-run
-```
+On C64 run:
 
 ```text
 load "%SubDirCommand40",8
 run
 ```
 
-A copy from one drive to another needs a second disk. In VICE on the computer, attach it as drive 9. That flag belongs on the `x64sc` command, not on the C64:
+for the machine code version, or
 
-```bash
-x64sc -8 dist/fb.d64 -9 other.d64
+```text
+load "SubDirCommand.40",8
+run
 ```
 
-`other.d64` is any second disk image. On a real C64, use the two drives you have and pick the target drive in the commander.
+for the BASIC one. On a real C64, use the two drives you have and pick the
+target drive in the commander.
 
 ## Keys
 
 | Key | Action |
 | --- | --- |
 | CRSR up / down | one line |
-| CRSR left / right | page up / page down (22 lines; on the first or last page: first or last entry) |
-| 1 / F1 | choose the drive and list it |
-| 2 / F2 | validate the disk and list again |
-| 3 / F3 | rename a file, disk image or root-level folder |
-| 4 / F4 | copy: name (RETURN = same name), then target drive (default: current) |
-| 5 / F5 | show the start address of a PRG |
-| 6 / F6 | delete an item (file/image, or the selected root-level folder; asks y/n) |
-| 7 / F7 / RETURN | run a program, enter a directory or disk image, run an `&` USR file in the drive |
-| 8 / F8 | load a program without running it (directories and images open like 7) |
+| CRSR left / right | page up / page down (22 lines) |
+| 1 · F1 | choose the drive and list it |
+| 2 · F2 | validate the disk |
+| 3 · F3 | rename a file, disk image or root-level folder |
+| 4 · F4 | copy: new name, then target drive (default: the current one) |
+| 5 · F5 | start address of a program |
+| 6 · F6 | delete an item, after y/n |
+| 7 · F7 · RETURN | run a program, open a directory or disk image |
+| 8 · F8 | load a program without running it |
 | 9 | move a file, on this drive or to another |
-| 0 | new/form disk (`Disk name`, optional `Disk ID`) |
+| 0 | new/form disk |
 | N | SD2IEC and pi1541: make a directory |
 | Space / * | mark one file, or mark and clear all |
-| ↑ | SD2IEC and pi1541: one directory level up (`CD:←`) |
+| ↑ | SD2IEC and pi1541: one directory level up |
 | ← | quit to BASIC |
 
-The key panel on the right says `U/D Move CRSR` and `L/R Page UpDn`.
-Validate, rename and format need a 1541, an SD2IEC, or a pi1541 disk image.
-At an SD2IEC/pi1541/KFF device root, `3`, `4`, `6` and `9` treat a listed
-disk image or normal file as a file; a true `DIR` entry is renamed or deleted
-as a folder. Folder creation and deletion are unavailable on Kung Fu Flash.
+## Two versions
+
+**Machine code** draws the directory list straight into screen memory, so
+scrolling and paging are instant. It keeps the directory in the RAM under the
+BASIC ROM. Copying between drives uses a 30.5 KiB buffer at `$2600-$9fff`.
+
+After Load or Run, you get the file list back only if the program loaded into
+`$2600-$9fff` or `$c000-$cfff`. Something that loads lower — for example at
+336 (`$0150`), in unused RAM at `$02a7-$02ff`, or in the cassette buffer at
+828 (`$033c`) — still runs via `LOAD"name",8,1` then `SYS`, but the commander
+does not reopen the list afterward. Same for ROM and I/O addresses.
+
+**BASIC** ends at `$2db1`; its transport trailer starts at `$2db2`, then
+relocates the services to `COPY $97f0-$9879`, `HEADER/WORK $9880-$98f2`,
+`PANEL $9930-$9b14` and `DIR READ $9b20-$9f6f`.
+
+## Loading
+
+When the commander cannot keep control, it prints the load the way you would
+type it: `LOAD"name",8` then `RUN` for a BASIC program, or `LOAD"name",8,1`
+then `SYS` for machine code. Then it exits. BASIC then owns the loaded
+program, so a later BASIC `SAVE` writes that program’s real size — not the
+size of the commander.
+
+## Copying
+
+A failed copy between drives (disk full, write error, RUN/STOP) deletes the
+partial file and frees its blocks via the `VALIDATE` command. On
+`FILE EXISTS`, the commander asks before replacing that one target; another
+key skips it. Plain C64 files copy anywhere; a folder or disk image taken from
+an SD2IEC/pi1541/KFF root needs another root as its cross-device target, never
+an opened disk image.
 
 Copy to another drive streams the file through the C64. PRG, SEQ and USR
 files (including an image listed as PRG) can be copied; REL files cannot. A
-failed copy (disk full, write error, RUN/STOP) removes the partial file and
-validates the target so its blocks come back. If DOS returns `FILE EXISTS`,
-the commander asks before scratching and replacing that one target; any other
-answer skips only that item. A Move scratches its source only after the copy
-or replacement succeeded. Copy on the same drive still uses the drive's own
-`C:`.
+Move scratches its source only after the copy or replacement succeeded. Copy
+on the same drive still uses the drive's own `C:`.
 
 The virtual-root distinction is DOS based, not a firmware-version guess:
 `CBM`, `COP` and `JIF` OS headers mean an open disk or image; every other
-header is a device root. Plain C64 files copy and move anywhere, but a folder
-or disk image taken from a root needs a virtual root as its cross-device
-target, so it cannot be written into an opened D64.
+header is a device root.
 
 At a root, a name extension decides what `5`, `7` and `8` do. A mountable
 image opens with `CD:` like a folder: SD2IEC mounts `.D64`, `.D41`, `.D71`,
 `.D81`, `.DNP` (and the deprecated `.M2I`), pi1541 also `.G64` and `.T64`.
 `.PRG` is a normal program. Any other extension (`.CRT`, `.SID` ...) is a host
 file and is reported as `Not a C64 program !` instead of being loaded. Inside
-an opened disk, a dot in a name has no meaning. An empty Disk ID sends `N:<name>,00` at such a root (needed by
-pi1541); inside an open disk it retains the bare `N:<name>` quick format.
+an opened disk, a dot in a name has no meaning.
 
 Entering an image and returning with `CD:` + left-arrow always invalidates the
 cached status title before the next listing, so the title is read again from
 the current device. This is deliberately a refresh, not a firmware-name
 guess: SD2IEC, pi1541 and Kung Fu Flash supply their own status text.
-
-At an SD2IEC or Kung Fu Flash root, a long host-file name may be returned as
-a device-selected FAT 8.3 alias in the standard 16-character directory-name
-field, for example `NAME56~1.D64`. SubDirCommander displays and sends that
-exact received name; it never invents missing characters from an unseen long
-filename. The `~` is a normal PETSCII graphics glyph in the usual C64
-charset. This follows the directory writers in the
-[SD2IEC source](https://github.com/thierer/sd2iec) and the
-[Kung Fu Flash](https://github.com/KimJorgensen/KungFuFlash) /
-[Kung Fu Flash 2](https://github.com/KimJorgensen/KungFuFlash2) sources.
 
 ## What changed in `.40`
 
