@@ -111,10 +111,16 @@ th { white-space: nowrap; color: var(--hi); font-weight: 600; width: 1%; }
 }
 
 .support p .c64-heart {
-  color: var(--hi);
-  font-family: ui-monospace, "Courier New", monospace;
-  font-weight: 700;
-  margin-left: 0.2em;
+  /* C64 light blue (bledomodrá), not cyan --hi */
+  color: #817eff;
+  display: inline-block;
+  vertical-align: -0.05em;
+  margin-left: 0.25em;
+  line-height: 0;
+}
+.support p .c64-heart svg {
+  display: block;
+  image-rendering: pixelated;
 }
 
 .support-actions {
